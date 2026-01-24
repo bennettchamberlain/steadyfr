@@ -1,94 +1,137 @@
-import {Suspense} from 'react'
 import Link from 'next/link'
-import {PortableText} from '@portabletext/react'
-
-import {AllPosts} from '@/app/components/Posts'
-import GetStartedCode from '@/app/components/GetStartedCode'
-import SideBySideIcons from '@/app/components/SideBySideIcons'
-import {settingsQuery} from '@/sanity/lib/queries'
+import GalleryGrid from '@/app/components/GalleryGrid'
+import {featuredGalleryProjectsQuery} from '@/sanity/lib/queries'
 import {sanityFetch} from '@/sanity/lib/live'
-import {dataAttr} from '@/sanity/lib/utils'
 
-export default async function Page() {
-  const {data: settings} = await sanityFetch({
-    query: settingsQuery,
+export const metadata = {
+  title: 'Steady Fence & Railing | San Francisco Bay Area',
+  description:
+    'Get a quote in a minute and a railing in a week. The shortest lead time in the San Francisco Bay Area. Quality railing installations including stair railings, deck rails, guardrails, and custom metalwork.',
+}
+
+export default async function HomePage() {
+  const {data: featuredProjects} = await sanityFetch({
+    query: featuredGalleryProjectsQuery,
   })
 
   return (
     <>
-      <div className="relative">
-        <div className="relative bg-[url(/images/tile-1-black.png)] bg-size-[5px]">
-          <div className="bg-gradient-to-b from-white w-full h-full absolute top-0"></div>
-          <div className="container">
-            <div className="relative min-h-[40vh] mx-auto max-w-2xl pt-10 xl:pt-20 pb-30 space-y-6 lg:max-w-4xl lg:px-12 flex flex-col items-center justify-center">
-              <div className="flex flex-col gap-4 items-center">
-                <div className="text-md leading-6 prose uppercase py-1 px-3 bg-white font-mono italic">
-                  A starter template for
-                </div>
-                <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold tracking-tighter text-black">
-                  <Link
-                    className="underline decoration-brand hover:text-brand underline-offset-8 hover:underline-offset-4 transition-all ease-out"
-                    href="https://sanity.io/"
-                  >
-                    Sanity
-                  </Link>
-                  +
-                  <Link
-                    className="underline decoration-black text-framework underline-offset-8 hover:underline-offset-4 transition-all ease-out"
-                    href="https://nextjs.org/"
-                  >
-                    Next.js
-                  </Link>
-                </h1>
+      {/* Hero Section */}
+      <section className="relative min-h-[80vh] flex items-center justify-center bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950">
+        <div className="absolute inset-0 bg-[url('/images/tile-grid-white.png')] bg-size-[17px] opacity-5" />
+        <div className="container relative z-10 py-20 px-4 sm:px-6">
+          <div className="max-w-4xl mx-auto text-center">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-6 tracking-tight">
+              Get a quote in a minute
+              <br />
+              <span className="text-gray-300">and a railing in a week</span>
+            </h1>
+            <p className="text-xl sm:text-2xl text-gray-400 mb-8 font-light">
+              The shortest lead time in the San Francisco Bay Area
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link
+                href="/quote"
+                className="inline-flex items-center justify-center px-8 py-4 bg-white text-gray-900 font-semibold rounded-md hover:bg-gray-100 transition-colors text-lg"
+              >
+                Get a Quote
+              </Link>
+              <Link
+                href="/gallery"
+                className="inline-flex items-center justify-center px-8 py-4 bg-gray-800 text-white font-semibold rounded-md hover:bg-gray-700 transition-colors text-lg border border-gray-700"
+              >
+                View Our Work
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Quote Widget Section */}
+      <section className="py-16 bg-gray-900 border-y border-gray-800">
+        <div className="container px-4 sm:px-6">
+          <div className="max-w-4xl mx-auto">
+            <div className="bg-gray-800 rounded-lg p-8 border border-gray-700">
+              <p className="text-gray-400 text-center mb-4">
+                Quote widget will be embedded here
+              </p>
+              <div className="bg-gray-900 rounded border border-gray-700 p-12 text-center text-gray-500">
+                <p className="text-sm">[Quote Widget Embed Placeholder]</p>
+                <p className="text-xs mt-2 text-gray-600">
+                  The iframe/embed snippet will be added here
+                </p>
               </div>
             </div>
           </div>
         </div>
-        <div className=" flex flex-col items-center">
-          <SideBySideIcons />
-          <div className="container relative mx-auto max-w-2xl pb-20 pt-10 space-y-6 lg:max-w-4xl lg:px-12 flex flex-col items-center">
-            <div className="prose sm:prose-lg md:prose-xl xl:prose-2xl text-gray-700 prose-a:text-gray-700 font-light text-center">
-              {settings?.description && (
-                <div
-                  data-sanity={dataAttr({
-                    id: settings._id,
-                    type: 'settings',
-                    path: 'description',
-                  }).toString()}
+      </section>
+
+      {/* Preview Gallery Section */}
+      {featuredProjects && featuredProjects.length > 0 && (
+        <section className="py-20 bg-gray-950">
+          <div className="container px-4 sm:px-6">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
+                Featured Projects
+              </h2>
+              <p className="text-gray-400 max-w-2xl mx-auto">
+                Explore our recent work showcasing quality craftsmanship and attention to detail
+              </p>
+            </div>
+            <GalleryGrid projects={featuredProjects} columns={3} />
+            <div className="text-center mt-12">
+              <Link
+                href="/gallery"
+                className="inline-flex items-center justify-center px-8 py-3 bg-gray-800 text-white font-semibold rounded-md hover:bg-gray-700 transition-colors border border-gray-700"
+              >
+                View All Projects
+                <svg
+                  className="w-5 h-5 ml-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
                 >
-                  <PortableText value={settings.description} />
-                </div>
-              )}
-              <div className="flex items-center flex-col gap-4">
-                <GetStartedCode />
-                <Link
-                  href="https://www.sanity.io/docs"
-                  className="inline-flex text-brand text-xs md:text-sm underline hover:text-gray-900"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Sanity Documentation
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    className="w-4 h-4 ml-1 inline"
-                    fill="currentColor"
-                  >
-                    <path d="M10 6V8H5V19H16V14H18V20C18 20.5523 17.5523 21 17 21H4C3.44772 21 3 20.5523 3 20V7C3 6.44772 3.44772 6 4 6H10ZM21 3V12L17.206 8.207L11.2071 14.2071L9.79289 12.7929L15.792 6.793L12 3H21Z"></path>
-                  </svg>
-                </Link>
-              </div>
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M17 8l4 4m0 0l-4 4m4-4H3"
+                  />
+                </svg>
+              </Link>
             </div>
           </div>
+        </section>
+      )}
+
+      {/* Trust Section - Yelp Reviews */}
+      <section className="py-20 bg-gray-900 border-t border-gray-800">
+        <div className="container px-4 sm:px-6">
+          <div className="max-w-4xl mx-auto text-center">
+            <h2 className="text-3xl sm:text-4xl font-bold text-white mb-6">
+              Trusted by Bay Area Homeowners
+            </h2>
+            <p className="text-gray-400 mb-8 text-lg">
+              See what our customers are saying about our work
+            </p>
+            <a
+              href="https://www.yelp.com/biz/sturdy-fence-and-railing-san-francisco"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center px-8 py-4 bg-red-600 text-white font-semibold rounded-md hover:bg-red-700 transition-colors"
+            >
+              <svg
+                className="w-6 h-6 mr-2"
+                fill="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path d="M21.5 9.5c-.1-1.1-.3-2.2-.6-3.2-.3-1-.7-2-1.2-2.9-.5-.9-1.1-1.7-1.8-2.5-.7-.8-1.5-1.5-2.4-2.1-.9-.6-1.9-1.1-2.9-1.5-1-.4-2-.7-3.1-.9-1.1-.2-2.2-.3-3.4-.3-1.2 0-2.3.1-3.4.3-1.1.2-2.1.5-3.1.9-1 .4-2 .9-2.9 1.5-.9.6-1.7 1.3-2.4 2.1-.7.8-1.3 1.6-1.8 2.5-.5.9-.9 1.9-1.2 2.9-.3 1-.5 2.1-.6 3.2-.1 1.1-.1 2.2-.1 3.4 0 1.2.1 2.3.1 3.4.1 1.1.3 2.2.6 3.2.3 1 .7 2 1.2 2.9.5.9 1.1 1.7 1.8 2.5.7.8 1.5 1.5 2.4 2.1.9.6 1.9 1.1 2.9 1.5 1 .4 2 .7 3.1.9 1.1.2 2.2.3 3.4.3 1.2 0 2.3-.1 3.4-.3 1.1-.2 2.1-.5 3.1-.9 1-.4 2-.9 2.9-1.5.9-.6 1.7-1.3 2.4-2.1.7-.8 1.3-1.6 1.8-2.5.5-.9.9-1.9 1.2-2.9.3-1 .5-2.1.6-3.2.1-1.1.1-2.2.1-3.4 0-1.2-.1-2.3-.1-3.4zm-9.5 2.5l-3.5 3.5-1.5-1.5L9.5 12l1.5-1.5L12.5 12l3.5-3.5L17.5 10l-5.5 5.5z" />
+              </svg>
+              Read Reviews on Yelp
+            </a>
+          </div>
         </div>
-      </div>
-      <div className="border-t border-gray-100 bg-gray-50">
-        <div className="container">
-          <aside className="py-12 sm:py-20">
-            <Suspense>{await AllPosts()}</Suspense>
-          </aside>
-        </div>
-      </div>
+      </section>
     </>
   )
 }

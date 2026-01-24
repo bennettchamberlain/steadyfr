@@ -99,3 +99,35 @@ export const pagesSlugs = defineQuery(`
   *[_type == "page" && defined(slug.current)]
   {"slug": slug.current}
 `)
+
+const galleryProjectFields = /* groq */ `
+  _id,
+  projectName,
+  location,
+  categories,
+  description,
+  featured,
+  order,
+  "photoGallery": photoGallery[]{
+    asset,
+    alt
+  }
+`
+
+export const allGalleryProjectsQuery = defineQuery(`
+  *[_type == "galleryProject"] | order(order asc, projectName asc) {
+    ${galleryProjectFields}
+  }
+`)
+
+export const featuredGalleryProjectsQuery = defineQuery(`
+  *[_type == "galleryProject" && featured == true] | order(order asc) [0...3] {
+    ${galleryProjectFields}
+  }
+`)
+
+export const galleryProjectQuery = defineQuery(`
+  *[_type == "galleryProject" && _id == $id][0] {
+    ${galleryProjectFields}
+  }
+`)
