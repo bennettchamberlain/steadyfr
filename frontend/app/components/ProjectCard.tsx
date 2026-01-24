@@ -28,16 +28,17 @@ export default function ProjectCard({project, onClick}: ProjectCardProps) {
       className="group cursor-pointer overflow-hidden rounded-lg bg-gray-900 transition-transform hover:scale-[1.02]"
       onClick={onClick}
     >
-      {firstImage?.asset && (
+      {firstImage?.asset?._ref && (
         <div className="relative aspect-[4/3] overflow-hidden">
           <Image
-            src={firstImage.asset}
+            id={firstImage.asset._ref}
             alt={firstImage.alt || project.projectName || 'Project image'}
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
             width={600}
             height={450}
             loading="lazy"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            mode="cover"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/0 to-black/0 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
         </div>

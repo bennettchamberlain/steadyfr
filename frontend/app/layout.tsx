@@ -27,9 +27,9 @@ export async function generateMetadata(): Promise<Metadata> {
     stega: false,
   })
   const title = settings?.title || 'Steady Fence & Railing'
-  const description =
-    settings?.description ||
-    'Get a quote in a minute and a railing in a week. The shortest lead time in the San Francisco Bay Area.'
+  const description = settings?.description
+    ? toPlainText(settings.description)
+    : 'Get a quote in a minute and a railing in a week. The shortest lead time in the San Francisco Bay Area.'
 
   const ogImage = resolveOpenGraphImage(settings?.ogImage)
   let metadataBase: URL | undefined = undefined
@@ -46,7 +46,7 @@ export async function generateMetadata(): Promise<Metadata> {
       template: `%s | ${title}`,
       default: title,
     },
-    description: toPlainText(description),
+    description,
     openGraph: {
       images: ogImage ? [ogImage] : [],
     },

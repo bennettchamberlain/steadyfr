@@ -92,14 +92,15 @@ export default function ImageModal({project, isOpen, onClose}: ImageModalProps) 
 
         {/* Main image */}
         <div className="flex-1 flex items-center justify-center relative">
-          {currentImage?.asset && (
+          {currentImage?.asset?._ref && (
             <Image
-              src={currentImage.asset}
+              id={currentImage.asset._ref}
               alt={currentImage.alt || `${project.projectName} - Image ${currentImageIndex + 1}`}
               className="max-h-full max-w-full object-contain"
               width={1920}
               height={1080}
               sizes="100vw"
+              mode="cover"
             />
           )}
 
@@ -180,13 +181,14 @@ export default function ImageModal({project, isOpen, onClose}: ImageModalProps) 
                         : 'border-transparent opacity-60 hover:opacity-100'
                     }`}
                   >
-                    {image?.asset && (
+                    {image?.asset?._ref && (
                       <Image
-                        src={image.asset}
+                        id={image.asset._ref}
                         alt={`Thumbnail ${idx + 1}`}
                         className="w-full h-full object-cover"
                         width={80}
                         height={80}
+                        mode="cover"
                       />
                     )}
                   </button>
