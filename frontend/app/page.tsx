@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import GalleryGrid from '@/app/components/GalleryGrid'
+import {QuoteBuilder} from '@/app/components/QuoteBuilder/QuoteBuilder'
 import {featuredGalleryProjectsQuery} from '@/sanity/lib/queries'
 import {sanityFetch} from '@/sanity/lib/live'
 
@@ -51,16 +52,8 @@ export default async function HomePage() {
       <section className="py-16 bg-gray-900 border-y border-gray-800">
         <div className="container px-4 sm:px-6">
           <div className="max-w-4xl mx-auto">
-            <div className="bg-gray-800 rounded-lg p-8 border border-gray-700">
-              <p className="text-gray-400 text-center mb-4">
-                Quote widget will be embedded here
-              </p>
-              <div className="bg-gray-900 rounded border border-gray-700 p-12 text-center text-gray-500">
-                <p className="text-sm">[Quote Widget Embed Placeholder]</p>
-                <p className="text-xs mt-2 text-gray-600">
-                  The iframe/embed snippet will be added here
-                </p>
-              </div>
+            <div className="bg-gray-800 rounded-lg p-6 sm:p-8 border border-gray-700">
+              <QuoteBuilder />
             </div>
           </div>
         </div>
