@@ -334,7 +334,7 @@ export function DiagramRenderer({style, infill, sections, materials}: DiagramRen
               )
 
               // Draw cables between consecutive stanchions in this section
-              const cableElements: JSX.Element[] = []
+              const cableElements: React.ReactElement[] = []
               for (let idx = 0; idx < sectionStanchions.length - 1; idx++) {
                 const startPosFeet = sectionStanchions[idx]
                 const endPosFeet = sectionStanchions[idx + 1]
@@ -388,7 +388,7 @@ export function DiagramRenderer({style, infill, sections, materials}: DiagramRen
               )
 
               // Draw slats between consecutive stanchions in this section
-              const slatElements: JSX.Element[] = []
+              const slatElements: React.ReactElement[] = []
               for (let idx = 0; idx < sectionStanchions.length - 1; idx++) {
                 const startPosFeet = sectionStanchions[idx]
                 const endPosFeet = sectionStanchions[idx + 1]
