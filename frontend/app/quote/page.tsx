@@ -1,3 +1,6 @@
+import {Suspense} from 'react'
+import {QuoteBuilder} from '@/app/components/QuoteBuilder/QuoteBuilder'
+
 export const metadata = {
   title: 'Get a Quote | Steady Fence & Railing',
   description:
@@ -39,34 +42,10 @@ export default function QuotePage() {
                 </p>
               </div>
               
-              {/* Embed Placeholder */}
-              <div className="bg-gray-800 rounded-lg border border-gray-700 p-16 text-center">
-                <div className="max-w-md mx-auto">
-                  <svg
-                    className="w-16 h-16 mx-auto mb-4 text-gray-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={1.5}
-                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                    />
-                  </svg>
-                  <p className="text-gray-400 mb-2 font-medium">Quote Widget</p>
-                  <p className="text-sm text-gray-500 mb-4">
-                    The quote widget iframe/embed will be placed here
-                  </p>
-                  <div className="bg-gray-900 rounded border border-gray-700 p-8 text-gray-600 text-xs">
-                    <p className="mb-2">[Embed Code Placeholder]</p>
-                    <p className="text-gray-700">
-                      Replace this section with your iframe or embed snippet
-                    </p>
-                  </div>
-                </div>
-              </div>
+              {/* Quote Builder Widget */}
+              <Suspense fallback={<div className="text-gray-400 text-center py-8">Loading quote builder...</div>}>
+                <QuoteBuilder />
+              </Suspense>
 
               {/* Additional Info */}
               <div className="mt-8 pt-8 border-t border-gray-800">
