@@ -54,9 +54,153 @@ export function QuoteSummary({
   const [name, setName] = useState('')
   const [contact, setContact] = useState('')
   const [zipcode, setZipcode] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle')
+  const [errorMessage, setErrorMessage] = useState('')
+
+  const captureDiagramAsImage = async (): Promise<string | null> => {
+    try {
+      // Find the SVG by ID
+      let svgElement: SVGSVGElement | null = document.getElementById('railing-diagram-svg') as SVGSVGElement | null
+      
+      if (!svgElement) {
+        // Fallback to other methods
+        const diagramElement = document.querySelector('svg[aria-label="Railing side view diagram"]')
+        if (diagramElement && diagramElement instanceof SVGSVGElement) {
+          svgElement = diagramElement
+        } else {
+          console.warn('SVG diagram not found')
+          return null
+        }
+      }
+      
+      if (!svgElement) return null
+      
+      // Wait a bit to ensure rendering is complete
+      await new Promise((resolve) => setTimeout(resolve, 200))
+      
+      // Get the SVG as a string and convert to data URL
+      const svgString = new XMLSerializer().serializeToString(svgElement)
+      const svgBlob = new Blob([svgString], {type: 'image/svg+xml;charset=utf-8'})
+      const svgUrl = URL.createObjectURL(svgBlob)
+      
+      // Create an image from the SVG
+      const img = new Image()
+      await new Promise<void>((resolve, reject) => {
+        img.onload = () => resolve()
+        img.onerror = () => reject(new Error('Failed to load SVG image'))
+        img.src = svgUrl
+      })
+      
+      // Use actual SVG dimensions or fallback, scale up for better quality
+      const baseWidth = svgElement.clientWidth || svgElement.viewBox.baseVal.width || 800
+      const baseHeight = svgElement.clientHeight || svgElement.viewBox.baseVal.height || 600
+      
+      // Scale up 2x for better quality in email (max 1200px width for email compatibility)
+      const scale = Math.min(2, 1200 / baseWidth)
+      const canvasWidth = Math.floor(baseWidth * scale)
+      const canvasHeight = Math.floor(baseHeight * scale)
+      
+      // Create a canvas and draw the SVG image
+      const canvas = document.createElement('canvas')
+      canvas.width = canvasWidth
+      canvas.height = canvasHeight
+      const ctx = canvas.getContext('2d', {alpha: false}) // No alpha for better email compatibility
+      
+      if (!ctx) {
+        URL.revokeObjectURL(svgUrl)
+        throw new Error('Could not get canvas context')
+      }
+      
+      // Fill background with dark color matching email theme
+      ctx.fillStyle = '#0d0e12'
+      ctx.fillRect(0, 0, canvas.width, canvas.height)
+      
+      // Draw the SVG image scaled up
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+      
+      // Clean up
+      URL.revokeObjectURL(svgUrl)
+      
+      // Convert to base64 PNG with high quality
+      const imageData = canvas.toDataURL('image/png', 1.0)
+      // Remove data:image/png;base64, prefix
+      return imageData.split(',')[1]
+    } catch (error) {
+      console.error('Error capturing diagram:', error)
+      return null
+    }
+  }
 
   const handleSubmitQuote = async () => {
+    if (!contact) {
+      setSubmitStatus('error')
+      setErrorMessage('Please provide your email address')
+      return
+    }
+    
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(contact)) {
+      setSubmitStatus('error')
+      setErrorMessage('Please provide a valid email address')
+      return
+    }
+    
+    setIsSubmitting(true)
+    setSubmitStatus('idle')
+    setErrorMessage('')
+    
     try {
+      // Capture diagram as image
+      const diagramImage = await captureDiagramAsImage()
+      
+      // Prepare email data
+      const emailData = {
+        name,
+        contact,
+        zipcode,
+        style,
+        infill,
+        picketStyle,
+        railingEnd,
+        materials: {
+          topRailFeet: materials.topRailFeet,
+          stanchionCount: materials.stanchionCount,
+          picketCount: materials.picketCount,
+          cableFeet: materials.cableFeet,
+          slatFeet: materials.slatFeet,
+        },
+        price: {
+          materials: price.materials,
+          labor: price.labor,
+          install: price.install,
+          total: price.total,
+        },
+        sections,
+        diagramImage: diagramImage || '',
+      }
+      
+      // Send email
+      const response = await fetch('/api/send-quote-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(emailData),
+      })
+      
+      const result = await response.json()
+      
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to send email')
+      }
+      
+      setSubmitStatus('success')
+      
+      // Also generate PDF if user wants
+      // (keeping PDF generation code below)
+      
       // Create PDF using config
       const pdf = new jsPDF(
         PDF_CONFIG.page.orientation,
@@ -344,8 +488,11 @@ export function QuoteSummary({
       // Download PDF
       pdf.save(`railing-quote-${Date.now()}.pdf`)
     } catch (error) {
-      console.error('Error generating PDF:', error)
-      alert(`Failed to generate PDF: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      console.error('Error sending quote:', error)
+      setSubmitStatus('error')
+      setErrorMessage(error instanceof Error ? error.message : 'Failed to send quote. Please try again.')
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -454,16 +601,20 @@ export function QuoteSummary({
           </div>
           <div>
             <label htmlFor="quote-contact" className="block text-xs text-gray-400 mb-1">
-              Phone / Email
+              Email Address <span className="text-red-400">*</span>
             </label>
             <input
               id="quote-contact"
-              type="text"
+              type="email"
               value={contact}
               onChange={(e) => setContact(e.target.value)}
               className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-white text-sm focus:outline-none focus:border-white"
-              placeholder="Enter your phone or email"
+              placeholder="your.email@example.com"
+              required
             />
+            <p className="mt-1 text-xs text-gray-500">
+              We'll send your quote to this email address
+            </p>
           </div>
           <div>
             <label htmlFor="quote-zipcode" className="block text-xs text-gray-400 mb-1">
@@ -481,10 +632,23 @@ export function QuoteSummary({
           <button
             type="button"
             onClick={handleSubmitQuote}
-            className="w-full px-4 py-2 bg-white text-gray-900 font-semibold rounded hover:bg-gray-100 transition-colors"
+            disabled={isSubmitting}
+            className="w-full px-4 py-2 bg-white text-gray-900 font-semibold rounded hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Submit Quote
+            {isSubmitting ? 'Sending...' : 'Submit Quote & Get Email'}
           </button>
+          
+          {submitStatus === 'success' && (
+            <div className="mt-3 p-3 bg-green-900/20 border border-green-700 rounded text-sm text-green-300">
+              ✓ Quote sent successfully! Check your email for details.
+            </div>
+          )}
+          
+          {submitStatus === 'error' && (
+            <div className="mt-3 p-3 bg-red-900/20 border border-red-700 rounded text-sm text-red-300">
+              ✗ {errorMessage || 'Failed to send quote. Please try again.'}
+            </div>
+          )}
         </div>
       </div>
 
