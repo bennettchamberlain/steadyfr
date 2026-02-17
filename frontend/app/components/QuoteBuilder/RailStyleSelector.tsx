@@ -20,26 +20,34 @@ export function RailStyleSelector({value, onChange}: RailStyleSelectorProps) {
         <button
           type="button"
           onClick={() => onChange('victorian')}
-          className={`flex flex-col items-start p-4 rounded-lg border ${
+          className={`flex flex-col items-center p-4 rounded-lg border ${
             value === 'victorian' ? 'border-white bg-gray-800' : 'border-gray-700 bg-gray-900'
           } hover:border-white/70 transition-colors`}
         >
+          <div className="w-16 h-16 mb-2 flex items-center justify-center">
+            <img
+              src="/icons/victorian-rail.svg"
+              alt="Victorian top rail"
+              className="h-full w-auto object-contain filter brightness-0 invert"
+            />
+          </div>
           <span className="text-sm font-semibold text-white">Victorian top rail</span>
-          <span className="text-xs text-gray-400 mt-1">
-            More decorative profile, premium look and feel.
-          </span>
         </button>
         <button
           type="button"
           onClick={() => onChange('rectangle')}
-          className={`flex flex-col items-start p-4 rounded-lg border ${
+          className={`flex flex-col items-center p-4 rounded-lg border ${
             value === 'rectangle' ? 'border-white bg-gray-800' : 'border-gray-700 bg-gray-900'
           } hover:border-white/70 transition-colors`}
         >
+          <div className="w-16 h-16 mb-2 flex items-center justify-center">
+            <img
+              src="/icons/rectangle-rail.svg"
+              alt="Rectangle top rail"
+              className="h-full w-auto object-contain filter brightness-0 invert"
+            />
+          </div>
           <span className="text-sm font-semibold text-white">Rectangle top rail</span>
-          <span className="text-xs text-gray-400 mt-1">
-            Clean, modern profile – great for contemporary spaces.
-          </span>
         </button>
       </div>
     </div>

@@ -1,0 +1,5 @@
+<svg viewBox="0 0 24 408" xmlns="http://www.w3.org/2000/svg">
+  <!-- Victorian ornamental picket: thicker vertical line for accent pickets -->
+  <!-- Matches current appearance: 1.5x thickness for accent pickets -->
+  <line x1="12" y1="0" x2="12" y2="408" stroke="currentColor" stroke-width="3" />
+</svg>

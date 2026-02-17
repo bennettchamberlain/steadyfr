@@ -38,39 +38,39 @@ export function PicketSelector({style, value, onChange}: PicketSelectorProps) {
           </span>
         </button>
 
-        {/* Standard pickets (both styles) */}
-        <button
-          type="button"
-          onClick={() => onChange('pickets')}
-          className={`flex flex-col items-start p-4 rounded-lg border ${
-            value === 'pickets' ? 'border-white bg-gray-800' : 'border-gray-700 bg-gray-900'
-          } hover:border-white/70 transition-colors`}
-        >
-          <span className="text-sm font-semibold text-white">
-            {isVictorian ? 'Victorian pickets' : 'Standard pickets'}
-          </span>
-          <span className="text-xs text-gray-400 mt-1">
-            Vertical metal pickets with approximately 4&quot; spacing.
-          </span>
-        </button>
-
-        {/* Victorian-only: twisted pickets */}
+        {/* Straight pickets (both styles) */}
         {isVictorian && (
           <button
             type="button"
-            onClick={() => onChange('twistedPickets')}
+            onClick={() => onChange('pickets')}
             className={`flex flex-col items-start p-4 rounded-lg border ${
-              value === 'twistedPickets' ? 'border-white bg-gray-800' : 'border-gray-700 bg-gray-900'
+              value === 'pickets' ? 'border-white bg-gray-800' : 'border-gray-700 bg-gray-900'
             } hover:border-white/70 transition-colors`}
           >
-            <span className="text-sm font-semibold text-white">Twisted pickets</span>
+            <span className="text-sm font-semibold text-white">Straight pickets</span>
             <span className="text-xs text-gray-400 mt-1">
-              Decorative twisted verticals for a more detailed look.
+              Vertical metal pickets with approximately 4&quot; spacing.
             </span>
           </button>
         )}
 
-        {/* Victorian-only: extra ornamental pickets */}
+        {/* Standard pickets (Rectangle style) */}
+        {!isVictorian && (
+          <button
+            type="button"
+            onClick={() => onChange('pickets')}
+            className={`flex flex-col items-start p-4 rounded-lg border ${
+              value === 'pickets' ? 'border-white bg-gray-800' : 'border-gray-700 bg-gray-900'
+            } hover:border-white/70 transition-colors`}
+          >
+            <span className="text-sm font-semibold text-white">Standard pickets</span>
+            <span className="text-xs text-gray-400 mt-1">
+              Vertical metal pickets with approximately 4&quot; spacing.
+            </span>
+          </button>
+        )}
+
+        {/* Victorian-only: Victorian pickets */}
         {isVictorian && (
           <button
             type="button"
@@ -81,9 +81,9 @@ export function PicketSelector({style, value, onChange}: PicketSelectorProps) {
                 : 'border-gray-700 bg-gray-900'
             } hover:border-white/70 transition-colors`}
           >
-            <span className="text-sm font-semibold text-white">Extra ornamental pickets</span>
+            <span className="text-sm font-semibold text-white">Victorian pickets</span>
             <span className="text-xs text-gray-400 mt-1">
-              Heavier ornamentation for a very classic, high‑detail look.
+              Endless options, pricing will vary
             </span>
           </button>
         )}
