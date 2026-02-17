@@ -35,6 +35,7 @@ export interface MaterialBreakdown {
 export interface PriceBreakdown {
   materials: number
   labor: number
+  install: number
   total: number
 }
 
@@ -211,6 +212,10 @@ export function calculateMaterials(
   }
 }
 
+export type PicketStyle = 'straight' | 'round' | 'square'
+
+export type RailingEndType = 'straight' | 'foldDown' | 'foldBack' | 'none'
+
 /**
  * Convert material quantities into cost numbers using placeholder pricing.
  */
@@ -218,6 +223,9 @@ export function calculatePrice(
   style: RailStyle,
   infill: InfillType,
   materials: MaterialBreakdown,
+  sections: SectionConfig[],
+  picketStyle?: PicketStyle,
+  railingEnd?: RailingEndType,
 ): PriceBreakdown {
   const railRate = style === 'victorian' ? PRICING.rail.victorian : PRICING.rail.rectangle
   let picketRate = 0
@@ -235,36 +243,70 @@ export function calculatePrice(
         picketRate = PRICING.pickets.victorianStandard
       }
     } else {
-      // Rectangle style uses a single standard picket rate
-      picketRate = PRICING.pickets.rectangleStandard
+      // Rectangle style - use picketStyle to determine rate
+      if (picketStyle === 'round') {
+        picketRate = PRICING.pickets.rectangleRound
+      } else if (picketStyle === 'square') {
+        picketRate = PRICING.pickets.rectangleSquare
+      } else {
+        picketRate = PRICING.pickets.rectangleStraight
+      }
     }
   }
 
   const railCost = materials.topRailFeet * railRate
-  const stanchionCost = materials.stanchionCount * PRICING.stanchion.each
+  const stanchionRate = infill === 'cable' ? PRICING.stanchion.cable : PRICING.stanchion.each
+  const stanchionCost = materials.stanchionCount * stanchionRate
   const picketCost = materials.picketCount * picketRate
   const cableCost = materials.cableFeet * PRICING.cable.perFoot
   const slatCost = materials.slatFeet * PRICING.slats.perFoot
 
-  // Optional per‑additional‑section fees for cable & slats
-  // (this will be non‑zero only when there are multiple sections).
-  const additionalSectionCount = Math.max(0, materials.topRailFeet > 0 ? 0 : 0)
-  // NOTE: For now we leave this at 0 until we wire in explicit section counts
-  // into the pricing model. When you want to use it, swap the line above for
-  // something like: `const additionalSectionCount = Math.max(0, sectionCount - 1)`
+  // Section fees for cable & slats (charged per section)
+  const sectionCount = sections.filter((s) => s.lengthFeet > 0).length
   const cableSectionFees =
-    infill === 'cable' ? additionalSectionCount * PRICING.cable.additionalSectionFee : 0
+    infill === 'cable' ? sectionCount * PRICING.cable.sectionFee : 0
   const slatSectionFees =
-    infill === 'slats' ? additionalSectionCount * PRICING.slats.additionalSectionFee : 0
+    infill === 'slats' ? sectionCount * PRICING.slats.sectionFee : 0
 
   const materialsTotal =
     railCost + stanchionCost + picketCost + cableCost + slatCost + cableSectionFees + slatSectionFees
-  const labor = materialsTotal * PRICING.labor.multiplier
-  const total = materialsTotal + labor
+
+  // Calculate labor based on infill type
+  let labor = 0
+
+  if (usesPickets) {
+    // Pickets: labor per picket + labor per stanchion
+    labor = materials.picketCount * PRICING.labor.pickets.perPicket + materials.stanchionCount * PRICING.labor.pickets.perStanchion
+  } else if (infill === 'cable') {
+    // Cable: labor per stanchion + labor per section
+    labor = materials.stanchionCount * PRICING.labor.cable.perStanchion + sectionCount * PRICING.labor.cable.perSection
+  } else if (infill === 'slats') {
+    // Slats: labor per stanchion + labor per section
+    labor = materials.stanchionCount * PRICING.labor.slats.perStanchion + sectionCount * PRICING.labor.slats.perSection
+  }
+  // If infill is 'none', labor remains 0
+
+  // Add railing end labor cost (applied to both start and end, so multiply by 2)
+  if (railingEnd && railingEnd !== 'none') {
+    const endCost = PRICING.labor.railingEnd[railingEnd]
+    if (endCost) {
+      labor += endCost * 2 // 2 ends (start and end)
+    }
+  }
+
+  // Apply modifiers to materials and labor
+  const materialsWithModifier = materialsTotal * PRICING.materialsModifier
+  const laborWithModifier = labor * PRICING.laborModifier
+
+  // Calculate install cost: base fee + per foot charge
+  const install = PRICING.install.baseFee + materials.topRailFeet * PRICING.install.perFoot
+
+  const total = materialsWithModifier + laborWithModifier + install
 
   return {
-    materials: roundToTwo(materialsTotal),
-    labor: roundToTwo(labor),
+    materials: roundToTwo(materialsWithModifier),
+    labor: roundToTwo(laborWithModifier),
+    install: roundToTwo(install),
     total: roundToTwo(total),
   }
 }

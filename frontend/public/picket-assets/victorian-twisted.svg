@@ -1,0 +1,5 @@
+<svg viewBox="0 0 24 408" xmlns="http://www.w3.org/2000/svg">
+  <!-- Victorian twisted picket: vertical line -->
+  <!-- Matches current appearance: alternating offset is handled in rendering code -->
+  <line x1="12" y1="0" x2="12" y2="408" stroke="currentColor" stroke-width="2" />
+</svg>

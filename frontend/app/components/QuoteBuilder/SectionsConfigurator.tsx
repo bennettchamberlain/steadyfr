@@ -51,7 +51,7 @@ export function SectionsConfigurator({sections, onChange}: SectionsConfiguratorP
 
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-semibold text-white">3. Railing sections</h3>
+      <h3 className="text-lg font-semibold text-white">4. Railing sections</h3>
       <p className="text-sm text-gray-400">
         Start with one section, then add more to wrap around corners or follow stairs. Angled
         sections are calculated at 45°.
