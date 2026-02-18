@@ -16,7 +16,7 @@ export default function Footer() {
             <Link href="/gallery" className="text-gray-400 hover:text-white transition-colors">
               Gallery
             </Link>
-            <Link href="/quote" className="text-gray-400 hover:text-white transition-colors">
+            <Link href="/#quote-widget" className="text-gray-400 hover:text-white transition-colors">
               Get a Quote
             </Link>
             <Link href="/contact" className="text-gray-400 hover:text-white transition-colors">

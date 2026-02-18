@@ -42,7 +42,7 @@ export function DiagramRenderer({
   railingEnd = 'none',
 }: DiagramRendererProps) {
   const {margin} = VISUAL_CONFIG.diagram
-  const slatHeight = VISUAL_CONFIG.slats.baseHeight * VISUAL_CONFIG.slats.heightScale
+  const slatHeight = VISUAL_CONFIG.slats.baseHeight * VISUAL_CONFIG.slats.heightScale * 1.5
   const ANGLE_RAD = (ANGLED_SECTION_DEGREES * Math.PI) / 180
 
   // Helper function to get picket asset path
@@ -655,6 +655,8 @@ export function DiagramRenderer({
 
               // Draw cables between consecutive stanchions in this section
               const cableElements: React.ReactElement[] = []
+              const isFlatSection = Math.abs(g.dy) < 0.001 // Check if section is flat
+              
               for (let idx = 0; idx < sectionStanchions.length - 1; idx++) {
                 const startPosFeet = sectionStanchions[idx]
                 const endPosFeet = sectionStanchions[idx + 1]
@@ -672,11 +674,18 @@ export function DiagramRenderer({
 
                 for (let cableIdx = 0; cableIdx < cableCount; cableIdx++) {
                   const cableYOffset = verticalStepPx * (cableIdx + 1)
-                  const startY = startXY.y + cableYOffset
-                  const endY = endXY.y + cableYOffset
+                  let startY = startXY.y + cableYOffset
+                  let endY = endXY.y + cableYOffset
+
+                  // For flat sections, ensure Y coordinates are EXACTLY equal (Safari fix)
+                  if (isFlatSection) {
+                    // Use the average Y to ensure perfect horizontal lines
+                    const avgY = (startY + endY) / 2
+                    startY = avgY
+                    endY = avgY
+                  }
 
                   // Round coordinates to avoid Safari sub-pixel rendering issues
-                  // For flat sections, ensure Y coordinates are exactly equal for horizontal lines
                   const roundedX1 = Math.round(startXY.x * 100) / 100
                   const roundedY1 = Math.round(startY * 100) / 100
                   const roundedX2 = Math.round(endXY.x * 100) / 100
@@ -690,9 +699,9 @@ export function DiagramRenderer({
                       x2={roundedX2}
                       y2={roundedY2}
                       stroke="#e5e7eb"
-                      strokeWidth={1}
-                      opacity={0.5}
-                      shapeRendering="geometricPrecision"
+                      strokeWidth={1.5}
+                      opacity={1}
+                      shapeRendering="crispEdges"
                       strokeLinecap="round"
                     />,
                   )
@@ -751,7 +760,7 @@ export function DiagramRenderer({
                       width={spanLength}
                       height={slatHeight}
                       fill="currentColor"
-                      opacity={0.5}
+                      opacity={1}
                       rx={2}
                       transform={`rotate(${(angle * 180) / Math.PI} ${startXY.x} ${startY})`}
                     />,

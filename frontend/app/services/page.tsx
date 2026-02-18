@@ -50,8 +50,25 @@ export default function ServicesPage() {
   return (
     <>
       {/* Hero Section */}
-      <section className="relative py-20 bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950">
-        <div className="absolute inset-0 bg-[url('/images/tile-grid-white.png')] bg-size-[17px] opacity-5" />
+      <section 
+        className="relative py-20 flex items-center justify-center"
+        style={{
+          background: 'linear-gradient(to bottom, #163861, #163861, #163861)'
+        }}
+      >
+        <div 
+          className="absolute inset-0 opacity-25"
+          style={{
+            '--grid-color': '#ffffff',
+            backgroundImage: `
+              linear-gradient(to right, var(--grid-color) 2px, transparent 2px),
+              linear-gradient(to bottom, var(--grid-color) 2px, transparent 2px),
+              linear-gradient(to right, var(--grid-color) 3px, transparent 3px),
+              linear-gradient(to bottom, var(--grid-color) 3px, transparent 3px)
+            `,
+            backgroundSize: '25px 25px, 25px 25px, 125px 125px, 125px 125px'
+          } as React.CSSProperties}
+        />
         <div className="container relative z-10 px-4 sm:px-6">
           <div className="max-w-3xl mx-auto text-center">
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-white mb-6 tracking-tight">
@@ -127,7 +144,7 @@ export default function ServicesPage() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
-                href="/quote"
+                href="/#quote-widget"
                 className="inline-flex items-center justify-center px-8 py-4 bg-white text-gray-900 font-semibold rounded-md hover:bg-gray-100 transition-colors text-lg"
               >
                 Get a Quote

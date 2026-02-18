@@ -6,6 +6,7 @@
 // equations like `50 * 1.2` if you prefer instead of hard numbers.
 
 export const PRICING = {
+  // MATERIALS PRICING
   rail: {
     // Top rail price per linear foot
     victorian: 3.45, // $/ft //69 for 20ft
@@ -30,8 +31,8 @@ export const PRICING = {
     sectionFee: 60, // $ per section
   },
   stanchion: {
-    each: 35, // $ each
-    cable: 35+5, // $ each for cable rail stanchions
+    each: 55, // $ each
+    cable: 55+15, // $ each for cable rail stanchions
   },
   labor: {
     // Labor rates by infill type

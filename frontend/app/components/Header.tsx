@@ -33,9 +33,9 @@ export default async function Header() {
                 </Link>
               </li>
               <li>
-                <a href="#quote-widget" className="text-gray-300 hover:text-white transition-colors">
+                <Link href="/#quote-widget" className="text-gray-300 hover:text-white transition-colors">
                   Quote
-                </a>
+                </Link>
               </li>
               <li className="sm:before:w-[1px] sm:before:bg-gray-700 before:block flex sm:gap-4 md:gap-6">
                 <Link
