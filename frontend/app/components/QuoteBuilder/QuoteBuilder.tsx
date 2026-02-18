@@ -39,6 +39,7 @@ export function QuoteBuilder() {
   const [sections, setSections] = useState<SectionConfig[]>([])
   const containerRef = useRef<HTMLDivElement | null>(null)
   const diagramRef = useRef<HTMLDivElement | null>(null)
+  const formContentRef = useRef<HTMLDivElement | null>(null)
   const [isDiagramFixed, setIsDiagramFixed] = useState(false)
   const [scrollY, setScrollY] = useState(0)
   const originalLeftRef = useRef<number | null>(null)
@@ -47,6 +48,7 @@ export function QuoteBuilder() {
   const originalAbsoluteTopRef = useRef<number | null>(null)
   const isDiagramFixedRef = useRef(false)
   const [isMounted, setIsMounted] = useState(false)
+  const resizeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Track client-side mount
   useEffect(() => {
@@ -60,7 +62,77 @@ export function QuoteBuilder() {
     }
   }, [sections.length])
 
-  // Simple threshold-based tracking
+  // Centralized function to recalculate all positions
+  const recalculatePositions = React.useCallback(() => {
+    if (!isMounted || !diagramRef.current || !containerRef.current) return
+
+    const currentScrollY = window.scrollY
+    const topOffset = 100
+    const wasFixed = isDiagramFixedRef.current
+
+    // Use requestAnimationFrame to ensure layout has updated
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (!diagramRef.current || !containerRef.current) return
+
+        // If diagram is fixed, calculate new position without unfixing
+        // We measure the container's position to determine where diagram naturally sits
+        if (wasFixed) {
+          const containerRect = containerRef.current.getBoundingClientRect()
+          const diagramRect = diagramRef.current.getBoundingClientRect()
+          
+          // Calculate where the diagram would naturally be in the grid
+          // The diagram is in the right column, so its natural top matches container top
+          // and its left is offset by the left column width
+          const absoluteTop = containerRect.top + currentScrollY
+          
+          // Update stored positions (preserve current left/width if valid)
+          if (diagramRect.width > 0) {
+            originalLeftRef.current = diagramRect.left
+            originalWidthRef.current = diagramRect.width
+          }
+          originalAbsoluteTopRef.current = absoluteTop
+          
+          // Recalculate threshold based on new natural position
+          scrollThresholdRef.current = absoluteTop - topOffset
+          
+          // Keep it fixed if we're still past the threshold
+          const shouldBeFixed = currentScrollY >= scrollThresholdRef.current
+          if (shouldBeFixed !== isDiagramFixedRef.current) {
+            isDiagramFixedRef.current = shouldBeFixed
+            setIsDiagramFixed(shouldBeFixed)
+          }
+        } else {
+          // Not fixed, can measure normally
+          const diagramRect = diagramRef.current.getBoundingClientRect()
+
+          // Only update if we have valid measurements
+          if (diagramRect.width > 0 && diagramRect.height > 0) {
+            // Calculate absolute positions (viewport position + scroll offset)
+            const absoluteTop = diagramRect.top + currentScrollY
+
+            // Store original positions
+            originalLeftRef.current = diagramRect.left
+            originalWidthRef.current = diagramRect.width
+            originalAbsoluteTopRef.current = absoluteTop
+
+            // Calculate top threshold (when to start fixing)
+            scrollThresholdRef.current = absoluteTop - topOffset
+
+            // Determine if should be fixed (only based on top threshold)
+            const shouldBeFixed =
+              scrollThresholdRef.current !== null &&
+              currentScrollY >= scrollThresholdRef.current
+
+            isDiagramFixedRef.current = shouldBeFixed
+            setIsDiagramFixed(shouldBeFixed)
+          }
+        }
+      })
+    })
+  }, [isMounted])
+
+  // Simple scroll handler - only top threshold
   useEffect(() => {
     if (!isMounted) return
 
@@ -68,93 +140,84 @@ export function QuoteBuilder() {
       if (!diagramRef.current) return
 
       const currentScrollY = window.scrollY
-      const topOffset = 100
 
-      // Capture original positions once
-      if (originalLeftRef.current === null && diagramRef.current) {
-        const rect = diagramRef.current.getBoundingClientRect()
-        originalLeftRef.current = rect.left
-        originalWidthRef.current = rect.width
-        originalAbsoluteTopRef.current = rect.top + currentScrollY
-        scrollThresholdRef.current = currentScrollY + rect.top - topOffset
-      }
-
-      // Update scroll position for position calculation
+      // Update scroll position
       setScrollY(currentScrollY)
 
-      // Simple threshold check - only fix if we have original positions
-      if (scrollThresholdRef.current !== null && originalLeftRef.current !== null && originalAbsoluteTopRef.current !== null) {
-        const shouldBeFixed = currentScrollY >= scrollThresholdRef.current
-        if (shouldBeFixed !== isDiagramFixedRef.current) {
-          isDiagramFixedRef.current = shouldBeFixed
-          setIsDiagramFixed(shouldBeFixed)
-        }
+      // Check if we need to recalculate positions (first time or after resize)
+      if (
+        originalLeftRef.current === null ||
+        scrollThresholdRef.current === null
+      ) {
+        recalculatePositions()
+        return
+      }
+
+      // Check if should be fixed (only based on top threshold)
+      const shouldBeFixed = currentScrollY >= scrollThresholdRef.current
+
+      if (shouldBeFixed !== isDiagramFixedRef.current) {
+        isDiagramFixedRef.current = shouldBeFixed
+        setIsDiagramFixed(shouldBeFixed)
       }
     }
 
+    // Initial calculation
     handleScroll()
-    window.addEventListener('scroll', handleScroll, {passive: true})
-    window.addEventListener('resize', () => {
-      originalLeftRef.current = null
-      originalWidthRef.current = null
-      originalAbsoluteTopRef.current = null
-      scrollThresholdRef.current = null
-      handleScroll()
-    })
 
-    return () => {
-      window.removeEventListener('scroll', handleScroll)
-      window.removeEventListener('resize', handleScroll)
-    }
-  }, [isMounted])
-
-  // Recalculate threshold when diagram content changes (sections affect diagram size)
-  useEffect(() => {
-    if (!isMounted || !diagramRef.current) return
-    
-    // Use requestAnimationFrame to ensure DOM has updated after section changes
-    requestAnimationFrame(() => {
-      if (!diagramRef.current) return
-      
-      const currentScrollY = window.scrollY
-      const topOffset = 100
-      
-      // If diagram is currently fixed, we need to temporarily unfix it to measure original position
-      const wasFixed = isDiagramFixedRef.current
-      if (wasFixed) {
+    // Resize handler - update left/width immediately, debounce full recalculation
+    const handleResize = () => {
+      // Immediately unfix diagram at start of resize to prevent it floating in space
+      if (isDiagramFixedRef.current) {
         isDiagramFixedRef.current = false
         setIsDiagramFixed(false)
       }
-      
-      // Wait for next frame to ensure layout has updated
-      requestAnimationFrame(() => {
-        if (!diagramRef.current) return
-        
-        const rect = diagramRef.current.getBoundingClientRect()
-        
-        // Only update if we have valid measurements
-        if (rect.width > 0 && rect.height > 0) {
-          // Calculate absolute position: viewport position + scroll offset
-          const absoluteTop = rect.top + currentScrollY
-          
-          originalLeftRef.current = rect.left
-          originalWidthRef.current = rect.width
-          originalAbsoluteTopRef.current = absoluteTop
-          // Threshold is when scroll reaches the diagram's absolute top minus the offset
-          scrollThresholdRef.current = absoluteTop - topOffset
-          
-          // Restore fixed state if it should be fixed based on new threshold
-          const shouldBeFixed = currentScrollY >= scrollThresholdRef.current
-          isDiagramFixedRef.current = shouldBeFixed
-          setIsDiagramFixed(shouldBeFixed)
-        } else if (wasFixed) {
-          // Restore fixed state if measurement failed
-          isDiagramFixedRef.current = true
-          setIsDiagramFixed(true)
+
+      // Update left and width immediately for horizontal resize (no lag)
+      if (diagramRef.current) {
+        const diagramRect = diagramRef.current.getBoundingClientRect()
+        if (diagramRect.width > 0) {
+          originalLeftRef.current = diagramRect.left
+          originalWidthRef.current = diagramRect.width
         }
-      })
-    })
-  }, [isMounted, sections])
+      }
+
+      // Clear existing timeout
+      if (resizeTimeoutRef.current) {
+        clearTimeout(resizeTimeoutRef.current)
+      }
+
+      // Reset position refs to trigger full recalculation
+      originalAbsoluteTopRef.current = null
+      scrollThresholdRef.current = null
+
+      // Debounce full recalculation with requestAnimationFrame + timeout
+      resizeTimeoutRef.current = setTimeout(() => {
+        requestAnimationFrame(() => {
+          recalculatePositions()
+          handleScroll()
+        })
+      }, 150)
+    }
+
+    window.addEventListener('scroll', handleScroll, {passive: true})
+    window.addEventListener('resize', handleResize, {passive: true})
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+      window.removeEventListener('resize', handleResize)
+      if (resizeTimeoutRef.current) {
+        clearTimeout(resizeTimeoutRef.current)
+      }
+    }
+  }, [isMounted, recalculatePositions])
+
+  // Recalculate positions when form or diagram content changes
+  // Form size changes with currentStep, sections, and other form state
+  useEffect(() => {
+    if (!isMounted) return
+    recalculatePositions()
+  }, [isMounted, sections, currentStep, style, infill, picketStyle, railingEnd, recalculatePositions])
 
   const materials = useMemo(
     () => calculateMaterials(style, infill, sections),
@@ -177,7 +240,7 @@ export function QuoteBuilder() {
   return (
     <div ref={containerRef} className="grid gap-8 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1.3fr)]">
       {/* Left: Form / Decision tree */}
-      <div>
+      <div ref={formContentRef}>
         <h2 className="text-2xl font-semibold text-white mb-2">
           Build your railing in a minute
         </h2>
@@ -245,7 +308,7 @@ export function QuoteBuilder() {
           isDiagramFixed && 
           isMounted && 
           originalLeftRef.current !== null && 
-          originalAbsoluteTopRef.current !== null
+          originalWidthRef.current !== null
             ? 'md:fixed md:z-30'
             : ''
         }`}
@@ -253,12 +316,16 @@ export function QuoteBuilder() {
           isDiagramFixed && 
           isMounted && 
           originalLeftRef.current !== null && 
-          originalAbsoluteTopRef.current !== null
-            ? {
-                left: `${originalLeftRef.current}px`,
-                top: `${Math.max(100, originalAbsoluteTopRef.current - scrollY)}px`,
-                ...(originalWidthRef.current !== null ? { width: `${originalWidthRef.current}px` } : {}),
-              }
+          originalWidthRef.current !== null
+            ? (() => {
+                const topOffset = 100
+                
+                return {
+                  left: `${originalLeftRef.current}px`,
+                  top: `${topOffset}px`,
+                  width: `${originalWidthRef.current}px`,
+                }
+              })()
             : undefined
         }
       >

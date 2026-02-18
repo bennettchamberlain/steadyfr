@@ -675,16 +675,25 @@ export function DiagramRenderer({
                   const startY = startXY.y + cableYOffset
                   const endY = endXY.y + cableYOffset
 
+                  // Round coordinates to avoid Safari sub-pixel rendering issues
+                  // For flat sections, ensure Y coordinates are exactly equal for horizontal lines
+                  const roundedX1 = Math.round(startXY.x * 100) / 100
+                  const roundedY1 = Math.round(startY * 100) / 100
+                  const roundedX2 = Math.round(endXY.x * 100) / 100
+                  const roundedY2 = Math.round(endY * 100) / 100
+
                   cableElements.push(
                     <line
                       key={`section-${sectionIdx}-cable-${idx}-${cableIdx}`}
-                      x1={startXY.x}
-                      y1={startY}
-                      x2={endXY.x}
-                      y2={endY}
-                      stroke="currentColor"
+                      x1={roundedX1}
+                      y1={roundedY1}
+                      x2={roundedX2}
+                      y2={roundedY2}
+                      stroke="#e5e7eb"
                       strokeWidth={1}
                       opacity={0.5}
+                      shapeRendering="geometricPrecision"
+                      strokeLinecap="round"
                     />,
                   )
                 }

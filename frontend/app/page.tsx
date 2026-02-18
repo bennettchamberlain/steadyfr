@@ -18,25 +18,49 @@ export default async function HomePage() {
   return (
     <>
       {/* Hero Section */}
-      <section className="relative min-h-[80vh] flex items-center justify-center bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950">
-        <div className="absolute inset-0 bg-[url('/images/tile-grid-white.png')] bg-size-[17px] opacity-5" />
+      {/* Change backgroundColor to any hex (#0a0a0a) or rgb (rgb(10, 10, 10)) value, or use gradient */}
+      <section 
+        className="relative min-h-[503px] max-h-[50vh] flex items-center justify-center"
+        style={{
+          background: 'linear-gradient(to bottom, #163861, #163861, #163861)' // Change this to your desired background color/gradient
+        }}
+      >
+        {/* Old background grid - commented out */}
+        {/* <div className="absolute inset-0 bg-[url('/images/tile-grid-white.png')] bg-size-[17px] opacity-5" /> */}
+        {/* Graph paper pattern: 25px boxes, 2px small lines, 3px thick lines every 5 boxes (125px) */}
+        {/* Change gridColor to any hex (#ffffff) or rgb (rgb(255, 255, 255)) value */}
+        <div 
+          className="absolute inset-0 opacity-25"
+          style={{
+            '--grid-color': '#ffffff', // Change this to your desired color (hex or rgb)
+            backgroundImage: `
+              linear-gradient(to right, var(--grid-color) 2px, transparent 2px),
+              linear-gradient(to bottom, var(--grid-color) 2px, transparent 2px),
+              linear-gradient(to right, var(--grid-color) 3px, transparent 3px),
+              linear-gradient(to bottom, var(--grid-color) 3px, transparent 3px)
+            `,
+            backgroundSize: '25px 25px, 25px 25px, 125px 125px, 125px 125px'
+          } as React.CSSProperties}
+        />
         <div className="container relative z-10 py-20 px-4 sm:px-6">
           <div className="max-w-4xl mx-auto text-center">
             <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-6 tracking-tight">
-              Get a quote in a minute
+              <a href="#quote-widget" className="text-white-300 cursor-pointer hover:opacity-90 transition-opacity">
+                Get a quote in a minute
+              </a>
               <br />
               <span className="text-gray-300">and a railing in a week</span>
             </h1>
-            <p className="text-xl sm:text-2xl text-gray-400 mb-8 font-light">
+            <p className="text-xl sm:text-2xl text-gray-400 mb-8 font-medium">
               The shortest lead time in the San Francisco Bay Area
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link
-                href="/quote"
+              <a
+                href="#quote-widget"
                 className="inline-flex items-center justify-center px-8 py-4 bg-white text-gray-900 font-semibold rounded-md hover:bg-gray-100 transition-colors text-lg"
               >
                 Get a Quote
-              </Link>
+              </a>
               <Link
                 href="/gallery"
                 className="inline-flex items-center justify-center px-8 py-4 bg-gray-800 text-white font-semibold rounded-md hover:bg-gray-700 transition-colors text-lg border border-gray-700"
@@ -49,7 +73,7 @@ export default async function HomePage() {
       </section>
 
       {/* Quote Widget Section */}
-      <section className="py-16 bg-gray-900 border-y border-gray-800">
+      <section id="quote-widget" className="py-16 bg-gray-900 border-y border-gray-800 scroll-mt-20">
         <div className="container px-4 sm:px-6">
           <div className="max-w-4xl mx-auto">
             <div className="bg-gray-800 rounded-lg p-6 sm:p-8 border border-gray-700">
