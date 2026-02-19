@@ -227,24 +227,36 @@ export function QuoteBuilder() {
       // Use requestAnimationFrame to ensure DOM has updated
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
-          // On mobile, scroll to the mobile version (in right column)
-          // On desktop, scroll to the desktop version (in left column)
-          // Check which one is visible and scroll to it
-          const mobileElement = quoteSummaryMobileRef.current
-          const desktopElement = quoteSummaryDesktopRef.current
-          
-          // Check if we're on mobile (window width < 1024px, which is lg breakpoint)
-          const isMobile = window.innerWidth < 1024
-          
-          const targetElement = isMobile ? mobileElement : desktopElement
-          
-          if (targetElement) {
-            const elementTop = targetElement.getBoundingClientRect().top + window.scrollY
-            const offset = 100 // Offset from top of viewport
-            window.scrollTo({
-              top: elementTop - offset,
-              behavior: 'smooth',
-            })
+          try {
+            // On mobile, scroll to the mobile version (in right column)
+            // On desktop, scroll to the desktop version (in left column)
+            // Check which one is visible and scroll to it
+            const mobileElement = quoteSummaryMobileRef.current
+            const desktopElement = quoteSummaryDesktopRef.current
+            
+            // Check if we're on mobile (window width < 1024px, which is lg breakpoint)
+            const isMobile = window.innerWidth < 1024
+            
+            const targetElement = isMobile ? mobileElement : desktopElement
+            
+            if (targetElement) {
+              const elementTop = targetElement.getBoundingClientRect().top + window.scrollY
+              const offset = 100 // Offset from top of viewport
+              
+              // Try smooth scroll, fallback to instant if it fails
+              try {
+                window.scrollTo({
+                  top: elementTop - offset,
+                  behavior: 'smooth',
+                })
+              } catch (scrollError) {
+                // Fallback to instant scroll if smooth scroll fails (e.g., due to extensions)
+                window.scrollTo(0, elementTop - offset)
+              }
+            }
+          } catch (error) {
+            // Silently handle any errors (likely from browser extensions)
+            // This prevents console noise from extension-related errors
           }
         })
       })
@@ -277,7 +289,7 @@ export function QuoteBuilder() {
           Build your railing in a minute
         </h2>
         <p className="text-sm text-gray-400 mb-6">
-          Answer a few quick questions to see layout, materials, and an instant ballpark price.
+          5 easy steps to get your estimate in an instant!
         </p>
 
         <div className="space-y-8">
@@ -386,7 +398,7 @@ export function QuoteBuilder() {
           </div>
         )}
 
-        <div className="bg-gray-900 border border-gray-800 rounded-lg p-4 space-y-2">
+        <div className="bg-gray-900 border border-gray-800 rounded-lg p-4 space-y-4">
           <div className="flex items-baseline justify-between">
             <div>
               <div className="text-xs uppercase tracking-wide text-gray-400">
@@ -405,21 +417,20 @@ export function QuoteBuilder() {
           <p className="text-[11px] text-gray-500">
             Update the length and options on the left to see the price change in real time.
           </p>
-        </div>
-
-        <div className="bg-gray-900 border border-gray-800 rounded-lg p-4 space-y-2">
-          <p className="text-sm text-white">
-            Want something more tailored to you?
-          </p>
-          <p className="text-xs text-gray-400">
-            Email us at{' '}
-            <a
-              href="mailto:sales@steadyfnr.com"
-              className="text-white hover:underline"
-            >
-              sales@steadyfnr.com
-            </a>
-          </p>
+          <div className="pt-2 border-t border-gray-800">
+            <p className="text-sm text-white">
+              Want something more tailored to you?
+            </p>
+            <p className="text-xs text-gray-400 mt-1">
+              Email us at{' '}
+              <a
+                href="mailto:sales@steadyfnr.com"
+                className="text-white hover:underline"
+              >
+                sales@steadyfnr.com
+              </a>
+            </p>
+          </div>
         </div>
       </div>
     </div>

@@ -20,7 +20,7 @@ export function PicketSelector({style, value, onChange}: PicketSelectorProps) {
     <div className="space-y-4">
       <h3 className="text-lg font-semibold text-white">2. Choose your infill</h3>
       <p className="text-sm text-gray-400">
-        This controls what fills the space between stanchions – pickets, cables, slats, or open.
+        The material that fills the open space between stanchions.
       </p>
 
       <div className="grid grid-cols-2 gap-4">
@@ -32,9 +32,9 @@ export function PicketSelector({style, value, onChange}: PicketSelectorProps) {
             value === 'none' ? 'border-white bg-gray-800' : 'border-gray-700 bg-gray-900'
           } hover:border-white/70 transition-colors`}
         >
-          <span className="text-sm font-semibold text-white">No pickets / infill</span>
+          <span className="text-sm font-semibold text-white">No infill</span>
           <span className="text-xs text-gray-400 mt-1">
-            Just the top rail and stanchions (often used with glass or open views).
+            Often used for wall mounted railings or ledges without a drop greater than 30&quot;.
           </span>
         </button>
 
@@ -65,7 +65,7 @@ export function PicketSelector({style, value, onChange}: PicketSelectorProps) {
           >
             <span className="text-sm font-semibold text-white">Standard pickets</span>
             <span className="text-xs text-gray-400 mt-1">
-              Vertical metal pickets with approximately 4&quot; spacing.
+              Pickets spaced by 3.5&quot;.
             </span>
           </button>
         )}
@@ -99,7 +99,7 @@ export function PicketSelector({style, value, onChange}: PicketSelectorProps) {
           >
             <span className="text-sm font-semibold text-white">Cable rail</span>
             <span className="text-xs text-gray-400 mt-1">
-              Horizontal stainless cables for a light, open feel.
+              10 rows of cable spaced by 3.5&quot; vertically.
             </span>
           </button>
         )}
@@ -115,7 +115,7 @@ export function PicketSelector({style, value, onChange}: PicketSelectorProps) {
           >
             <span className="text-sm font-semibold text-white">Horizontal slats</span>
             <span className="text-xs text-gray-400 mt-1">
-              Tight horizontal slats for privacy and a modern look.
+              Tightly spaced rectangular tubing spanning horizontally between stanchions.
             </span>
           </button>
         )}

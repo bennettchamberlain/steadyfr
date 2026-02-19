@@ -18,9 +18,6 @@ export function RailingEndSelector({style, value, onChange}: RailingEndSelectorP
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-semibold text-white">3. Choose your railing ends</h3>
-      <p className="text-sm text-gray-400">
-        Select how the railing ends at the first and last stanchions.
-      </p>
       <div className="grid grid-cols-2 gap-4">
         {/* Straight – shared */}
         <button

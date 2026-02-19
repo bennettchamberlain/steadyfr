@@ -479,7 +479,7 @@ export function QuoteSummary({
         PDF_CONFIG.colors.textSecondary.b,
       )
       pdf.text(
-        'This is a preliminary estimate based on typical conditions. Final pricing may vary with site access, mounting conditions, and design details.',
+        'This estimate assumes ideal conditions and accurate details. Pricing and lead times may vary based on site conditions, location, weather, or unforeseen circumstances.',
         margin,
         footerY,
         {maxWidth: pageWidth - 2 * margin},
@@ -500,8 +500,7 @@ export function QuoteSummary({
     <div className="space-y-4">
       <h3 className="text-lg font-semibold text-white">5. Quote summary</h3>
       <p className="text-sm text-gray-400">
-        This is an instant ballpark quote based on a single straight section. We&apos;ll confirm all
-        details during your site visit.
+        This instant estimate is based on the details provided. All measurements will be confirmed during your on-site visit.
       </p>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -577,8 +576,7 @@ export function QuoteSummary({
           </div>
         </div>
         <p className="mt-2 text-[11px] text-gray-500">
-          This is a preliminary estimate based on typical conditions. Final pricing may vary with
-          site access, mounting conditions, and design details.
+          This estimate assumes ideal conditions and accurate details. Pricing and lead times may vary based on site conditions, location, weather, or unforeseen circumstances.
         </p>
       </div>
 

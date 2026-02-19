@@ -13,9 +13,6 @@ export function RailStyleSelector({value, onChange}: RailStyleSelectorProps) {
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-semibold text-white">1. Choose your rail style</h3>
-      <p className="text-sm text-gray-400">
-        This controls the look of the top rail and the base pricing.
-      </p>
       <div className="grid grid-cols-2 gap-4">
         <button
           type="button"
