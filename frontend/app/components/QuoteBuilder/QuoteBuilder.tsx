@@ -414,9 +414,6 @@ export function QuoteBuilder() {
               <div>Install: ${price.install.toFixed(0)}</div>
             </div>
           </div>
-          <p className="text-[11px] text-gray-500">
-            Update the length and options on the left to see the price change in real time.
-          </p>
           <div className="pt-2 border-t border-gray-800">
             <p className="text-sm text-white">
               Want something more tailored to you?
