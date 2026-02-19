@@ -40,6 +40,8 @@ export function QuoteBuilder() {
   const containerRef = useRef<HTMLDivElement | null>(null)
   const diagramRef = useRef<HTMLDivElement | null>(null)
   const formContentRef = useRef<HTMLDivElement | null>(null)
+  const quoteSummaryDesktopRef = useRef<HTMLDivElement | null>(null)
+  const quoteSummaryMobileRef = useRef<HTMLDivElement | null>(null)
   const [isDiagramFixed, setIsDiagramFixed] = useState(false)
   const [scrollY, setScrollY] = useState(0)
   const originalLeftRef = useRef<number | null>(null)
@@ -219,6 +221,36 @@ export function QuoteBuilder() {
     recalculatePositions()
   }, [isMounted, sections, currentStep, style, infill, picketStyle, railingEnd, recalculatePositions])
 
+  // Auto-scroll to quote summary when step 5 is reached
+  useEffect(() => {
+    if (currentStep === 5 && isMounted) {
+      // Use requestAnimationFrame to ensure DOM has updated
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          // On mobile, scroll to the mobile version (in right column)
+          // On desktop, scroll to the desktop version (in left column)
+          // Check which one is visible and scroll to it
+          const mobileElement = quoteSummaryMobileRef.current
+          const desktopElement = quoteSummaryDesktopRef.current
+          
+          // Check if we're on mobile (window width < 1024px, which is lg breakpoint)
+          const isMobile = window.innerWidth < 1024
+          
+          const targetElement = isMobile ? mobileElement : desktopElement
+          
+          if (targetElement) {
+            const elementTop = targetElement.getBoundingClientRect().top + window.scrollY
+            const offset = 100 // Offset from top of viewport
+            window.scrollTo({
+              top: elementTop - offset,
+              behavior: 'smooth',
+            })
+          }
+        })
+      })
+    }
+  }, [currentStep, isMounted])
+
   const materials = useMemo(
     () => calculateMaterials(style, infill, sections),
     [style, infill, sections],
@@ -280,7 +312,7 @@ export function QuoteBuilder() {
           )}
 
           {currentStep >= 5 && (
-            <div>
+            <div ref={quoteSummaryDesktopRef} className="hidden lg:block">
               <QuoteSummary
                 style={style}
                 infill={infill}
@@ -338,6 +370,20 @@ export function QuoteBuilder() {
             sections={sections}
             railingEnd={railingEnd}
           />
+        )}
+
+        {currentStep >= 5 && (
+          <div ref={quoteSummaryMobileRef} className="lg:hidden">
+            <QuoteSummary
+              style={style}
+              infill={infill}
+              materials={materials}
+              price={price}
+              sections={sections}
+              picketStyle={picketStyle}
+              railingEnd={railingEnd}
+            />
+          </div>
         )}
 
         <div className="bg-gray-900 border border-gray-800 rounded-lg p-4 space-y-2">

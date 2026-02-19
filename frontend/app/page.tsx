@@ -49,9 +49,9 @@ export default async function HomePage() {
                 Get a quote in a minute
               </a>
               <br />
-              <span className="text-gray-300">and a railing in a week</span>
+              <span className="text-gray-200">and a railing in a week</span>
             </h1>
-            <p className="text-xl sm:text-2xl text-gray-400 mb-8 font-medium">
+            <p className="text-xl sm:text-2xl text-gray-300 mb-8 font-medium">
               The shortest lead time in the San Francisco Bay Area
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">

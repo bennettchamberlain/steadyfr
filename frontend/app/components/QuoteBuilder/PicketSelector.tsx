@@ -23,7 +23,7 @@ export function PicketSelector({style, value, onChange}: PicketSelectorProps) {
         This controls what fills the space between stanchions – pickets, cables, slats, or open.
       </p>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-4">
         {/* Shared "no infill" option */}
         <button
           type="button"

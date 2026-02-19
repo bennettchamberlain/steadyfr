@@ -82,7 +82,7 @@ export const PICKET_WIDTHS = {
   // Victorian picket styles
   victorianStandard: 0.5,
   victorianTwisted: 0.5,
-  victorianOrnamental: 0.5,
+  victorianOrnamental: 1.8,
 } as const
 
 // Default picket spacing in inches (on-center)

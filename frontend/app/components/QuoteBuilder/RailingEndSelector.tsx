@@ -21,7 +21,7 @@ export function RailingEndSelector({style, value, onChange}: RailingEndSelectorP
       <p className="text-sm text-gray-400">
         Select how the railing ends at the first and last stanchions.
       </p>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-4">
         {/* Straight – shared */}
         <button
           type="button"

@@ -78,17 +78,29 @@ export function DiagramRenderer({
   // Check if Victorian style (needed for thickness adjustments)
   const isVictorian = style === 'victorian'
   
+  // Minimum stroke width to prevent lines from disappearing when zoomed out on mobile
+  const MIN_STROKE_WIDTH_PX = 1.5
+  
   // Line thicknesses based on requested dimensions
   const baseTopRailThickness = Math.max(inchesToPx(1.5), 2)
   const baseStanchionThickness = Math.max(inchesToPx(STANCHION_WIDTH_INCHES), 2)
   const baseBottomRailThickness = 2
   
   // Adjust thicknesses for Victorian style
-  const TOP_RAIL_THICKNESS_PX = isVictorian ? baseTopRailThickness * 0.7 : baseTopRailThickness
-  const STANCHION_THICKNESS_PX = isVictorian ? baseStanchionThickness * 0.7 : baseStanchionThickness
-  const BOTTOM_RAIL_THICKNESS_PX = isVictorian ? baseBottomRailThickness * 1.3 : baseBottomRailThickness
+  const TOP_RAIL_THICKNESS_PX = Math.max(
+    isVictorian ? baseTopRailThickness * 0.7 : baseTopRailThickness,
+    MIN_STROKE_WIDTH_PX
+  )
+  const STANCHION_THICKNESS_PX = Math.max(
+    isVictorian ? baseStanchionThickness * 0.7 : baseStanchionThickness,
+    MIN_STROKE_WIDTH_PX
+  )
+  const BOTTOM_RAIL_THICKNESS_PX = Math.max(
+    isVictorian ? baseBottomRailThickness * 1.3 : baseBottomRailThickness,
+    MIN_STROKE_WIDTH_PX
+  )
   
-  const PICKET_THICKNESS_PX = Math.max(inchesToPx(0.5), 1)
+  const PICKET_THICKNESS_PX = Math.max(inchesToPx(0.5), MIN_STROKE_WIDTH_PX)
 
   // Get picket width from constants based on style and picket type
   const getPicketWidthInches = (): number => {
@@ -345,7 +357,7 @@ export function DiagramRenderer({
                       x2={x2}
                       y2={y2 - 4}
                       stroke="currentColor"
-                      strokeWidth={2}
+                      strokeWidth={Math.max(2, MIN_STROKE_WIDTH_PX)}
                       opacity={0.6}
                     />
                     <line
@@ -354,7 +366,7 @@ export function DiagramRenderer({
                       x2={x2}
                       y2={y2 + 4}
                       stroke="currentColor"
-                      strokeWidth={2}
+                      strokeWidth={Math.max(2, MIN_STROKE_WIDTH_PX)}
                       opacity={0.6}
                     />
                   </>
@@ -699,7 +711,7 @@ export function DiagramRenderer({
                       x2={roundedX2}
                       y2={roundedY2}
                       stroke="#e5e7eb"
-                      strokeWidth={1.5}
+                      strokeWidth={Math.max(1.5, MIN_STROKE_WIDTH_PX)}
                       opacity={1}
                       shapeRendering="crispEdges"
                       strokeLinecap="round"
@@ -779,7 +791,7 @@ export function DiagramRenderer({
           x2={viewBoxWidth - margin + 10}
           y2={viewBoxHeight - 10}
           stroke="currentColor"
-          strokeWidth={1}
+          strokeWidth={Math.max(1, MIN_STROKE_WIDTH_PX)}
           opacity={0.25}
           strokeDasharray="4 4"
         />

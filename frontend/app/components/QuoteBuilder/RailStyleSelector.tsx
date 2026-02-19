@@ -16,7 +16,7 @@ export function RailStyleSelector({value, onChange}: RailStyleSelectorProps) {
       <p className="text-sm text-gray-400">
         This controls the look of the top rail and the base pricing.
       </p>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-4">
         <button
           type="button"
           onClick={() => onChange('victorian')}
