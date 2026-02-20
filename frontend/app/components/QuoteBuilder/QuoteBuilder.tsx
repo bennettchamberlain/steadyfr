@@ -285,12 +285,14 @@ export function QuoteBuilder() {
     <div ref={containerRef} className="grid gap-8 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1.3fr)]">
       {/* Left: Form / Decision tree */}
       <div ref={formContentRef}>
-        <h2 className="text-2xl font-semibold text-white mb-2">
-          Build your railing in a minute
-        </h2>
-        <p className="text-sm text-gray-400 mb-6">
-          5 easy steps to get your estimate in an instant!
-        </p>
+        <div>
+          <h2 className="text-2xl font-semibold text-white mb-0">
+            Build your railing in a minute
+          </h2>
+          <p className="text-sm text-gray-400 mb-6 mt-0">
+            5 easy steps to get your estimate in an instant!
+          </p>
+        </div>
 
         <div className="space-y-8">
           {currentStep >= 1 && (
@@ -348,7 +350,7 @@ export function QuoteBuilder() {
       {/* Right: Live diagram + quick totals */}
       <div
         ref={diagramRef}
-        className={`space-y-4 ${
+        className={`space-y-2 ${
           isDiagramFixed && 
           isMounted && 
           originalLeftRef.current !== null && 
@@ -398,7 +400,7 @@ export function QuoteBuilder() {
           </div>
         )}
 
-        <div className="bg-gray-900 border border-gray-800 rounded-lg p-4 space-y-4">
+        <div className="bg-gray-900 border border-gray-800 rounded-lg p-4 space-y-2">
           <div className="flex items-baseline justify-between">
             <div>
               <div className="text-xs uppercase tracking-wide text-gray-400">
@@ -414,7 +416,7 @@ export function QuoteBuilder() {
               <div>Install: ${price.install.toFixed(0)}</div>
             </div>
           </div>
-          <div className="pt-2 border-t border-gray-800">
+          <div className="pt-1 border-t border-gray-800">
             <p className="text-sm text-white">
               Want something more tailored to you?
             </p>

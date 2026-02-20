@@ -498,10 +498,12 @@ export function QuoteSummary({
 
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-semibold text-white">5. Quote summary</h3>
-      <p className="text-sm text-gray-400">
-        This instant estimate is based on the details provided. All measurements will be confirmed during your on-site visit.
-      </p>
+      <div>
+        <h3 className="text-lg font-semibold text-white">5. Quote summary</h3>
+        <p className="text-sm text-gray-400 mt-0">
+          This instant estimate is based on the details provided. All measurements will be confirmed during your on-site visit.
+        </p>
+      </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="bg-gray-900 rounded-lg border border-gray-800 p-4 space-y-2">

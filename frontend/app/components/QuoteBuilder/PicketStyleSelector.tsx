@@ -14,15 +14,12 @@ export function PicketStyleSelector({value, onChange}: PicketStyleSelectorProps)
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-semibold text-white">Choose your picket style</h3>
-      <p className="text-sm text-gray-400">
-        Select the shape of your pickets.
-      </p>
 
       <div className="grid grid-cols-3 gap-4">
         <button
           type="button"
           onClick={() => onChange('straight')}
-          className={`flex flex-col items-center p-4 rounded-lg border ${
+          className={`flex flex-col items-center p-2.5 rounded-lg border ${
             value === 'straight' ? 'border-white bg-gray-800' : 'border-gray-700 bg-gray-900'
           } hover:border-white/70 transition-colors`}
         >
@@ -39,7 +36,7 @@ export function PicketStyleSelector({value, onChange}: PicketStyleSelectorProps)
         <button
           type="button"
           onClick={() => onChange('round')}
-          className={`flex flex-col items-center p-4 rounded-lg border ${
+          className={`flex flex-col items-center p-2.5 rounded-lg border ${
             value === 'round' ? 'border-white bg-gray-800' : 'border-gray-700 bg-gray-900'
           } hover:border-white/70 transition-colors`}
         >
@@ -56,7 +53,7 @@ export function PicketStyleSelector({value, onChange}: PicketStyleSelectorProps)
         <button
           type="button"
           onClick={() => onChange('square')}
-          className={`flex flex-col items-center p-4 rounded-lg border ${
+          className={`flex flex-col items-center p-2.5 rounded-lg border ${
             value === 'square' ? 'border-white bg-gray-800' : 'border-gray-700 bg-gray-900'
           } hover:border-white/70 transition-colors`}
         >

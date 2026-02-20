@@ -51,10 +51,12 @@ export function SectionsConfigurator({sections, onChange}: SectionsConfiguratorP
 
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-semibold text-white">4. Railing sections</h3>
-      <p className="text-sm text-gray-400">
-        Outline your railing dimensions by adjusting the length, angle, and adding sections.
-      </p>
+      <div>
+        <h3 className="text-lg font-semibold text-white">4. Railing sections</h3>
+        <p className="text-sm text-gray-400 mt-0">
+          Outline your railing dimensions by adjusting the length, angle, and adding sections.
+        </p>
+      </div>
 
       <div className="space-y-3">
         {sections.map((section, index) => (
