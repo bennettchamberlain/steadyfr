@@ -12,7 +12,7 @@ export default async function Header() {
       <div className="container py-4 px-4 sm:px-6 w-full">
         <div className="flex items-center justify-between gap-5">
           <Link className="flex items-center gap-2" href="/">
-            <span className="text-xl sm:text-2xl font-bold text-white tracking-tight">
+            <span className="text-xl sm:text-2xl font-bold text-white tracking-tight leading-[1.11]">
               {settings?.title || 'Steady Fence & Railing'}
             </span>
           </Link>

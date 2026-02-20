@@ -401,7 +401,7 @@ export function QuoteBuilder() {
         )}
 
         <div className="bg-gray-900 border border-gray-800 rounded-lg p-4 space-y-2">
-          <div className="flex items-baseline justify-between">
+          <div className={`flex items-baseline justify-between ${currentStep >= 5 ? 'hidden sm:flex' : ''}`}>
             <div>
               <div className="text-xs uppercase tracking-wide text-gray-400">
                 Running total (est.)
@@ -416,7 +416,7 @@ export function QuoteBuilder() {
               <div>Install: ${price.install.toFixed(0)}</div>
             </div>
           </div>
-          <div className="pt-1 border-t border-gray-800">
+          <div className={`pt-1 ${currentStep >= 5 ? 'border-t-0 sm:border-t' : 'border-t'} border-gray-800`}>
             <p className="text-sm text-white">
               Want something more tailored to you?
             </p>

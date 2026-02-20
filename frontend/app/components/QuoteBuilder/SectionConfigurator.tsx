@@ -26,9 +26,11 @@ export function SectionConfigurator({section, onChange}: SectionConfiguratorProp
       </p>
 
       <div className="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_auto] gap-3 items-end">
-        <label className="flex flex-col gap-2">
+        <label htmlFor="single-section-length" className="flex flex-col gap-2">
           <span className="text-xs font-medium text-gray-300">Section length</span>
           <input
+            id="single-section-length"
+            name="single-section-length"
             type="number"
             min={0}
             step={0.5}

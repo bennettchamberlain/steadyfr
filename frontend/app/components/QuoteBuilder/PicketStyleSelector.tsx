@@ -24,11 +24,15 @@ export function PicketStyleSelector({value, onChange}: PicketStyleSelectorProps)
           } hover:border-white/70 transition-colors`}
         >
           <div className="w-16 h-16 flex items-center justify-center">
-            <img
-              src="/picket-assets/straight.svg"
-              alt="Straight picket"
-              className="h-full w-auto object-contain filter brightness-0 invert"
-            />
+            {/* Straight picket SVG is extremely narrow (36x2448), so we render it inline with explicit width to ensure visibility on mobile */}
+            <svg
+              viewBox="0 0 36 2448"
+              className="h-full w-auto filter brightness-0 invert"
+              style={{ minWidth: '4px' }}
+              aria-label="Straight picket"
+            >
+              <rect x="0" y="0" width="36" height="2448" fill="currentColor" />
+            </svg>
           </div>
           <span className="text-sm font-semibold text-white mt-2">Straight</span>
         </button>

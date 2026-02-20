@@ -81,11 +81,13 @@ export function SectionsConfigurator({sections, onChange}: SectionsConfiguratorP
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-3">
-                <label className="flex flex-col gap-1">
+                <label htmlFor={`section-length-${section.id}`} className="flex flex-col gap-1">
                   <span className="text-[11px] font-medium text-gray-300">
                     Length (feet)
                   </span>
                   <input
+                    id={`section-length-${section.id}`}
+                    name={`section-length-${section.id}`}
                     type="number"
                     min={0}
                     step={0.5}
@@ -95,9 +97,11 @@ export function SectionsConfigurator({sections, onChange}: SectionsConfiguratorP
                   />
                 </label>
 
-                <label className="flex flex-col gap-1">
+                <label htmlFor={`section-type-${section.id}`} className="flex flex-col gap-1">
                   <span className="text-[11px] font-medium text-gray-300">Type</span>
                   <select
+                    id={`section-type-${section.id}`}
+                    name={`section-type-${section.id}`}
                     value={section.type}
                     onChange={(e) =>
                       handleTypeChange(section.id, e.target.value as SectionConfig['type'])

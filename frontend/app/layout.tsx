@@ -71,7 +71,7 @@ export default async function RootLayout({children}: {children: React.ReactNode}
 
   return (
     <html lang="en" className={`${inter.variable} ${ibmPlexMono.variable} bg-gray-950 text-white`} style={{scrollBehavior: 'smooth'}}>
-      <body className="bg-gray-950 text-white">
+      <body className="bg-gray-950 text-white" suppressHydrationWarning>
         {/* The <Toaster> component is responsible for rendering toast notifications used in /app/client-utils.ts and /app/components/DraftModeToast.tsx */}
         <Toaster />
         {isDraftMode && (

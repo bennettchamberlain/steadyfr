@@ -592,7 +592,9 @@ export function QuoteSummary({
             </label>
             <input
               id="quote-name"
+              name="quote-name"
               type="text"
+              autoComplete="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-white text-sm focus:outline-none focus:border-white"
@@ -605,7 +607,9 @@ export function QuoteSummary({
             </label>
             <input
               id="quote-contact"
+              name="quote-contact"
               type="email"
+              autoComplete="email"
               value={contact}
               onChange={(e) => setContact(e.target.value)}
               className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-white text-sm focus:outline-none focus:border-white"
@@ -622,7 +626,9 @@ export function QuoteSummary({
             </label>
             <input
               id="quote-zipcode"
+              name="quote-zipcode"
               type="text"
+              autoComplete="postal-code"
               value={zipcode}
               onChange={(e) => setZipcode(e.target.value)}
               className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-white text-sm focus:outline-none focus:border-white"
@@ -652,142 +658,6 @@ export function QuoteSummary({
         </div>
       </div>
 
-      {/* Temporary detailed calculation breakdown */}
-      <div className="bg-gray-900 rounded-lg border border-gray-800 p-4">
-        <h4 className="text-sm font-semibold text-white mb-3">Calculation Breakdown (Temporary)</h4>
-        <div className="text-xs text-gray-300 space-y-2 font-mono">
-          {(() => {
-            const railRate = style === 'victorian' ? PRICING.rail.victorian : PRICING.rail.rectangle
-            const railCost = materials.topRailFeet * railRate
-            const stanchionCost = materials.stanchionCount * PRICING.stanchion.each
-
-            let picketRate = 0
-            const usesPickets =
-              infill === 'pickets' || infill === 'twistedPickets' || infill === 'ornamentalPickets'
-
-            if (usesPickets) {
-              if (style === 'victorian') {
-                if (infill === 'twistedPickets') {
-                  picketRate = PRICING.pickets.victorianTwisted
-                } else if (infill === 'ornamentalPickets') {
-                  picketRate = PRICING.pickets.victorianOrnamental
-                } else {
-                  picketRate = PRICING.pickets.victorianStandard
-                }
-              } else {
-                if (picketStyle === 'round') {
-                  picketRate = PRICING.pickets.rectangleRound
-                } else if (picketStyle === 'square') {
-                  picketRate = PRICING.pickets.rectangleSquare
-                } else {
-                  picketRate = PRICING.pickets.rectangleStraight
-                }
-              }
-            }
-
-            const picketCost = materials.picketCount * picketRate
-            const cableCost = materials.cableFeet * PRICING.cable.perFoot
-            const slatCost = materials.slatFeet * PRICING.slats.perFoot
-            const sectionCount = sections.filter((s) => s.lengthFeet > 0).length
-            const cableSectionFees =
-              infill === 'cable' ? sectionCount * PRICING.cable.sectionFee : 0
-            const slatSectionFees =
-              infill === 'slats' ? sectionCount * PRICING.slats.sectionFee : 0
-
-            return (
-              <>
-                <div>Top Rail: {materials.topRailFeet.toFixed(1)} ft × ${railRate}/ft = ${railCost.toFixed(2)}</div>
-                <div>
-                  Stanchions: {materials.stanchionCount} × ${PRICING.stanchion.each} = ${stanchionCost.toFixed(2)}
-                </div>
-                {materials.picketCount > 0 && (
-                  <div>
-                    Pickets: {materials.picketCount} × ${picketRate} = ${picketCost.toFixed(2)}
-                  </div>
-                )}
-                {materials.cableFeet > 0 && (
-                  <>
-                    <div>
-                      Cable: {materials.cableFeet.toFixed(1)} ft × ${PRICING.cable.perFoot}/ft = ${cableCost.toFixed(2)}
-                    </div>
-                    <div>
-                      Cable Sections: {sectionCount} × ${PRICING.cable.sectionFee} = ${cableSectionFees.toFixed(2)}
-                    </div>
-                  </>
-                )}
-                {materials.slatFeet > 0 && (
-                  <>
-                    <div>
-                      Slats: {materials.slatFeet.toFixed(1)} ft × ${PRICING.slats.perFoot}/ft = ${slatCost.toFixed(2)}
-                    </div>
-                    <div>
-                      Slat Sections: {sectionCount} × ${PRICING.slats.sectionFee} = ${slatSectionFees.toFixed(2)}
-                    </div>
-                  </>
-                )}
-                <div className="pt-2 border-t border-gray-700">
-                  <div>Materials Subtotal: ${price.materials.toFixed(2)}</div>
-                  <div className="mt-2">Labor:</div>
-                  {(() => {
-                    const sectionCount = sections.filter((s) => s.lengthFeet > 0).length
-                    if (usesPickets) {
-                      const picketLabor = materials.picketCount * PRICING.labor.pickets.perPicket
-                      const stanchionLabor = materials.stanchionCount * PRICING.labor.pickets.perStanchion
-                      return (
-                        <>
-                          <div className="ml-4">
-                            Pickets: {materials.picketCount} × ${PRICING.labor.pickets.perPicket} = ${picketLabor.toFixed(2)}
-                          </div>
-                          <div className="ml-4">
-                            Stanchions: {materials.stanchionCount} × ${PRICING.labor.pickets.perStanchion} = ${stanchionLabor.toFixed(2)}
-                          </div>
-                        </>
-                      )
-                    } else if (infill === 'cable') {
-                      const stanchionLabor = materials.stanchionCount * PRICING.labor.cable.perStanchion
-                      const sectionLabor = sectionCount * PRICING.labor.cable.perSection
-                      return (
-                        <>
-                          <div className="ml-4">
-                            Stanchions: {materials.stanchionCount} × ${PRICING.labor.cable.perStanchion} = ${stanchionLabor.toFixed(2)}
-                          </div>
-                          <div className="ml-4">
-                            Sections: {sectionCount} × ${PRICING.labor.cable.perSection} = ${sectionLabor.toFixed(2)}
-                          </div>
-                        </>
-                      )
-                    } else if (infill === 'slats') {
-                      const stanchionLabor = materials.stanchionCount * PRICING.labor.slats.perStanchion
-                      const sectionLabor = sectionCount * PRICING.labor.slats.perSection
-                      return (
-                        <>
-                          <div className="ml-4">
-                            Stanchions: {materials.stanchionCount} × ${PRICING.labor.slats.perStanchion} = ${stanchionLabor.toFixed(2)}
-                          </div>
-                          <div className="ml-4">
-                            Sections: {sectionCount} × ${PRICING.labor.slats.perSection} = ${sectionLabor.toFixed(2)}
-                          </div>
-                        </>
-                      )
-                    }
-                    return null
-                  })()}
-                  <div className="mt-1">Labor Total: ${price.labor.toFixed(2)}</div>
-                  <div className="mt-2">Install:</div>
-                  <div className="ml-4">
-                    Base Fee: ${PRICING.install.baseFee.toFixed(2)}
-                  </div>
-                  <div className="ml-4">
-                    Per Foot: {materials.topRailFeet.toFixed(1)} ft × ${PRICING.install.perFoot}/ft = ${(materials.topRailFeet * PRICING.install.perFoot).toFixed(2)}
-                  </div>
-                  <div className="mt-1">Install Total: ${price.install.toFixed(2)}</div>
-                  <div className="font-semibold text-white mt-2">Total: ${price.total.toFixed(2)}</div>
-                </div>
-              </>
-            )
-          })()}
-        </div>
-      </div>
     </div>
   )
 }
