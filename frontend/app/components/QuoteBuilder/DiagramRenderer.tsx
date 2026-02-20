@@ -79,7 +79,7 @@ export function DiagramRenderer({
   const isVictorian = style === 'victorian'
   
   // Minimum stroke width to prevent lines from disappearing when zoomed out on mobile
-  const MIN_STROKE_WIDTH_PX = 1.5
+  const MIN_STROKE_WIDTH_PX = 1
   
   // Line thicknesses based on requested dimensions
   const baseTopRailThickness = Math.max(inchesToPx(1.5), 2)
@@ -603,7 +603,7 @@ export function DiagramRenderer({
                 const picketWidthPx = (picketWidthFeet / totalHorizontalFeet) * initialUsableWidth
 
                 // Ensure minimum width for Safari rendering (prevents intermittent rendering issues)
-                const minPicketWidthPx = 2
+                const minPicketWidthPx = 1
                 const safePicketWidthPx = Math.max(picketWidthPx, minPicketWidthPx)
 
                 // Center the image on the computed x position by offsetting by half the width.
@@ -616,22 +616,33 @@ export function DiagramRenderer({
                 // Scale to fixed height (PICKET_HEIGHT_PX = 34 inches), maintain aspect ratio
                 // Width is set from the configured physical width so that edge positions match the math.
                 // Apply white filter to render in white.
-                // For straight pickets, use "slice" to prioritize height filling (fixes Safari mobile gaps)
+                // For straight/narrow pickets (0.5" wide), use "slice" to prioritize height filling (fixes Safari mobile gaps)
                 // Other pickets use "meet" which works correctly for their aspect ratios
-                const isStraightPicket = style === 'rectangle' && infill === 'pickets' && picketStyle === 'straight'
+                // Straight pickets include: rectangle style with straight picketStyle, and Victorian style with standard pickets
+                const isStraightPicket = 
+                  (style === 'rectangle' && infill === 'pickets' && picketStyle === 'straight') ||
+                  (style === 'victorian' && infill === 'pickets')
                 
                 // Only render if dimensions are valid (prevents Safari rendering issues)
+                // Safari mobile can have issues with very small images, so ensure minimum dimensions
                 if (safePicketWidthPx > 0 && PICKET_HEIGHT_PX > 0) {
+                  // For Safari compatibility, ensure dimensions are at least 1px
+                  // Safari may not render images below ~2px, so use a slightly higher minimum for reliability
+                  const finalWidth = Math.max(safePicketWidthPx, 2)
+                  const finalHeight = Math.max(PICKET_HEIGHT_PX, 1)
+                  
                   return (
                     <g key={i}>
                       <image
                         href={picketAssetPath}
                         x={safeImageX}
                         y={safeYTop}
-                        width={safePicketWidthPx}
-                        height={PICKET_HEIGHT_PX}
+                        width={finalWidth}
+                        height={finalHeight}
                         preserveAspectRatio={isStraightPicket ? "xMidYMid slice" : "xMidYMid meet"}
                         filter="url(#whiteFilter)"
+                        // Add explicit attributes to help Safari render small images
+                        imageRendering="auto"
                       />
                     </g>
                   )
