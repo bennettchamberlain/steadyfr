@@ -602,27 +602,41 @@ export function DiagramRenderer({
                 const picketWidthFeet = picketWidthIn / 12
                 const picketWidthPx = (picketWidthFeet / totalHorizontalFeet) * initialUsableWidth
 
+                // Ensure minimum width for Safari rendering (prevents intermittent rendering issues)
+                const minPicketWidthPx = 2
+                const safePicketWidthPx = Math.max(picketWidthPx, minPicketWidthPx)
+
                 // Center the image on the computed x position by offsetting by half the width.
+                // Round coordinates to avoid Safari sub-pixel rendering issues
                 const centerX = x
-                const imageX = centerX - picketWidthPx / 2
+                const safeImageX = Math.round(centerX - safePicketWidthPx / 2)
+                const safeYTop = Math.round(yTop)
 
                 // Render picket using SVG asset
                 // Scale to fixed height (PICKET_HEIGHT_PX = 34 inches), maintain aspect ratio
                 // Width is set from the configured physical width so that edge positions match the math.
                 // Apply white filter to render in white.
-                return (
-                  <g key={i}>
-                    <image
-                      href={picketAssetPath}
-                      x={imageX}
-                      y={yTop}
-                      width={picketWidthPx}
-                      height={PICKET_HEIGHT_PX}
-                      preserveAspectRatio="xMidYMid meet"
-                      filter="url(#whiteFilter)"
-                    />
-                  </g>
-                )
+                // For straight pickets, use "slice" to prioritize height filling (fixes Safari mobile gaps)
+                // Other pickets use "meet" which works correctly for their aspect ratios
+                const isStraightPicket = style === 'rectangle' && infill === 'pickets' && picketStyle === 'straight'
+                
+                // Only render if dimensions are valid (prevents Safari rendering issues)
+                if (safePicketWidthPx > 0 && PICKET_HEIGHT_PX > 0) {
+                  return (
+                    <g key={i}>
+                      <image
+                        href={picketAssetPath}
+                        x={safeImageX}
+                        y={safeYTop}
+                        width={safePicketWidthPx}
+                        height={PICKET_HEIGHT_PX}
+                        preserveAspectRatio={isStraightPicket ? "xMidYMid slice" : "xMidYMid meet"}
+                        filter="url(#whiteFilter)"
+                      />
+                    </g>
+                  )
+                }
+                return null
               })
             })()}
 
@@ -712,6 +726,7 @@ export function DiagramRenderer({
                       y2={roundedY2}
                       stroke="#e5e7eb"
                       strokeWidth={Math.max(1.5, MIN_STROKE_WIDTH_PX)}
+                      vectorEffect="non-scaling-stroke"
                       opacity={1}
                       shapeRendering="crispEdges"
                       strokeLinecap="round"
