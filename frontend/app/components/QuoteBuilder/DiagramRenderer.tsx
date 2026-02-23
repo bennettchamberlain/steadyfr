@@ -97,10 +97,13 @@ export function DiagramRenderer({
   )
   const BOTTOM_RAIL_THICKNESS_PX = Math.max(
     isVictorian ? baseBottomRailThickness * 1.3 : baseBottomRailThickness,
-    MIN_STROKE_WIDTH_PX
+    MIN_STROKE_WIDTH_PX,
   )
   
+  // Use the straight picket physical thickness (0.5") as the reference width for
+  // the bottom rail so it visually matches the straight pickets.
   const PICKET_THICKNESS_PX = Math.max(inchesToPx(0.5), MIN_STROKE_WIDTH_PX)
+  const BOTTOM_RAIL_STROKE_PX = PICKET_THICKNESS_PX
 
   // Get picket width from constants based on style and picket type
   const getPicketWidthInches = (): number => {
@@ -314,6 +317,10 @@ export function DiagramRenderer({
         style={{aspectRatio: `${viewBoxWidth} / ${viewBoxHeight}`}}
         role="img"
         aria-label="Railing side view diagram"
+        // Set an explicit color so that when the SVG is serialized and rendered
+        // in isolation (for the email snapshot), `currentColor` still resolves
+        // to the intended light gray/white instead of defaulting to black.
+        color="#e5e7eb"
       >
         {/* Define filter to make pickets white */}
         <defs>
@@ -651,30 +658,32 @@ export function DiagramRenderer({
               })
             })()}
 
-            {/* Bottom rail connecting pickets */}
-            {sectionGeoms.length > 0 && (
-              <path
-                d={
-                  sectionGeoms
-                    .map((g, index) => {
-                      const x1 = g.startX
-                      const y1 = g.startY + PICKET_HEIGHT_PX
-                      const x2 = g.startX + g.dx
-                      const y2 = g.startY + g.dy + PICKET_HEIGHT_PX
-                      if (index === 0) {
-                        return `M ${x1} ${y1} L ${x2} ${y2}`
-                      }
-                      return `L ${x1} ${y1} L ${x2} ${y2}`
-                    })
-                    .join(' ')
-                }
-                stroke="currentColor"
-                strokeWidth={BOTTOM_RAIL_THICKNESS_PX}
-                opacity={0.6}
-                fill="none"
-              />
-            )}
           </g>
+        )}
+
+        {/* Bottom rail (always show). Match stroke width to straight picket thickness. */}
+        {sectionGeoms.length > 0 && (
+          <path
+            d={
+              sectionGeoms
+                .map((g, index) => {
+                  const x1 = g.startX
+                  const y1 = g.startY + PICKET_HEIGHT_PX
+                  const x2 = g.startX + g.dx
+                  const y2 = g.startY + g.dy + PICKET_HEIGHT_PX
+                  if (index === 0) {
+                    return `M ${x1} ${y1} L ${x2} ${y2}`
+                  }
+                  return `L ${x1} ${y1} L ${x2} ${y2}`
+                })
+                .join(' ')
+            }
+            stroke="currentColor"
+            strokeWidth={BOTTOM_RAIL_STROKE_PX}
+            opacity={0.6}
+            fill="none"
+            strokeLinecap="round"
+          />
         )}
 
         {infill === 'cable' && (

@@ -8,6 +8,10 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [new URL('https://cdn.sanity.io/**')],
   },
+  experimental: {
+    // Allow using nodemailer in server components / route handlers
+    serverComponentsExternalPackages: ['nodemailer'],
+  },
 }
 
 export default nextConfig

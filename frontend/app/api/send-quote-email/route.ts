@@ -1,6 +1,9 @@
 import {NextRequest, NextResponse} from 'next/server'
 import nodemailer from 'nodemailer'
 
+// Ensure this route uses the Node.js runtime so we can use nodemailer
+export const runtime = 'nodejs'
+
 interface QuoteEmailData {
   name: string
   contact: string
@@ -31,6 +34,7 @@ interface QuoteEmailData {
 }
 
 // Create transporter for Brevo SMTP
+// Note: Removed debug: true and logger: true as they can prevent actual email sending
 const transporter = nodemailer.createTransport({
   host: 'smtp-relay.brevo.com',
   port: 587,
@@ -39,7 +43,29 @@ const transporter = nodemailer.createTransport({
     user: 'a29434001@smtp-brevo.com',
     pass: '9rCqOfGUQdYgIJ1y',
   },
+  // Enable TLS
+  requireTLS: true,
+  tls: {
+    // Do not fail on invalid certs
+    rejectUnauthorized: false,
+  },
 })
+
+// Log transporter configuration (without sensitive data) - only once at module load
+declare global {
+  // eslint-disable-next-line no-var
+  var transporterLogged: boolean | undefined
+}
+if (!global.transporterLogged) {
+  console.log('[send-quote-email] Transporter configured:', {
+    host: 'smtp-relay.brevo.com',
+    port: 587,
+    secure: false,
+    authUser: 'a29434001@smtp-brevo.com',
+    requireTLS: true,
+  })
+  global.transporterLogged = true
+}
 
 function generateEmailHTML(data: QuoteEmailData): string {
   const styleLabel = data.style === 'victorian' ? 'Victorian Top Rail' : 'Rectangle Top Rail'
@@ -281,6 +307,21 @@ function generateEmailHTML(data: QuoteEmailData): string {
 export async function POST(request: NextRequest) {
   try {
     const data: QuoteEmailData = await request.json()
+
+    // Debug logging so we can trace email attempts in server logs
+    console.log('[send-quote-email] Incoming request payload (redacted):', {
+      hasDiagramImage: !!data.diagramImage,
+      diagramImageLength: data.diagramImage?.length ?? 0,
+      contact: data.contact,
+      name: data.name,
+      zipcode: data.zipcode,
+      style: data.style,
+      infill: data.infill,
+      picketStyle: data.picketStyle,
+      railingEnd: data.railingEnd,
+      totalPrice: data.price?.total,
+      sectionsCount: data.sections?.length ?? 0,
+    })
     
     // Validate required fields
     if (!data.contact) {
@@ -300,6 +341,9 @@ export async function POST(request: NextRequest) {
         {status: 400}
       )
     }
+
+    console.log('[send-quote-email] Parsed recipient email:', recipientEmail)
+    console.log('[send-quote-email] Diagram image present:', !!data.diagramImage)
     
     // Generate HTML email
     const htmlContent = generateEmailHTML(data)
@@ -336,9 +380,10 @@ San Francisco Bay Area`
     // Prepare attachments (inline image)
     const attachments: Array<{
       filename: string
-      content: string
+      content: string | Buffer
       cid: string
       contentType: string
+      encoding?: string
     }> = []
     
     if (data.diagramImage) {
@@ -347,13 +392,34 @@ San Francisco Bay Area`
         content: data.diagramImage,
         cid: 'railing-diagram',
         contentType: 'image/png',
+        encoding: 'base64',
       })
     }
     
+    // Verify SMTP connection first
+    console.log('[send-quote-email] Verifying SMTP connection to Brevo...')
+    try {
+      await transporter.verify()
+      console.log('[send-quote-email] SMTP connection verified successfully')
+    } catch (verifyError) {
+      console.error('[send-quote-email] SMTP connection verification failed:', verifyError)
+      throw new Error(`SMTP connection failed: ${verifyError instanceof Error ? verifyError.message : 'Unknown error'}`)
+    }
+
     // Send email with proper headers for deliverability
-    const info = await transporter.sendMail({
+    console.log('[send-quote-email] Sending email via nodemailer/Brevo...', {
+      to: recipientEmail,
+      bcc: 'help@superhotfab.com',
+      from: 'sales@steadyfnr.com',
+      hasAttachments: attachments.length > 0,
+      attachmentNames: attachments.map((a) => a.filename),
+      attachmentSizes: attachments.map((a) => typeof a.content === 'string' ? a.content.length : 'Buffer'),
+    })
+
+    const mailOptions = {
       from: '"Steady Fence & Railing" <sales@steadyfnr.com>',
       to: recipientEmail,
+      bcc: 'help@superhotfab.com', // BCC all quote emails to this address
       replyTo: 'sales@steadyfnr.com',
       subject: `Your Railing Quote - $${data.price.total.toLocaleString(undefined, {maximumFractionDigits: 0})}`,
       html: htmlContent,
@@ -367,16 +433,67 @@ San Francisco Bay Area`
         'X-Auto-Response-Suppress': 'All',
         'Message-ID': `<quote-${Date.now()}-${Math.random().toString(36).substring(7)}@steadyfnr.com>`,
       },
-      priority: 'high',
+      priority: 'high' as const,
       date: new Date(),
+    }
+
+    let info
+    try {
+      info = await transporter.sendMail(mailOptions)
+    } catch (sendError) {
+      console.error('[send-quote-email] sendMail threw an error:', sendError)
+      throw sendError
+    }
+    
+    console.log('[send-quote-email] Email send completed:', {
+      messageId: info.messageId,
+      accepted: info.accepted,
+      rejected: info.rejected,
+      response: info.response,
+      pending: info.pending,
+      envelope: info.envelope,
+    })
+
+    // Check if email was actually accepted
+    if (info.rejected && info.rejected.length > 0) {
+      console.error('[send-quote-email] Email was rejected:', info.rejected)
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Email rejected by server',
+          rejected: info.rejected,
+          messageId: info.messageId,
+        },
+        {status: 400}
+      )
+    }
+
+    if (!info.accepted || info.accepted.length === 0) {
+      console.error('[send-quote-email] Email was not accepted by server')
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Email was not accepted by SMTP server',
+          messageId: info.messageId,
+          accepted: info.accepted,
+        },
+        {status: 500}
+      )
+    }
+    
+    console.log('[send-quote-email] Email successfully sent and accepted:', {
+      messageId: info.messageId,
+      acceptedRecipients: info.accepted,
     })
     
     return NextResponse.json({
       success: true,
       messageId: info.messageId,
+      accepted: info.accepted,
+      response: info.response,
     })
   } catch (error) {
-    console.error('Error sending email:', error)
+    console.error('[send-quote-email] Error sending email:', error)
     return NextResponse.json(
       {
         error: 'Failed to send email',

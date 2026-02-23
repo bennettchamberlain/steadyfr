@@ -79,8 +79,59 @@ export function QuoteSummary({
       // Wait a bit to ensure rendering is complete
       await new Promise((resolve) => setTimeout(resolve, 200))
       
+      // IMPORTANT: the SVG uses `<image href="/picket-assets/...">` for pickets.
+      // When we serialize the SVG and render it in isolation, those linked assets
+      // may not be loaded in time, which makes the snapshot look like it has "no infill".
+      // To make the email snapshot match what you see in the render window, inline
+      // any `<image>` hrefs as data URLs before serializing.
+      const svgClone = svgElement.cloneNode(true) as SVGSVGElement
+
+      // Ensure namespaces exist (helps when serializing)
+      if (!svgClone.getAttribute('xmlns')) {
+        svgClone.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
+      }
+      if (!svgClone.getAttribute('xmlns:xlink')) {
+        svgClone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink')
+      }
+
+      const imageNodes = Array.from(svgClone.querySelectorAll('image'))
+      await Promise.all(
+        imageNodes.map(async (node) => {
+          const href =
+            node.getAttribute('href') ||
+            node.getAttributeNS('http://www.w3.org/1999/xlink', 'href') ||
+            ''
+
+          // Already inlined
+          if (href.startsWith('data:')) return
+
+          // Only inline local assets
+          const absoluteUrl = href.startsWith('http')
+            ? href
+            : new URL(href, window.location.origin).toString()
+
+          try {
+            const resp = await fetch(absoluteUrl)
+            if (!resp.ok) return
+            const blob = await resp.blob()
+            const dataUrl: string = await new Promise((resolve, reject) => {
+              const reader = new FileReader()
+              reader.onloadend = () => resolve(String(reader.result || ''))
+              reader.onerror = () => reject(new Error('Failed to read blob'))
+              reader.readAsDataURL(blob)
+            })
+
+            if (!dataUrl) return
+            node.setAttribute('href', dataUrl)
+            node.setAttributeNS('http://www.w3.org/1999/xlink', 'href', dataUrl)
+          } catch {
+            // If any single asset fails, we still try to render the rest of the diagram
+          }
+        }),
+      )
+
       // Get the SVG as a string and convert to data URL
-      const svgString = new XMLSerializer().serializeToString(svgElement)
+      const svgString = new XMLSerializer().serializeToString(svgClone)
       const svgBlob = new Blob([svgString], {type: 'image/svg+xml;charset=utf-8'})
       const svgUrl = URL.createObjectURL(svgBlob)
       
@@ -153,7 +204,12 @@ export function QuoteSummary({
     
     try {
       // Capture diagram as image
+      console.log('[QuoteSummary] Starting diagram capture for email...')
       const diagramImage = await captureDiagramAsImage()
+      console.log('[QuoteSummary] Diagram capture complete:', {
+        hasImage: !!diagramImage,
+        length: diagramImage?.length ?? 0,
+      })
       
       // Prepare email data
       const emailData = {
@@ -180,6 +236,14 @@ export function QuoteSummary({
         sections,
         diagramImage: diagramImage || '',
       }
+
+      console.log('[QuoteSummary] Sending email request to /api/send-quote-email...', {
+        contact: emailData.contact,
+        name: emailData.name,
+        zipcode: emailData.zipcode,
+        hasDiagramImage: !!emailData.diagramImage,
+        diagramImageLength: emailData.diagramImage.length,
+      })
       
       // Send email
       const response = await fetch('/api/send-quote-email', {
@@ -191,6 +255,11 @@ export function QuoteSummary({
       })
       
       const result = await response.json()
+      console.log('[QuoteSummary] Email API response:', {
+        status: response.status,
+        ok: response.ok,
+        body: result,
+      })
       
       if (!response.ok) {
         throw new Error(result.error || 'Failed to send email')
@@ -355,8 +424,53 @@ export function QuoteSummary({
           // Wait a bit to ensure rendering is complete
           await new Promise((resolve) => setTimeout(resolve, 200))
           
-          // Get the SVG as a string and convert to data URL
-          const svgString = new XMLSerializer().serializeToString(svgElement)
+          // Get the SVG as a string and convert to data URL.
+          // As with the email snapshot, inline any `<image>` assets (pickets)
+          // so they reliably appear in the rasterized output.
+          const svgClone = svgElement.cloneNode(true) as SVGSVGElement
+
+          if (!svgClone.getAttribute('xmlns')) {
+            svgClone.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
+          }
+          if (!svgClone.getAttribute('xmlns:xlink')) {
+            svgClone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink')
+          }
+
+          const imageNodes = Array.from(svgClone.querySelectorAll('image'))
+          await Promise.all(
+            imageNodes.map(async (node) => {
+              const href =
+                node.getAttribute('href') ||
+                node.getAttributeNS('http://www.w3.org/1999/xlink', 'href') ||
+                ''
+
+              if (!href || href.startsWith('data:')) return
+
+              const absoluteUrl = href.startsWith('http')
+                ? href
+                : new URL(href, window.location.origin).toString()
+
+              try {
+                const resp = await fetch(absoluteUrl)
+                if (!resp.ok) return
+                const blob = await resp.blob()
+                const dataUrl: string = await new Promise((resolve, reject) => {
+                  const reader = new FileReader()
+                  reader.onloadend = () => resolve(String(reader.result || ''))
+                  reader.onerror = () => reject(new Error('Failed to read blob'))
+                  reader.readAsDataURL(blob)
+                })
+
+                if (!dataUrl) return
+                node.setAttribute('href', dataUrl)
+                node.setAttributeNS('http://www.w3.org/1999/xlink', 'href', dataUrl)
+              } catch {
+                // Ignore failures for individual assets; keep the rest of the diagram.
+              }
+            }),
+          )
+
+          const svgString = new XMLSerializer().serializeToString(svgClone)
           const svgBlob = new Blob([svgString], {type: 'image/svg+xml;charset=utf-8'})
           const svgUrl = URL.createObjectURL(svgBlob)
           
