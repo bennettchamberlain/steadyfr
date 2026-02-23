@@ -27,8 +27,8 @@ export const PRICING = {
     sectionFee: 50.20, // $ per section
   },
   slats: {
-    perFoot: 12, // $/ft of horizontal slats
-    sectionFee: 60, // $ per section
+    perFoot: 10, // $/ft of horizontal slats
+    sectionFee: 30, // $ per section
   },
   stanchion: {
     each: 55, // $ each
@@ -59,7 +59,7 @@ export const PRICING = {
     baseFee: 400, // $ base installation fee
     perFoot: 10, // $ per linear foot of rail
   },
-  materialsModifier: 1.5, // Multiplier for total materials cost
+  materialsModifier: 1.75, // Multiplier for total materials cost
   laborModifier: 1.0, // Multiplier for total labor cost
 } as const
 

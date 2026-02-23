@@ -264,8 +264,8 @@ export function QuoteBuilder() {
   }, [currentStep, isMounted])
 
   const materials = useMemo(
-    () => calculateMaterials(style, infill, sections),
-    [style, infill, sections],
+    () => calculateMaterials(style, infill, sections, picketStyle),
+    [style, infill, sections, picketStyle],
   )
   const price = useMemo(
     () => calculatePrice(style, infill, materials, sections, picketStyle, railingEnd),

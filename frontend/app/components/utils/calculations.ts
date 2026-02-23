@@ -1,8 +1,11 @@
 import {
   ANGLED_SECTION_DEGREES,
+  MAX_PICKET_CLEAR_GAP_INCHES,
   PICKET_SPACING_INCHES,
+  PICKET_WIDTHS,
   PRICING,
   STANCHION_MAX_SPACING,
+  STANCHION_WIDTH_INCHES,
 } from './pricingConstants'
 
 export type RailStyle = 'victorian' | 'rectangle'
@@ -38,6 +41,10 @@ export interface PriceBreakdown {
   install: number
   total: number
 }
+
+export type PicketStyle = 'straight' | 'round' | 'square'
+
+export type RailingEndType = 'straight' | 'foldDown' | 'foldBack' | 'none'
 
 const ANGLED_SECTION_RADIANS = (ANGLED_SECTION_DEGREES * Math.PI) / 180
 
@@ -105,12 +112,37 @@ export function calculateStanchionPositionsForSections(
 }
 
 /**
+ * Get picket width in inches based on style, infill, and picketStyle.
+ */
+function getPicketWidthInches(
+  style: RailStyle,
+  infill: InfillType,
+  picketStyle?: PicketStyle,
+): number {
+  // Rectangle styles
+  if (style === 'rectangle' && infill === 'pickets') {
+    if (picketStyle === 'square') return PICKET_WIDTHS.rectangleSquare
+    if (picketStyle === 'round') return PICKET_WIDTHS.rectangleRound
+    return PICKET_WIDTHS.rectangleStraight
+  }
+
+  // Victorian pickets
+  if (infill === 'twistedPickets') return PICKET_WIDTHS.victorianTwisted
+  if (infill === 'ornamentalPickets') return PICKET_WIDTHS.victorianOrnamental
+  if (infill === 'pickets') return PICKET_WIDTHS.victorianStandard
+
+  // Fallback
+  return PICKET_WIDTHS.victorianStandard
+}
+
+/**
  * Calculate material quantities for one or more sections.
  */
 export function calculateMaterials(
   style: RailStyle,
   infill: InfillType,
   sections: SectionConfig[],
+  picketStyle?: PicketStyle,
 ): MaterialBreakdown {
   const maxSpacing =
     infill === 'cable' ? STANCHION_MAX_SPACING.cable : STANCHION_MAX_SPACING.default
@@ -196,8 +228,30 @@ export function calculateMaterials(
         }
       }
 
-      // Count pickets for this span (4" on-center)
-      totalPickets += Math.max(0, Math.floor((horizontalSpanFeet * 12) / PICKET_SPACING_INCHES))
+      // Calculate pickets based on actual picket width and maximum gap constraint
+      // This matches the logic in DiagramRenderer.tsx
+      const picketWidthIn = getPicketWidthInches(style, infill, picketStyle)
+      const centerToCenterIn = horizontalSpanFeet * 12
+      const clearSpanIn = centerToCenterIn - STANCHION_WIDTH_INCHES
+      
+      if (clearSpanIn > 0) {
+        // Calculate the number of pickets to give ≤4" spacing between edges
+        // Formula: clearSpanIn = N * picketWidthIn + (N + 1) * gapIn
+        // We want: 0 <= gapIn <= MAX_PICKET_CLEAR_GAP_INCHES
+        let picketCountInSpan = 0
+        const maxPossiblePickets = Math.floor(clearSpanIn / picketWidthIn)
+
+        // Find the MINIMUM number of pickets that satisfies gap <= MAX_PICKET_CLEAR_GAP_INCHES
+        for (let n = 1; n <= maxPossiblePickets; n++) {
+          const gapIn = (clearSpanIn - n * picketWidthIn) / (n + 1)
+          if (gapIn >= 0 && gapIn <= MAX_PICKET_CLEAR_GAP_INCHES) {
+            picketCountInSpan = n
+            break
+          }
+        }
+
+        totalPickets += picketCountInSpan
+      }
     }
   }
 
@@ -211,10 +265,6 @@ export function calculateMaterials(
     slatFeet: totalSlatFeet,
   }
 }
-
-export type PicketStyle = 'straight' | 'round' | 'square'
-
-export type RailingEndType = 'straight' | 'foldDown' | 'foldBack' | 'none'
 
 /**
  * Convert material quantities into cost numbers using placeholder pricing.
