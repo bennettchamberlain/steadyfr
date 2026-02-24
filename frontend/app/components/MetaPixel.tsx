@@ -4,7 +4,7 @@ import Script from 'next/script'
 import {usePathname, useSearchParams} from 'next/navigation'
 import {useEffect, Suspense} from 'react'
 
-const META_PIXEL_ID = '744046428528683'
+const META_PIXEL_ID = '767536079342741'
 
 declare global {
   interface Window {
