@@ -14,6 +14,7 @@ import type {
 } from '../utils/calculations'
 import {PRICING} from '../utils/pricingConstants'
 import {PDF_CONFIG} from '../utils/pdfConstants'
+import {trackMetaEvent} from '@/app/components/MetaPixel'
 
 interface QuoteSummaryProps {
   style: RailStyle
@@ -266,6 +267,35 @@ export function QuoteSummary({
       }
       
       setSubmitStatus('success')
+      
+      // Track quote completion events in Meta Pixel
+      // Lead event - primary conversion event
+      trackMetaEvent('Lead', {
+        content_name: 'Railing Quote Request',
+        content_category: 'Quote',
+        value: price.total,
+        currency: 'USD',
+        quote_value: price.total,
+        style: style,
+        infill: infill,
+        total_length: materials.topRailFeet,
+      })
+      
+      // Purchase event - track as completed quote (even though not a purchase, it's a completed conversion)
+      trackMetaEvent('Purchase', {
+        content_name: 'Quote Completed',
+        content_category: 'Quote',
+        value: price.total,
+        currency: 'USD',
+        quote_value: price.total,
+      })
+      
+      // CompleteRegistration - track form completion
+      trackMetaEvent('CompleteRegistration', {
+        content_name: 'Quote Form Completed',
+        value: price.total,
+        currency: 'USD',
+      })
       
       // Also generate PDF if user wants
       // (keeping PDF generation code below)

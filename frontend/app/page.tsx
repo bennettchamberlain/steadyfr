@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import GalleryGrid from '@/app/components/GalleryGrid'
 import {QuoteBuilder} from '@/app/components/QuoteBuilder/QuoteBuilder'
+import {TrackedLink} from '@/app/components/TrackedLink'
 import {featuredGalleryProjectsQuery} from '@/sanity/lib/queries'
 import {sanityFetch} from '@/sanity/lib/live'
 
@@ -55,12 +56,16 @@ export default async function HomePage() {
               The shortest lead time in the San Francisco Bay Area
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <a
-                href="#quote-widget"
-                className="inline-flex items-center justify-center px-8 py-4 bg-white text-gray-900 font-semibold rounded-md hover:bg-gray-100 transition-colors text-lg w-fit max-w-[50vw] mx-auto sm:mx-0"
+              <TrackedLink
+                href="/quote"
+                className="inline-flex items-center justify-center px-8 py-4 bg-white text-gray-900 font-semibold rounded-md hover:bg-gray-100 transition-colors text-lg"
+                eventName="InitiateCheckout"
+                eventParams={{
+                  content_name: 'Home Page CTA - Get a Quote',
+                }}
               >
                 Get a Quote
-              </a>
+              </TrackedLink>
               <Link
                 href="/gallery"
                 className="inline-flex items-center justify-center px-8 py-4 bg-gray-800 text-white font-semibold rounded-md hover:bg-gray-700 transition-colors text-lg border border-gray-700 w-fit max-w-[50vw] mx-auto sm:mx-0"

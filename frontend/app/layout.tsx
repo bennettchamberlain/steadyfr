@@ -10,6 +10,7 @@ import DraftModeToast from '@/app/components/DraftModeToast'
 import Toaster from '@/app/components/Toaster'
 import Footer from '@/app/components/Footer'
 import Header from '@/app/components/Header'
+import MetaPixel from '@/app/components/MetaPixel'
 import * as demo from '@/sanity/lib/demo'
 import {sanityFetch, SanityLive} from '@/sanity/lib/live'
 import {settingsQuery} from '@/sanity/lib/queries'
@@ -89,6 +90,7 @@ export default async function RootLayout({children}: {children: React.ReactNode}
           <Footer />
         </section>
         <SpeedInsights />
+        <MetaPixel />
       </body>
     </html>
   )

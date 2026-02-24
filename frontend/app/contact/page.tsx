@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import {TrackedLink} from '@/app/components/TrackedLink'
 
 export const metadata = {
   title: 'Contact Us | Steady Fence & Railing',
@@ -83,16 +84,16 @@ export default function ContactPage() {
                         />
                       </svg>
                     </div>
-                  <h2 className="text-2xl font-bold text-white mb-2">Email Us</h2>
-                  <a
-                    href="mailto:sales@steadyfnr.com"
-                    className="text-xl text-gray-300 hover:text-white transition-colors break-all"
-                  >
-                    sales@steadyfnr.com
-                  </a>
-                </div>
+                    <h2 className="text-2xl font-bold text-white mb-2">Email Us</h2>
+                    <a
+                      href="mailto:sales@steadyfnr.com"
+                      className="text-xl text-gray-300 hover:text-white transition-colors break-all"
+                    >
+                      sales@steadyfnr.com
+                    </a>
+                  </div>
 
-                <div className="border-t border-gray-800"></div>
+                  <div className="border-t border-gray-800"></div>
 
                   {/* Phone */}
                   <div className="text-center">
@@ -111,27 +112,31 @@ export default function ContactPage() {
                         />
                       </svg>
                     </div>
-                  <h2 className="text-2xl font-bold text-white mb-2">Call or Text</h2>
-                  <a
-                    href="tel:5108497343"
-                    className="text-xl text-gray-300 hover:text-white transition-colors"
-                  >
-                    (510) 849-7343
-                  </a>
-                </div>
-
-                <div className="border-t border-gray-800 pt-8">
-                  <div className="text-center">
-                    <p className="text-gray-400 mb-6">
-                      Prefer to get a quote online? Use our quick quote form.
-                    </p>
-                    <Link
-                      href="/#quote-widget"
-                      className="inline-flex items-center justify-center px-8 py-4 bg-white text-gray-900 font-semibold rounded-md hover:bg-gray-100 transition-colors"
+                    <h2 className="text-2xl font-bold text-white mb-2">Call or Text</h2>
+                    <a
+                      href="tel:5108497343"
+                      className="text-xl text-gray-300 hover:text-white transition-colors"
                     >
-                      Get a Quote
-                    </Link>
+                      (510) 849-7343
+                    </a>
                   </div>
+
+                  <div className="border-t border-gray-800 pt-8">
+                    <div className="text-center">
+                      <p className="text-gray-400 mb-6">
+                        Prefer to get a quote online? Use our quick quote form.
+                      </p>
+                      <TrackedLink
+                        href="/quote"
+                        className="inline-flex items-center justify-center px-8 py-4 bg-white text-gray-900 font-semibold rounded-md hover:bg-gray-100 transition-colors"
+                        eventName="InitiateCheckout"
+                        eventParams={{
+                          content_name: 'Contact Page CTA - Get a Quote',
+                        }}
+                      >
+                        Get a Quote
+                      </TrackedLink>
+                    </div>
                   </div>
                 </div>
               </div>

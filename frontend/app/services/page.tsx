@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import {TrackedLink} from '@/app/components/TrackedLink'
 
 export const metadata = {
   title: 'Services | Steady Fence & Railing',
@@ -143,12 +144,16 @@ export default function ServicesPage() {
               Get a quote in a minute and have your railing installed in a week
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link
-                href="/#quote-widget"
+              <TrackedLink
+                href="/quote"
                 className="inline-flex items-center justify-center px-8 py-4 bg-white text-gray-900 font-semibold rounded-md hover:bg-gray-100 transition-colors text-lg"
+                eventName="InitiateCheckout"
+                eventParams={{
+                  content_name: 'Services Page CTA - Get a Quote',
+                }}
               >
                 Get a Quote
-              </Link>
+              </TrackedLink>
               <Link
                 href="/gallery"
                 className="inline-flex items-center justify-center px-8 py-4 bg-gray-800 text-white font-semibold rounded-md hover:bg-gray-700 transition-colors text-lg border border-gray-700"

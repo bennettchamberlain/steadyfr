@@ -3,9 +3,16 @@ import {settingsQuery} from '@/sanity/lib/queries'
 import {sanityFetch} from '@/sanity/lib/live'
 
 export default async function Header() {
-  const {data: settings} = await sanityFetch({
-    query: settingsQuery,
-  })
+  let settings: {title?: string} | null = null
+  try {
+    const result = await sanityFetch({
+      query: settingsQuery,
+    })
+    settings = result.data
+  } catch (error) {
+    console.error('Error fetching settings for header:', error)
+    // Continue with defaults if fetch fails
+  }
 
   return (
     <header className="fixed z-50 h-20 inset-0 bg-gray-950/95 flex items-center backdrop-blur-lg border-b border-gray-800">

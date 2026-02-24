@@ -18,6 +18,7 @@ import {RailingEndSelector} from './RailingEndSelector'
 import type {RailingEndType} from '../utils/calculations'
 import {SectionsConfigurator} from './SectionsConfigurator'
 import {StepNavigation} from './StepNavigation'
+import {trackMetaEvent} from '@/app/components/MetaPixel'
 
 const TOTAL_STEPS = 5
 
@@ -56,6 +57,19 @@ export function QuoteBuilder() {
   useEffect(() => {
     setIsMounted(true)
   }, [])
+
+  // Track when quote builder is first loaded/interacted with
+  const hasTrackedInitiation = useRef(false)
+  useEffect(() => {
+    if (isMounted && !hasTrackedInitiation.current) {
+      // Track InitiateCheckout when user starts the quote process
+      trackMetaEvent('InitiateCheckout', {
+        content_name: 'Railing Quote Builder',
+        content_category: 'Quote',
+      })
+      hasTrackedInitiation.current = true
+    }
+  }, [isMounted])
 
   // Initialize sections when user reaches step 1 (show 10ft section from start)
   useEffect(() => {
@@ -272,12 +286,26 @@ export function QuoteBuilder() {
     [style, infill, materials, sections, picketStyle, railingEnd],
   )
 
+  // Track step progression
+  const trackedSteps = useRef<Set<number>>(new Set())
+  
   // Basic guard so the user can't move past steps without a sensible length
   const handleStepChange = (step: number) => {
     if (step > currentStep && sections.some((s) => s.lengthFeet <= 0)) {
       // For MVP we just prevent moving forward instead of showing a full error system
       return
     }
+    
+    // Track when user progresses to a new step
+    if (step > currentStep && !trackedSteps.current.has(step)) {
+      trackMetaEvent('ViewContent', {
+        content_name: `Quote Step ${step}`,
+        content_category: 'Quote Progress',
+        step: step,
+      })
+      trackedSteps.current.add(step)
+    }
+    
     setCurrentStep(step)
   }
 
