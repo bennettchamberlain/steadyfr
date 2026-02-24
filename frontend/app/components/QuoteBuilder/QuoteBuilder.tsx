@@ -396,7 +396,7 @@ export function QuoteBuilder() {
           isMounted && 
           originalLeftRef.current !== null && 
           originalWidthRef.current !== null
-            ? 'md:fixed md:z-30'
+            ? 'lg:fixed lg:z-30'
             : ''
         }`}
         style={
