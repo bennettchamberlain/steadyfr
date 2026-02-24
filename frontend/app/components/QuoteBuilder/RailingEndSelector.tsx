@@ -1,5 +1,9 @@
+'use client'
+
 import React from 'react'
 import type {RailStyle, RailingEndType} from '../utils/calculations'
+import {trackGAEvent} from '@/app/components/GoogleAnalytics'
+import {trackMetaEvent} from '@/app/components/MetaPixel'
 
 interface RailingEndSelectorProps {
   style: RailStyle
@@ -22,7 +26,21 @@ export function RailingEndSelector({style, value, onChange}: RailingEndSelectorP
         {/* Straight – shared */}
         <button
           type="button"
-          onClick={() => onChange('straight')}
+          onClick={() => {
+            trackGAEvent('quote_option_selected', {
+              event_category: 'quote',
+              event_label: 'railing_end_selected',
+              option_type: 'railing_end',
+              option_value: 'straight',
+            })
+            trackMetaEvent('ViewContent', {
+              content_name: 'Railing End Selected',
+              content_category: 'Quote',
+              content_type: 'railing_end',
+              content_ids: ['straight'],
+            })
+            onChange('straight')
+          }}
           className={`flex flex-col items-center p-4 rounded-lg border ${
             value === 'straight' ? 'border-white bg-gray-800' : 'border-gray-700 bg-gray-900'
           } hover:border-white/70 transition-colors`}
@@ -37,7 +55,21 @@ export function RailingEndSelector({style, value, onChange}: RailingEndSelectorP
         {!isVictorian && (
           <button
             type="button"
-            onClick={() => onChange('foldDown')}
+            onClick={() => {
+              trackGAEvent('quote_option_selected', {
+                event_category: 'quote',
+                event_label: 'railing_end_selected',
+                option_type: 'railing_end',
+                option_value: 'foldDown',
+              })
+              trackMetaEvent('ViewContent', {
+                content_name: 'Railing End Selected',
+                content_category: 'Quote',
+                content_type: 'railing_end',
+                content_ids: ['foldDown'],
+              })
+              onChange('foldDown')
+            }}
             className={`flex flex-col items-center p-4 rounded-lg border ${
               value === 'foldDown' ? 'border-white bg-gray-800' : 'border-gray-700 bg-gray-900'
             } hover:border-white/70 transition-colors`}
@@ -53,7 +85,21 @@ export function RailingEndSelector({style, value, onChange}: RailingEndSelectorP
         {!isVictorian && (
           <button
             type="button"
-            onClick={() => onChange('foldBack')}
+            onClick={() => {
+              trackGAEvent('quote_option_selected', {
+                event_category: 'quote',
+                event_label: 'railing_end_selected',
+                option_type: 'railing_end',
+                option_value: 'foldBack',
+              })
+              trackMetaEvent('ViewContent', {
+                content_name: 'Railing End Selected',
+                content_category: 'Quote',
+                content_type: 'railing_end',
+                content_ids: ['foldBack'],
+              })
+              onChange('foldBack')
+            }}
             className={`flex flex-col items-center p-4 rounded-lg border ${
               value === 'foldBack' ? 'border-white bg-gray-800' : 'border-gray-700 bg-gray-900'
             } hover:border-white/70 transition-colors`}
@@ -69,7 +115,21 @@ export function RailingEndSelector({style, value, onChange}: RailingEndSelectorP
         {!isVictorian && (
           <button
             type="button"
-            onClick={() => onChange('none')}
+            onClick={() => {
+              trackGAEvent('quote_option_selected', {
+                event_category: 'quote',
+                event_label: 'railing_end_selected',
+                option_type: 'railing_end',
+                option_value: 'none',
+              })
+              trackMetaEvent('ViewContent', {
+                content_name: 'Railing End Selected',
+                content_category: 'Quote',
+                content_type: 'railing_end',
+                content_ids: ['none'],
+              })
+              onChange('none')
+            }}
             className={`flex flex-col items-center justify-center p-4 rounded-lg border ${
               value === 'none' ? 'border-white bg-gray-800' : 'border-gray-700 bg-gray-900'
             } hover:border-white/70 transition-colors`}
@@ -82,7 +142,21 @@ export function RailingEndSelector({style, value, onChange}: RailingEndSelectorP
         {isVictorian && (
           <button
             type="button"
-            onClick={() => onChange('foldDown')}
+            onClick={() => {
+              trackGAEvent('quote_option_selected', {
+                event_category: 'quote',
+                event_label: 'railing_end_selected',
+                option_type: 'railing_end',
+                option_value: 'foldDown',
+              })
+              trackMetaEvent('ViewContent', {
+                content_name: 'Railing End Selected',
+                content_category: 'Quote',
+                content_type: 'railing_end',
+                content_ids: ['foldDown'],
+              })
+              onChange('foldDown')
+            }}
             className={`flex flex-col items-center p-4 rounded-lg border ${
               value === 'foldDown' ? 'border-white bg-gray-800' : 'border-gray-700 bg-gray-900'
             } hover:border-white/70 transition-colors`}

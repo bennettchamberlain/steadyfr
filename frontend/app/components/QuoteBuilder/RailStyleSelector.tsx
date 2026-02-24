@@ -1,5 +1,9 @@
+'use client'
+
 import React from 'react'
 import type {RailStyle} from '../utils/calculations'
+import {trackGAEvent} from '@/app/components/GoogleAnalytics'
+import {trackMetaEvent} from '@/app/components/MetaPixel'
 
 interface RailStyleSelectorProps {
   value: RailStyle
@@ -16,7 +20,21 @@ export function RailStyleSelector({value, onChange}: RailStyleSelectorProps) {
       <div className="grid grid-cols-2 gap-4">
         <button
           type="button"
-          onClick={() => onChange('victorian')}
+          onClick={() => {
+            trackGAEvent('quote_option_selected', {
+              event_category: 'quote',
+              event_label: 'rail_style_selected',
+              option_type: 'rail_style',
+              option_value: 'victorian',
+            })
+            trackMetaEvent('ViewContent', {
+              content_name: 'Rail Style Selected',
+              content_category: 'Quote',
+              content_type: 'rail_style',
+              content_ids: ['victorian'],
+            })
+            onChange('victorian')
+          }}
           className={`flex flex-col items-center p-4 rounded-lg border ${
             value === 'victorian' ? 'border-white bg-gray-800' : 'border-gray-700 bg-gray-900'
           } hover:border-white/70 transition-colors`}
@@ -32,7 +50,21 @@ export function RailStyleSelector({value, onChange}: RailStyleSelectorProps) {
         </button>
         <button
           type="button"
-          onClick={() => onChange('rectangle')}
+          onClick={() => {
+            trackGAEvent('quote_option_selected', {
+              event_category: 'quote',
+              event_label: 'rail_style_selected',
+              option_type: 'rail_style',
+              option_value: 'rectangle',
+            })
+            trackMetaEvent('ViewContent', {
+              content_name: 'Rail Style Selected',
+              content_category: 'Quote',
+              content_type: 'rail_style',
+              content_ids: ['rectangle'],
+            })
+            onChange('rectangle')
+          }}
           className={`flex flex-col items-center p-4 rounded-lg border ${
             value === 'rectangle' ? 'border-white bg-gray-800' : 'border-gray-700 bg-gray-900'
           } hover:border-white/70 transition-colors`}

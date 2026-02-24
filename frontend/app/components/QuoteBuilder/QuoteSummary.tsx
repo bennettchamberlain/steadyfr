@@ -15,6 +15,7 @@ import type {
 import {PRICING} from '../utils/pricingConstants'
 import {PDF_CONFIG} from '../utils/pdfConstants'
 import {trackMetaEvent} from '@/app/components/MetaPixel'
+import {trackGAEvent} from '@/app/components/GoogleAnalytics'
 
 interface QuoteSummaryProps {
   style: RailStyle
@@ -268,8 +269,8 @@ export function QuoteSummary({
       
       setSubmitStatus('success')
       
-      // Track quote completion events in Meta Pixel
-      // Lead event - primary conversion event
+      // ===== META PIXEL CONVERSION EVENTS =====
+      // Lead event - primary conversion event for Meta Pixel
       trackMetaEvent('Lead', {
         content_name: 'Railing Quote Request',
         content_category: 'Quote',
@@ -281,7 +282,7 @@ export function QuoteSummary({
         total_length: materials.topRailFeet,
       })
       
-      // Purchase event - track as completed quote (even though not a purchase, it's a completed conversion)
+      // Purchase event - standard conversion event for Meta Pixel
       trackMetaEvent('Purchase', {
         content_name: 'Quote Completed',
         content_category: 'Quote',
@@ -290,11 +291,55 @@ export function QuoteSummary({
         quote_value: price.total,
       })
       
-      // CompleteRegistration - track form completion
+      // CompleteRegistration - form completion conversion event
       trackMetaEvent('CompleteRegistration', {
         content_name: 'Quote Form Completed',
         value: price.total,
         currency: 'USD',
+      })
+      
+      // ===== GOOGLE ANALYTICS CONVERSION EVENTS =====
+      // generate_lead - Standard GA4 conversion event (automatically recognized as conversion)
+      // This is the primary conversion event for lead generation forms
+      trackGAEvent('generate_lead', {
+        value: price.total,
+        currency: 'USD',
+        quote_style: style,
+        quote_infill: infill,
+        quote_length: materials.topRailFeet,
+        quote_total: price.total,
+      })
+      
+      // Purchase event - Standard GA4 e-commerce conversion event
+      // Using purchase event format for quote completion tracking
+      const transactionId = `quote_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+      trackGAEvent('purchase', {
+        transaction_id: transactionId,
+        value: price.total,
+        currency: 'USD',
+        items: [{
+          item_id: 'railing_quote',
+          item_name: 'Railing Quote Request',
+          item_category: 'Quote',
+          price: price.total,
+          quantity: 1,
+        }],
+        quote_style: style,
+        quote_infill: infill,
+        quote_length: materials.topRailFeet,
+      })
+      
+      // Quote submitted event - Custom event for detailed tracking
+      // Note: Mark this as a conversion in GA4 dashboard if needed
+      trackGAEvent('quote_submitted', {
+        event_category: 'quote',
+        event_label: 'quote_form_submitted',
+        value: price.total,
+        currency: 'USD',
+        quote_style: style,
+        quote_infill: infill,
+        quote_length: materials.topRailFeet,
+        quote_total: price.total,
       })
       
       // Also generate PDF if user wants
@@ -740,7 +785,33 @@ export function QuoteSummary({
               type="text"
               autoComplete="name"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => {
+                setName(e.target.value)
+                if (e.target.value.length > 0) {
+                  trackGAEvent('form_field_interaction', {
+                    event_category: 'quote_form',
+                    event_label: 'name_field_filled',
+                    field_name: 'name',
+                  })
+                  trackMetaEvent('ViewContent', {
+                    content_name: 'Name Field Filled',
+                    content_category: 'Quote Form',
+                    field_name: 'name',
+                  })
+                }
+              }}
+              onFocus={() => {
+                trackGAEvent('form_field_focus', {
+                  event_category: 'quote_form',
+                  event_label: 'name_field_focused',
+                  field_name: 'name',
+                })
+                trackMetaEvent('ViewContent', {
+                  content_name: 'Name Field Focused',
+                  content_category: 'Quote Form',
+                  field_name: 'name',
+                })
+              }}
               className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-white text-sm focus:outline-none focus:border-white"
               placeholder="Enter your name"
             />
@@ -755,7 +826,33 @@ export function QuoteSummary({
               type="email"
               autoComplete="email"
               value={contact}
-              onChange={(e) => setContact(e.target.value)}
+              onChange={(e) => {
+                setContact(e.target.value)
+                if (e.target.value.length > 0) {
+                  trackGAEvent('form_field_interaction', {
+                    event_category: 'quote_form',
+                    event_label: 'email_field_filled',
+                    field_name: 'email',
+                  })
+                  trackMetaEvent('ViewContent', {
+                    content_name: 'Email Field Filled',
+                    content_category: 'Quote Form',
+                    field_name: 'email',
+                  })
+                }
+              }}
+              onFocus={() => {
+                trackGAEvent('form_field_focus', {
+                  event_category: 'quote_form',
+                  event_label: 'email_field_focused',
+                  field_name: 'email',
+                })
+                trackMetaEvent('ViewContent', {
+                  content_name: 'Email Field Focused',
+                  content_category: 'Quote Form',
+                  field_name: 'email',
+                })
+              }}
               className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-white text-sm focus:outline-none focus:border-white"
               placeholder="your.email@example.com"
               required
@@ -774,14 +871,67 @@ export function QuoteSummary({
               type="text"
               autoComplete="postal-code"
               value={zipcode}
-              onChange={(e) => setZipcode(e.target.value)}
+              onChange={(e) => {
+                setZipcode(e.target.value)
+                if (e.target.value.length > 0) {
+                  trackGAEvent('form_field_interaction', {
+                    event_category: 'quote_form',
+                    event_label: 'zipcode_field_filled',
+                    field_name: 'zipcode',
+                  })
+                  trackMetaEvent('ViewContent', {
+                    content_name: 'Zipcode Field Filled',
+                    content_category: 'Quote Form',
+                    field_name: 'zipcode',
+                  })
+                }
+              }}
+              onFocus={() => {
+                trackGAEvent('form_field_focus', {
+                  event_category: 'quote_form',
+                  event_label: 'zipcode_field_focused',
+                  field_name: 'zipcode',
+                })
+                trackMetaEvent('ViewContent', {
+                  content_name: 'Zipcode Field Focused',
+                  content_category: 'Quote Form',
+                  field_name: 'zipcode',
+                })
+              }}
               className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-white text-sm focus:outline-none focus:border-white"
               placeholder="Enter your zipcode"
             />
           </div>
           <button
             type="button"
-            onClick={handleSubmitQuote}
+            onClick={() => {
+              // Track conversion intent on button click for both platforms
+              trackGAEvent('quote_submit_button_clicked', {
+                event_category: 'quote',
+                event_label: 'submit_button_clicked',
+                quote_value: price.total,
+              })
+              trackGAEvent('conversion', {
+                event_category: 'quote',
+                event_label: 'submit_button_clicked',
+                value: price.total,
+                currency: 'USD',
+              })
+              // Track Meta Pixel conversion events
+              trackMetaEvent('InitiateCheckout', {
+                content_name: 'Quote Submit Button Clicked',
+                content_category: 'Quote',
+                value: price.total,
+                currency: 'USD',
+              })
+              trackMetaEvent('Lead', {
+                content_name: 'Quote Submit Initiated',
+                content_category: 'Quote',
+                value: price.total,
+                currency: 'USD',
+              })
+              handleSubmitQuote()
+            }}
             disabled={isSubmitting}
             className="w-full px-4 py-2 bg-white text-gray-900 font-semibold rounded hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >

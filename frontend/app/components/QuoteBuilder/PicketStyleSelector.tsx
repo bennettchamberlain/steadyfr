@@ -1,5 +1,9 @@
+'use client'
+
 import React from 'react'
 import type {PicketStyle} from '../utils/calculations'
+import {trackGAEvent} from '@/app/components/GoogleAnalytics'
+import {trackMetaEvent} from '@/app/components/MetaPixel'
 
 interface PicketStyleSelectorProps {
   value: PicketStyle
@@ -18,7 +22,21 @@ export function PicketStyleSelector({value, onChange}: PicketStyleSelectorProps)
       <div className="grid grid-cols-3 gap-4">
         <button
           type="button"
-          onClick={() => onChange('straight')}
+          onClick={() => {
+            trackGAEvent('quote_option_selected', {
+              event_category: 'quote',
+              event_label: 'picket_style_selected',
+              option_type: 'picket_style',
+              option_value: 'straight',
+            })
+            trackMetaEvent('ViewContent', {
+              content_name: 'Picket Style Selected',
+              content_category: 'Quote',
+              content_type: 'picket_style',
+              content_ids: ['straight'],
+            })
+            onChange('straight')
+          }}
           className={`flex flex-col items-center p-2.5 rounded-lg border ${
             value === 'straight' ? 'border-white bg-gray-800' : 'border-gray-700 bg-gray-900'
           } hover:border-white/70 transition-colors`}
@@ -39,7 +57,21 @@ export function PicketStyleSelector({value, onChange}: PicketStyleSelectorProps)
 
         <button
           type="button"
-          onClick={() => onChange('round')}
+          onClick={() => {
+            trackGAEvent('quote_option_selected', {
+              event_category: 'quote',
+              event_label: 'picket_style_selected',
+              option_type: 'picket_style',
+              option_value: 'round',
+            })
+            trackMetaEvent('ViewContent', {
+              content_name: 'Picket Style Selected',
+              content_category: 'Quote',
+              content_type: 'picket_style',
+              content_ids: ['round'],
+            })
+            onChange('round')
+          }}
           className={`flex flex-col items-center p-2.5 rounded-lg border ${
             value === 'round' ? 'border-white bg-gray-800' : 'border-gray-700 bg-gray-900'
           } hover:border-white/70 transition-colors`}
@@ -56,7 +88,21 @@ export function PicketStyleSelector({value, onChange}: PicketStyleSelectorProps)
 
         <button
           type="button"
-          onClick={() => onChange('square')}
+          onClick={() => {
+            trackGAEvent('quote_option_selected', {
+              event_category: 'quote',
+              event_label: 'picket_style_selected',
+              option_type: 'picket_style',
+              option_value: 'square',
+            })
+            trackMetaEvent('ViewContent', {
+              content_name: 'Picket Style Selected',
+              content_category: 'Quote',
+              content_type: 'picket_style',
+              content_ids: ['square'],
+            })
+            onChange('square')
+          }}
           className={`flex flex-col items-center p-2.5 rounded-lg border ${
             value === 'square' ? 'border-white bg-gray-800' : 'border-gray-700 bg-gray-900'
           } hover:border-white/70 transition-colors`}

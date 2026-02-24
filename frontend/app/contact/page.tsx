@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import {TrackedLink} from '@/app/components/TrackedLink'
+import ContactPageTracker from './ContactPageTracker'
 
 export const metadata = {
   title: 'Contact Us | Steady Fence & Railing',
@@ -10,6 +11,7 @@ export const metadata = {
 export default function ContactPage() {
   return (
     <>
+      <ContactPageTracker />
       {/* Hero Section */}
       <section 
         className="relative py-20 flex items-center justify-center"
@@ -132,6 +134,12 @@ export default function ContactPage() {
                         eventName="InitiateCheckout"
                         eventParams={{
                           content_name: 'Contact Page CTA - Get a Quote',
+                        }}
+                        gaEventName="quote_cta_click"
+                        gaEventParams={{
+                          event_category: 'quote',
+                          event_label: 'contact_page_get_quote',
+                          page: 'contact',
                         }}
                       >
                         Get a Quote

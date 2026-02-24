@@ -19,6 +19,7 @@ import type {RailingEndType} from '../utils/calculations'
 import {SectionsConfigurator} from './SectionsConfigurator'
 import {StepNavigation} from './StepNavigation'
 import {trackMetaEvent} from '@/app/components/MetaPixel'
+import {trackGAEvent} from '@/app/components/GoogleAnalytics'
 
 const TOTAL_STEPS = 5
 
@@ -66,6 +67,11 @@ export function QuoteBuilder() {
       trackMetaEvent('InitiateCheckout', {
         content_name: 'Railing Quote Builder',
         content_category: 'Quote',
+      })
+      // Track GA event
+      trackGAEvent('quote_started', {
+        event_category: 'quote',
+        event_label: 'quote_builder_initiated',
       })
       hasTrackedInitiation.current = true
     }
@@ -302,6 +308,13 @@ export function QuoteBuilder() {
         content_name: `Quote Step ${step}`,
         content_category: 'Quote Progress',
         step: step,
+      })
+      // Track GA event
+      trackGAEvent('quote_step_completed', {
+        event_category: 'quote',
+        event_label: `step_${step}`,
+        step_number: step,
+        total_steps: TOTAL_STEPS,
       })
       trackedSteps.current.add(step)
     }

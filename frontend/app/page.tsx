@@ -4,6 +4,7 @@ import {QuoteBuilder} from '@/app/components/QuoteBuilder/QuoteBuilder'
 import {TrackedLink} from '@/app/components/TrackedLink'
 import {featuredGalleryProjectsQuery} from '@/sanity/lib/queries'
 import {sanityFetch} from '@/sanity/lib/live'
+import YelpLinkTracker from '@/app/components/YelpLinkTracker'
 
 export const metadata = {
   title: 'Steady Fence & Railing | San Francisco Bay Area',
@@ -18,6 +19,7 @@ export default async function HomePage() {
 
   return (
     <>
+      <YelpLinkTracker />
       {/* Hero Section */}
       {/* Change backgroundColor to any hex (#0a0a0a) or rgb (rgb(10, 10, 10)) value, or use gradient */}
       <section 
@@ -66,12 +68,22 @@ export default async function HomePage() {
               >
                 Get a Quote
               </TrackedLink>
-              <Link
+              <TrackedLink
                 href="/gallery"
                 className="inline-flex items-center justify-center px-8 py-4 bg-gray-800 text-white font-semibold rounded-md hover:bg-gray-700 transition-colors text-lg border border-gray-700 w-fit max-w-[50vw] mx-auto sm:mx-0"
+                eventName="ViewContent"
+                eventParams={{
+                  content_name: 'View Our Work - Home Page',
+                  content_category: 'Gallery',
+                }}
+                gaEventName="gallery_cta_click"
+                gaEventParams={{
+                  event_category: 'navigation',
+                  event_label: 'home_page_view_our_work',
+                }}
               >
                 View Our Work
-              </Link>
+              </TrackedLink>
             </div>
           </div>
         </div>
@@ -102,9 +114,19 @@ export default async function HomePage() {
             </div>
             <GalleryGrid projects={featuredProjects} columns={3} />
             <div className="text-center mt-12">
-              <Link
+              <TrackedLink
                 href="/gallery"
                 className="inline-flex items-center justify-center px-8 py-3 bg-gray-800 text-white font-semibold rounded-md hover:bg-gray-700 transition-colors border border-gray-700"
+                eventName="ViewContent"
+                eventParams={{
+                  content_name: 'View All Projects - Home Page',
+                  content_category: 'Gallery',
+                }}
+                gaEventName="gallery_cta_click"
+                gaEventParams={{
+                  event_category: 'navigation',
+                  event_label: 'home_page_view_all_projects',
+                }}
               >
                 View All Projects
                 <svg
@@ -120,7 +142,7 @@ export default async function HomePage() {
                     d="M17 8l4 4m0 0l-4 4m4-4H3"
                   />
                 </svg>
-              </Link>
+              </TrackedLink>
             </div>
           </div>
         </section>

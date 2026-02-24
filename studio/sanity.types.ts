@@ -12,7 +12,7 @@
  * ---------------------------------------------------------------------------------
  */
 
-// Source: ..\sanity.schema.json
+// Source: ../sanity.schema.json
 export type PageReference = {
   _ref: string
   _type: 'reference'
@@ -553,9 +553,3 @@ export type AllSanitySchemaTypes =
   | Geopoint
 
 export declare const internalGroqTypeReferenceTo: unique symbol
-
-type ArrayOf<T> = Array<
-  T & {
-    _key: string
-  }
->

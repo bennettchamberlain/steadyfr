@@ -3,6 +3,8 @@
 import {useState} from 'react'
 import ImageModal from './ImageModal'
 import ProjectCard from './ProjectCard'
+import {trackGAEvent} from './GoogleAnalytics'
+import {trackMetaEvent} from './MetaPixel'
 
 interface GalleryProject {
   _id: string
@@ -29,6 +31,22 @@ export default function GalleryGrid({projects, columns = 3}: GalleryGridProps) {
   const [isModalOpen, setIsModalOpen] = useState(false)
 
   const handleProjectClick = (project: GalleryProject) => {
+    // Track gallery project click
+    const projectName = project.projectName || 'Unknown Project'
+    trackGAEvent('gallery_project_click', {
+      event_category: 'gallery',
+      event_label: projectName,
+      project_id: project._id,
+      project_location: project.location || '',
+      project_categories: project.categories?.join(', ') || '',
+    })
+    // Track Meta Pixel event
+    trackMetaEvent('ViewContent', {
+      content_name: projectName,
+      content_category: 'Gallery',
+      content_ids: [project._id],
+      content_type: 'product',
+    })
     setSelectedProject(project)
     setIsModalOpen(true)
   }

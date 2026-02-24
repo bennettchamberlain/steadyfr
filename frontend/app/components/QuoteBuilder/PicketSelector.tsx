@@ -1,5 +1,9 @@
+'use client'
+
 import React from 'react'
 import type {InfillType, RailStyle} from '../utils/calculations'
+import {trackGAEvent} from '@/app/components/GoogleAnalytics'
+import {trackMetaEvent} from '@/app/components/MetaPixel'
 
 interface PicketSelectorProps {
   style: RailStyle
@@ -29,7 +33,21 @@ export function PicketSelector({style, value, onChange}: PicketSelectorProps) {
         {/* Shared "no infill" option */}
         <button
           type="button"
-          onClick={() => onChange('none')}
+          onClick={() => {
+            trackGAEvent('quote_option_selected', {
+              event_category: 'quote',
+              event_label: 'infill_selected',
+              option_type: 'infill',
+              option_value: 'none',
+            })
+            trackMetaEvent('ViewContent', {
+              content_name: 'Infill Selected',
+              content_category: 'Quote',
+              content_type: 'infill',
+              content_ids: ['none'],
+            })
+            onChange('none')
+          }}
           className={`flex flex-col items-center p-4 rounded-lg border ${
             value === 'none' ? 'border-white bg-gray-800' : 'border-gray-700 bg-gray-900'
           } hover:border-white/70 transition-colors`}
@@ -44,7 +62,21 @@ export function PicketSelector({style, value, onChange}: PicketSelectorProps) {
         {isVictorian && (
           <button
             type="button"
-            onClick={() => onChange('pickets')}
+            onClick={() => {
+              trackGAEvent('quote_option_selected', {
+                event_category: 'quote',
+                event_label: 'infill_selected',
+                option_type: 'infill',
+                option_value: 'pickets',
+              })
+              trackMetaEvent('ViewContent', {
+                content_name: 'Infill Selected',
+                content_category: 'Quote',
+                content_type: 'infill',
+                content_ids: ['pickets'],
+              })
+              onChange('pickets')
+            }}
             className={`flex flex-col items-center p-4 rounded-lg border ${
               value === 'pickets' ? 'border-white bg-gray-800' : 'border-gray-700 bg-gray-900'
             } hover:border-white/70 transition-colors`}
@@ -60,7 +92,21 @@ export function PicketSelector({style, value, onChange}: PicketSelectorProps) {
         {!isVictorian && (
           <button
             type="button"
-            onClick={() => onChange('pickets')}
+            onClick={() => {
+              trackGAEvent('quote_option_selected', {
+                event_category: 'quote',
+                event_label: 'infill_selected',
+                option_type: 'infill',
+                option_value: 'pickets',
+              })
+              trackMetaEvent('ViewContent', {
+                content_name: 'Infill Selected',
+                content_category: 'Quote',
+                content_type: 'infill',
+                content_ids: ['pickets'],
+              })
+              onChange('pickets')
+            }}
             className={`flex flex-col items-center p-4 rounded-lg border ${
               value === 'pickets' ? 'border-white bg-gray-800' : 'border-gray-700 bg-gray-900'
             } hover:border-white/70 transition-colors`}
@@ -76,7 +122,21 @@ export function PicketSelector({style, value, onChange}: PicketSelectorProps) {
         {isVictorian && (
           <button
             type="button"
-            onClick={() => onChange('ornamentalPickets')}
+            onClick={() => {
+              trackGAEvent('quote_option_selected', {
+                event_category: 'quote',
+                event_label: 'infill_selected',
+                option_type: 'infill',
+                option_value: 'ornamentalPickets',
+              })
+              trackMetaEvent('ViewContent', {
+                content_name: 'Infill Selected',
+                content_category: 'Quote',
+                content_type: 'infill',
+                content_ids: ['ornamentalPickets'],
+              })
+              onChange('ornamentalPickets')
+            }}
             className={`flex flex-col items-center p-4 rounded-lg border ${
               value === 'ornamentalPickets'
                 ? 'border-white bg-gray-800'
@@ -94,7 +154,21 @@ export function PicketSelector({style, value, onChange}: PicketSelectorProps) {
         {!isVictorian && (
           <button
             type="button"
-            onClick={() => onChange('cable')}
+            onClick={() => {
+              trackGAEvent('quote_option_selected', {
+                event_category: 'quote',
+                event_label: 'infill_selected',
+                option_type: 'infill',
+                option_value: 'cable',
+              })
+              trackMetaEvent('ViewContent', {
+                content_name: 'Infill Selected',
+                content_category: 'Quote',
+                content_type: 'infill',
+                content_ids: ['cable'],
+              })
+              onChange('cable')
+            }}
             className={`flex flex-col items-center p-4 rounded-lg border sm:col-span-1 ${
               value === 'cable' ? 'border-white bg-gray-800' : 'border-gray-700 bg-gray-900'
             } hover:border-white/70 transition-colors`}
@@ -110,7 +184,21 @@ export function PicketSelector({style, value, onChange}: PicketSelectorProps) {
         {!isVictorian && (
           <button
             type="button"
-            onClick={() => onChange('slats')}
+            onClick={() => {
+              trackGAEvent('quote_option_selected', {
+                event_category: 'quote',
+                event_label: 'infill_selected',
+                option_type: 'infill',
+                option_value: 'slats',
+              })
+              trackMetaEvent('ViewContent', {
+                content_name: 'Infill Selected',
+                content_category: 'Quote',
+                content_type: 'infill',
+                content_ids: ['slats'],
+              })
+              onChange('slats')
+            }}
             className={`flex flex-col items-center p-4 rounded-lg border sm:col-span-1 ${
               value === 'slats' ? 'border-white bg-gray-800' : 'border-gray-700 bg-gray-900'
             } hover:border-white/70 transition-colors`}

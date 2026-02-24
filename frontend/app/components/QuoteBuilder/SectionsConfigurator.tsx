@@ -1,5 +1,9 @@
+'use client'
+
 import React from 'react'
 import type {SectionConfig} from '../utils/calculations'
+import {trackGAEvent} from '@/app/components/GoogleAnalytics'
+import {trackMetaEvent} from '@/app/components/MetaPixel'
 
 interface SectionsConfiguratorProps {
   sections: SectionConfig[]
@@ -41,11 +45,31 @@ export function SectionsConfigurator({sections, onChange}: SectionsConfiguratorP
   }
 
   const handleAddSection = () => {
+    trackGAEvent('quote_section_added', {
+      event_category: 'quote',
+      event_label: 'section_added',
+      total_sections: sections.length + 1,
+    })
+    trackMetaEvent('ViewContent', {
+      content_name: 'Section Added',
+      content_category: 'Quote',
+      total_sections: sections.length + 1,
+    })
     onChange([...sections, createSection()])
   }
 
   const handleRemoveSection = (id: string) => {
     if (sections.length <= 1) return
+    trackGAEvent('quote_section_removed', {
+      event_category: 'quote',
+      event_label: 'section_removed',
+      total_sections: sections.length - 1,
+    })
+    trackMetaEvent('ViewContent', {
+      content_name: 'Section Removed',
+      content_category: 'Quote',
+      total_sections: sections.length - 1,
+    })
     onChange(sections.filter((section) => section.id !== id))
   }
 
@@ -92,7 +116,24 @@ export function SectionsConfigurator({sections, onChange}: SectionsConfiguratorP
                     min={0}
                     step={0.5}
                     value={section.lengthFeet}
-                    onChange={(e) => handleLengthChange(section.id, e.target.value)}
+                    onChange={(e) => {
+                      const newValue = e.target.value
+                      handleLengthChange(section.id, newValue)
+                      if (newValue && !isNaN(Number(newValue))) {
+                        trackGAEvent('quote_section_updated', {
+                          event_category: 'quote',
+                          event_label: 'section_length_changed',
+                          section_id: section.id,
+                          length: Number(newValue),
+                        })
+                        trackMetaEvent('ViewContent', {
+                          content_name: 'Section Length Updated',
+                          content_category: 'Quote',
+                          section_id: section.id,
+                          length: Number(newValue),
+                        })
+                      }
+                    }}
                     className="w-full rounded-md bg-gray-950 border border-gray-700 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-white/40"
                   />
                 </label>
@@ -103,9 +144,22 @@ export function SectionsConfigurator({sections, onChange}: SectionsConfiguratorP
                     id={`section-type-${section.id}`}
                     name={`section-type-${section.id}`}
                     value={section.type}
-                    onChange={(e) =>
-                      handleTypeChange(section.id, e.target.value as SectionConfig['type'])
-                    }
+                    onChange={(e) => {
+                      const newType = e.target.value as SectionConfig['type']
+                      trackGAEvent('quote_section_updated', {
+                        event_category: 'quote',
+                        event_label: 'section_type_changed',
+                        section_id: section.id,
+                        section_type: newType,
+                      })
+                      trackMetaEvent('ViewContent', {
+                        content_name: 'Section Type Updated',
+                        content_category: 'Quote',
+                        section_id: section.id,
+                        section_type: newType,
+                      })
+                      handleTypeChange(section.id, newType)
+                    }}
                     className="w-full rounded-md bg-gray-950 border border-gray-700 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-white/40"
                   >
                     <option value="flat">Flat / level</option>

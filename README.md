@@ -1,33 +1,9 @@
-# Clean Next.js + Sanity app
+# STEADY FENCE AND RAIL
+  a Superhot business
 
-This template includes a [Next.js](https://nextjs.org/) app with a [Sanity Studio](https://www.sanity.io/) – an open-source React application that connects to your Sanity project’s hosted dataset. The Studio is configured locally and can then be deployed for content collaboration.
-
-![Screenshot of Sanity Studio using Presentation Tool to do Visual Editing](/sanity-next-preview.png)
-
-## Features
-
-- **Next.js 16 for Performance:** Leverage the power of Next.js 16 App Router for blazing-fast performance and SEO-friendly static sites.
-- **Real-time Visual Editing:** Edit content live with Sanity's [Presentation Tool](https://www.sanity.io/docs/presentation) and see updates in real time.
-- **Live Content:** The [Live Content API](https://www.sanity.io/live) allows you to deliver live, dynamic experiences to your users without the complexity and scalability challenges that typically come with building real-time functionality.
-- **Customizable Pages with Drag-and-Drop:** Create and manage pages using a page builder with dynamic components and [Drag-and-Drop Visual Editing](https://www.sanity.io/visual-editing-for-structured-content).
-- **Powerful Content Management:** Collaborate with team members in real-time, with fine-grained revision history.
-- **AI-powered Media Support:** Auto-generate alt text with [Sanity AI Assist](https://www.sanity.io/ai-assist).
-- **On-demand Publishing:** No waiting for rebuilds—new content is live instantly with Incremental Static Revalidation.
-- **Easy Media Management:** [Integrated Unsplash support](https://www.sanity.io/plugins/sanity-plugin-asset-source-unsplash) for seamless media handling.
-
-## Demo
+# Clean Next.js + Sanity app Template
 
 https://template-nextjs-clean.sanity.dev
-
-## Getting Started
-
-### Installing the template
-
-#### 1. Initialize template with Sanity CLI
-
-Run the command in your Terminal to initialize this template on your local computer.
-
-See the documentation if you are [having issues with the CLI](https://www.sanity.io/help/cli-errors).
 
 ```shell
 npm create sanity@latest -- --template sanity-io/sanity-template-nextjs-clean
@@ -41,22 +17,6 @@ Navigate to the template directory using `cd <your app name>`, and start the dev
 npm run dev
 ```
 
-#### 3. Open the app and sign in to the Studio
-
-Open the Next.js app running locally in your browser on [http://localhost:3000](http://localhost:3000).
-
-Open the Studio running locally in your browser on [http://localhost:3333](http://localhost:3333). You should now see a screen prompting you to log in to the Studio. Use the same service (Google, GitHub, or email) that you used when you logged in to the CLI.
-
-### Adding content with Sanity
-
-#### 1. Publish your first document
-
-The template comes pre-defined with a schema containing `Page`, `Post`, `Person`, and `Settings` document types.
-
-From the Studio, click "+ Create" and select the `Post` document type. Go ahead and create and publish the document.
-
-Your content should now appear in your Next.js app ([http://localhost:3000](http://localhost:3000)) as well as in the Studio on the "Presentation" Tab
-
 #### 2. Import Sample Data (optional)
 
 You may want to start with some sample content and we've got you covered. Run this command from the root of your project to import the provided dataset (sample-data.tar.gz) into your Sanity project. This step is optional but can be helpful for getting started quickly.
@@ -65,41 +25,164 @@ You may want to start with some sample content and we've got you covered. Run th
 npm run import-sample-data
 ```
 
-#### 3. Extending the Sanity schema
-
-The schema for the `Post` document type is defined in the `studio/src/schemaTypes/post.ts` file. You can [add more document types](https://www.sanity.io/docs/studio/schema-types) to the schema to suit your needs.
-
-### Deploying your application and inviting editors
-
-#### 1. Deploy Sanity Studio
-
-Your Next.js frontend (`/frontend`) and Sanity Studio (`/studio`) are still only running on your local computer. It's time to deploy and get it into the hands of other content editors.
-
 Back in your Studio directory (`/studio`), run the following command to deploy your Sanity Studio.
 
 ```shell
 npx sanity deploy
 ```
 
-#### 2. Deploy Next.js app to Vercel
+## Analytics & Tracking
 
-You have the freedom to deploy your Next.js app to your hosting provider of choice. With Vercel and GitHub being a popular choice, we'll cover the basics of that approach.
+This project includes comprehensive event tracking for both **Google Analytics 4** (GA4) and **Meta Pixel** (Facebook Pixel). All user interactions, clicks, and conversions are tracked across both platforms.
 
-1. Create a GitHub repository from this project. [Learn more](https://docs.github.com/en/migrations/importing-source-code/using-the-command-line-to-import-source-code/adding-locally-hosted-code-to-github).
-2. Create a new Vercel project and connect it to your Github repository.
-3. Set the `Root Directory` to your Next.js app.
-4. Configure your Environment Variables.
+### Analytics Setup
 
-#### 3. Invite a collaborator
+- **Google Analytics ID**: `G-PV51QJQLR9`
+- **Meta Pixel ID**: `767536079342741`
 
-Now that you’ve deployed your Next.js application and Sanity Studio, you can optionally invite a collaborator to your Studio. Open up [Manage](https://www.sanity.io/manage), select your project and click "Invite project members"
+Both analytics platforms are automatically initialized on page load and track page views on route changes.
 
-They will be able to access the deployed Studio, where you can collaborate together on creating content.
+### Complete Event Tracking Reference
 
-## Resources
+#### 📄 Page Views
 
-- [Sanity documentation](https://www.sanity.io/docs)
-- [Next.js documentation](https://nextjs.org/docs)
-- [Join the Sanity Community](https://slack.sanity.io)
-- [Learn Sanity](https://www.sanity.io/learn)
-# steadyfr
+| Event | Platform | Trigger | Parameters |
+|-------|----------|---------|------------|
+| `PageView` | Meta Pixel | Every page navigation | `content_name`, `page_path` |
+| `page_view` | Google Analytics | Every page navigation | `page_title`, `page_location` |
+| `quote_page_view` | Google Analytics | Landing on `/quote` page | `event_category: 'quote'`, `event_label: 'quote_page_visited'`, `page_path: '/quote'` |
+
+#### 🧭 Navigation Events
+
+| Event | Platform | Trigger | Parameters |
+|-------|----------|---------|------------|
+| `navigation_click` | Google Analytics | Internal link click | `event_category: 'navigation'`, `link_url`, `link_text` |
+| `external_link_click` | Google Analytics | External link click | `event_category: 'navigation'`, `link_url`, `link_text` |
+| `ViewContent` | Meta Pixel | Any link click | `content_name`, `content_category: 'Navigation'` or `'External Link'` |
+| `cta_click` | Google Analytics | CTA button click (via TrackedLink) | `event_category: 'navigation'`, `link_url`, `link_text` |
+| `InitiateCheckout` | Meta Pixel | CTA button click (via TrackedLink) | `content_name: 'Get a Quote'`, `content_category: 'Quote'` |
+
+#### 📞 Contact Page Events
+
+| Event | Platform | Trigger | Parameters |
+|-------|----------|---------|------------|
+| `contact_click` | Google Analytics | Email or phone link click | `event_category: 'contact'`, `event_label: 'email_click'` or `'phone_click'`, `contact_method`, `contact_value` |
+| `Contact` | Meta Pixel | Email or phone link click | `content_name: 'Email Click'` or `'Phone Click'`, `content_category: 'Contact'`, `contact_method` |
+
+#### 🖼️ Gallery Events
+
+| Event | Platform | Trigger | Parameters |
+|-------|----------|---------|------------|
+| `gallery_project_click` | Google Analytics | Gallery project card click | `event_category: 'gallery'`, `event_label: projectName`, `project_id`, `project_location`, `project_categories` |
+| `ViewContent` | Meta Pixel | Gallery project card click | `content_name: projectName`, `content_category: 'Gallery'`, `content_ids: [project._id]`, `content_type: 'product'` |
+| `gallery_cta_click` | Google Analytics | "View Our Work" or "View All Projects" button | `event_category: 'navigation'`, `event_label: 'home_page_view_our_work'` or `'home_page_view_all_projects'` |
+
+#### ⭐ Social Media Events
+
+| Event | Platform | Trigger | Parameters |
+|-------|----------|---------|------------|
+| `external_link_click` | Google Analytics | Yelp reviews link click | `event_category: 'social'`, `event_label: 'yelp_reviews_click'`, `link_url` |
+| `ViewContent` | Meta Pixel | Yelp reviews link click | `content_name: 'Yelp Reviews Click'`, `content_category: 'Social'`, `content_type: 'external_link'` |
+
+#### 🎯 Quote Builder Events
+
+##### Quote Initiation
+
+| Event | Platform | Trigger | Parameters |
+|-------|----------|---------|------------|
+| `quote_started` | Google Analytics | Quote builder first loaded | `event_category: 'quote'`, `event_label: 'quote_builder_initiated'` |
+| `InitiateCheckout` | Meta Pixel | Quote builder first loaded | `content_name: 'Railing Quote Builder'`, `content_category: 'Quote'` |
+| `InitiateCheckout` | Meta Pixel | Landing on `/quote` page | `content_name: 'Quote Page'`, `content_category: 'Quote'` |
+
+##### Step Navigation
+
+| Event | Platform | Trigger | Parameters |
+|-------|----------|---------|------------|
+| `quote_navigation` | Google Analytics | Step back/next button click | `event_category: 'quote'`, `event_label: 'step_back'` or `'step_next'`, `from_step`, `to_step` |
+| `ViewContent` | Meta Pixel | Step navigation | `content_name: 'Quote Step X'`, `content_category: 'Quote Navigation'`, `step` |
+| `quote_step_completed` | Google Analytics | User progresses to new step | `event_category: 'quote'`, `event_label: 'step_X'`, `step_number`, `total_steps: 5` |
+| `ViewContent` | Meta Pixel | Step completion | `content_name: 'Quote Step X'`, `content_category: 'Quote Progress'`, `step` |
+
+##### Option Selections
+
+| Event | Platform | Trigger | Parameters |
+|-------|----------|---------|------------|
+| `quote_option_selected` | Google Analytics | Any option selection (rail style, infill, picket style, railing end) | `event_category: 'quote'`, `event_label`, `option_type`, `option_value` |
+| `ViewContent` | Meta Pixel | Any option selection | `content_name`, `content_category: 'Quote'`, `content_type`, `content_ids: [option_value]` |
+
+**Option Types Tracked:**
+- **Rail Style**: `victorian`, `rectangle`
+- **Infill Type**: `none`, `pickets`, `ornamentalPickets`, `cable`, `slats`
+- **Picket Style**: `straight`, `round`, `square`
+- **Railing End**: `straight`, `foldDown`, `foldBack`, `none`
+
+##### Section Management
+
+| Event | Platform | Trigger | Parameters |
+|-------|----------|---------|------------|
+| `quote_section_added` | Google Analytics | Add section button click | `event_category: 'quote'`, `event_label: 'section_added'`, `total_sections` |
+| `quote_section_removed` | Google Analytics | Remove section button click | `event_category: 'quote'`, `event_label: 'section_removed'`, `total_sections` |
+| `quote_section_updated` | Google Analytics | Section length or type changed | `event_category: 'quote'`, `event_label: 'section_length_changed'` or `'section_type_changed'`, `section_id`, `length` or `section_type` |
+| `ViewContent` | Meta Pixel | Section add/remove/update | `content_name: 'Section Added'` / `'Section Removed'` / `'Section Length Updated'` / `'Section Type Updated'`, `content_category: 'Quote'`, `total_sections` or `section_id` |
+
+##### Form Field Interactions
+
+| Event | Platform | Trigger | Parameters |
+|-------|----------|---------|------------|
+| `form_field_focus` | Google Analytics | Form field focused | `event_category: 'quote_form'`, `event_label: '{field}_field_focused'`, `field_name: 'name'` / `'email'` / `'zipcode'` |
+| `form_field_interaction` | Google Analytics | Form field filled (value entered) | `event_category: 'quote_form'`, `event_label: '{field}_field_filled'`, `field_name` |
+| `ViewContent` | Meta Pixel | Form field focus or fill | `content_name: '{Field} Field Focused'` or `'{Field} Field Filled'`, `content_category: 'Quote Form'`, `field_name` |
+
+**Fields Tracked:** `name`, `email`, `zipcode`
+
+##### Quote Submission (Conversion Events)
+
+| Event | Platform | Trigger | Parameters |
+|-------|----------|---------|------------|
+| `quote_submit_button_clicked` | Google Analytics | Submit button clicked | `event_category: 'quote'`, `event_label: 'submit_button_clicked'`, `quote_value` |
+| `conversion` | Google Analytics | Submit button clicked | `event_category: 'quote'`, `event_label: 'submit_button_clicked'`, `value`, `currency: 'USD'` |
+| `InitiateCheckout` | Meta Pixel | Submit button clicked | `content_name: 'Quote Submit Button Clicked'`, `content_category: 'Quote'`, `value`, `currency: 'USD'` |
+| `Lead` | Meta Pixel | Submit button clicked | `content_name: 'Quote Submit Initiated'`, `content_category: 'Quote'`, `value`, `currency: 'USD'` |
+| `generate_lead` | Google Analytics | **CONVERSION** - Form submitted successfully | `value`, `currency: 'USD'`, `quote_style`, `quote_infill`, `quote_length`, `quote_total` |
+| `purchase` | Google Analytics | **CONVERSION** - Form submitted successfully | `transaction_id`, `value`, `currency: 'USD'`, `items: [{item_id, item_name, item_category, price, quantity}]`, `quote_style`, `quote_infill`, `quote_length` |
+| `quote_submitted` | Google Analytics | Form submitted successfully | `event_category: 'quote'`, `event_label: 'quote_form_submitted'`, `value`, `currency: 'USD'`, `quote_style`, `quote_infill`, `quote_length`, `quote_total` |
+| `Lead` | Meta Pixel | **CONVERSION** - Form submitted successfully | `content_name: 'Railing Quote Request'`, `content_category: 'Quote'`, `value`, `currency: 'USD'`, `quote_value`, `style`, `infill`, `total_length` |
+| `Purchase` | Meta Pixel | **CONVERSION** - Form submitted successfully | `content_name: 'Quote Completed'`, `content_category: 'Quote'`, `value`, `currency: 'USD'`, `quote_value` |
+| `CompleteRegistration` | Meta Pixel | **CONVERSION** - Form submitted successfully | `content_name: 'Quote Form Completed'`, `value`, `currency: 'USD'` |
+
+### Conversion Events Summary
+
+**Primary Conversion Events** (automatically recognized by both platforms):
+
+1. **Google Analytics:**
+   - `generate_lead` - Standard GA4 conversion event
+   - `purchase` - Standard GA4 e-commerce conversion event
+
+2. **Meta Pixel:**
+   - `Lead` - Standard Meta conversion event
+   - `Purchase` - Standard Meta conversion event
+   - `CompleteRegistration` - Standard Meta conversion event
+
+**Conversion Tracking Flow:**
+- **Intent Stage**: Submit button click fires `InitiateCheckout` (Meta) and `conversion` (GA)
+- **Completion Stage**: Successful form submission fires all conversion events listed above
+
+### Event Categories
+
+All events are organized into the following categories:
+
+- **Navigation**: Link clicks, CTA buttons
+- **Contact**: Email/phone interactions
+- **Gallery**: Project views and interactions
+- **Quote**: All quote builder interactions
+- **Quote Form**: Form field interactions
+- **Social**: External social media links
+
+### Implementation Notes
+
+- All events fire on both Google Analytics and Meta Pixel simultaneously
+- Page views are automatically tracked on route changes
+- Conversion events include transaction values and quote details
+- Form field interactions track both focus and fill events
+- All quote builder option selections are individually tracked
+- Navigation clicks are automatically captured via `NavigationTracker` component

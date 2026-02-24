@@ -11,6 +11,8 @@ import Toaster from '@/app/components/Toaster'
 import Footer from '@/app/components/Footer'
 import Header from '@/app/components/Header'
 import MetaPixel from '@/app/components/MetaPixel'
+import GoogleAnalytics from '@/app/components/GoogleAnalytics'
+import NavigationTracker from '@/app/components/NavigationTracker'
 import * as demo from '@/sanity/lib/demo'
 import {sanityFetch, SanityLive} from '@/sanity/lib/live'
 import {settingsQuery} from '@/sanity/lib/queries'
@@ -91,6 +93,8 @@ export default async function RootLayout({children}: {children: React.ReactNode}
         </section>
         <SpeedInsights />
         <MetaPixel />
+        <GoogleAnalytics />
+        <NavigationTracker />
       </body>
     </html>
   )
