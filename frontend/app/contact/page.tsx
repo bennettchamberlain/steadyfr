@@ -129,7 +129,7 @@ export default function ContactPage() {
                         Prefer to get a quote online? Use our quick quote form.
                       </p>
                       <TrackedLink
-                        href="/quote"
+                        href="/#quote-widget"
                         className="inline-flex items-center justify-center px-8 py-4 bg-white text-gray-900 font-semibold rounded-md hover:bg-gray-100 transition-colors"
                         eventName="InitiateCheckout"
                         eventParams={{
