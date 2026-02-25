@@ -82,9 +82,24 @@ export default function MetaPixel() {
 /**
  * Helper function to track custom events
  * Usage: trackMetaEvent('Lead', { content_name: 'Quote Request' })
+ * 
+ * Note: For standard events, use only standard parameters:
+ * - ViewContent: content_name, content_category, content_ids, content_type, value, currency
+ * - Lead: content_name, content_category, value, currency
+ * - Purchase: content_name, content_ids, value, currency
+ * - Contact: content_name, content_category
+ * - InitiateCheckout: content_name, content_category, value, currency
+ * - CompleteRegistration: content_name, value, currency
  */
 export function trackMetaEvent(eventName: string, params?: Record<string, unknown>) {
+  // Guard against empty or undefined event names
+  if (!eventName || eventName.trim() === '') {
+    console.warn('Meta Pixel: Attempted to track event with empty name', params)
+    return
+  }
+  
   if (typeof window !== 'undefined' && window.fbq) {
+    // Facebook Pixel automatically queues events if not loaded yet
     window.fbq('track', eventName, params)
   }
 }

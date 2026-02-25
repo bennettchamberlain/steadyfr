@@ -12,7 +12,10 @@ export default function NavigationTracker() {
       const link = target.closest('a')
       if (link && link.href) {
         const url = new URL(link.href)
-        const linkText = link.textContent?.trim() || url.pathname
+        const linkText = link.textContent?.trim() || url.pathname || 'Unknown Link'
+        
+        // Only track if we have valid link text or pathname
+        if (!linkText || linkText === '') return
         
         // Only track internal navigation
         if (url.origin === window.location.origin) {

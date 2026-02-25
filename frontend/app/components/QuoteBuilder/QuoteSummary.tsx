@@ -807,9 +807,9 @@ export function QuoteSummary({
                   field_name: 'name',
                 })
                 trackMetaEvent('ViewContent', {
-                  content_name: 'Name Field Focused',
+                  content_name: 'Email Field Focused',
                   content_category: 'Quote Form',
-                  field_name: 'name',
+                  field_name: 'email',
                 })
               }}
               className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-white text-sm focus:outline-none focus:border-white"

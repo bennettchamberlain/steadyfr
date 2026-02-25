@@ -6,14 +6,12 @@ import {trackMetaEvent} from '@/app/components/MetaPixel'
 
 export default function ContactPageTracker() {
   useEffect(() => {
-    // Track page view
+    // Track page view (GA only - Meta Pixel tracks PageView automatically)
     trackGAEvent('page_view', {
       page_title: 'Contact Page',
       page_location: window.location.href,
     })
-    trackMetaEvent('PageView', {
-      content_name: 'Contact Page',
-    })
+    // Note: PageView is already tracked automatically by MetaPixelTracker component
 
     // Track email click
     const emailLink = document.querySelector('a[href^="mailto:"]')

@@ -152,12 +152,7 @@ export function SectionsConfigurator({sections, onChange}: SectionsConfiguratorP
                         section_id: section.id,
                         section_type: newType,
                       })
-                      trackMetaEvent('ViewContent', {
-                        content_name: 'Section Type Updated',
-                        content_category: 'Quote',
-                        section_id: section.id,
-                        section_type: newType,
-                      })
+                      // Note: Section updates tracked in GA only
                       handleTypeChange(section.id, newType)
                     }}
                     className="w-full rounded-md bg-gray-950 border border-gray-700 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-white/40"
