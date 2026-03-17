@@ -13,6 +13,7 @@ import Header from '@/app/components/Header'
 import MetaPixel from '@/app/components/MetaPixel'
 import GoogleAnalytics from '@/app/components/GoogleAnalytics'
 import NavigationTracker from '@/app/components/NavigationTracker'
+import LocalBusinessSchema from '@/app/components/LocalBusinessSchema'
 import * as demo from '@/sanity/lib/demo'
 import {sanityFetch, SanityLive} from '@/sanity/lib/live'
 import {settingsQuery} from '@/sanity/lib/queries'
@@ -50,8 +51,67 @@ export async function generateMetadata(): Promise<Metadata> {
       default: title,
     },
     description,
+    keywords: [
+      'fence installation',
+      'railing installation',
+      'stair railings',
+      'deck rails',
+      'guardrails',
+      'custom metalwork',
+      'San Francisco',
+      'Bay Area',
+      'Oakland',
+      'San Jose',
+      'Berkeley',
+      'Palo Alto',
+      'California',
+      'metal fabrication',
+      'residential railings',
+      'commercial railings',
+      'fence repair',
+      'railing repair',
+      'metal railing',
+      'wood fence',
+      'vinyl fence',
+      'chain link fence',
+    ],
+    authors: [{name: 'Steady Fence & Railing'}],
+    creator: 'Steady Fence & Railing',
+    publisher: 'Steady Fence & Railing',
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        'max-video-preview': -1,
+        'max-image-preview': 'large',
+        'max-snippet': -1,
+      },
+    },
     openGraph: {
+      type: 'website',
+      locale: 'en_US',
+      url: 'https://steadyfnr.com',
+      title: title,
+      description: description,
+      siteName: 'Steady Fence & Railing',
       images: ogImage ? [ogImage] : [],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: title,
+      description: description,
+      images: ogImage ? [ogImage.url] : [],
+    },
+    alternates: {
+      canonical: 'https://steadyfnr.com',
+    },
+    other: {
+      'geo.region': 'US-CA',
+      'geo.placename': 'San Francisco',
+      'geo.position': '37.7749;-122.4194',
+      'ICBM': '37.7749, -122.4194',
     },
   }
 }
@@ -95,6 +155,7 @@ export default async function RootLayout({children}: {children: React.ReactNode}
         <MetaPixel />
         <GoogleAnalytics />
         <NavigationTracker />
+        <LocalBusinessSchema />
       </body>
     </html>
   )

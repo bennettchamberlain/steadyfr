@@ -7,9 +7,29 @@ import {sanityFetch} from '@/sanity/lib/live'
 import YelpLinkTracker from '@/app/components/YelpLinkTracker'
 
 export const metadata = {
-  title: 'Steady Fence & Railing | San Francisco Bay Area',
+  title: 'Steady Fence & Railing | San Francisco Bay Area Railing & Fence Installation',
   description:
-    'Get a quote in a minute and a railing in a week. The shortest lead time in the San Francisco Bay Area. Quality railing installations including stair railings, deck rails, guardrails, and custom metalwork.',
+    'Get a quote in a minute and a railing in a week. The shortest lead time in the San Francisco Bay Area. Quality railing installations including stair railings, deck rails, guardrails, and custom metalwork. Serving San Francisco, Oakland, San Jose, Berkeley, and Palo Alto.',
+  keywords: [
+    'fence installation San Francisco',
+    'railing installation Bay Area',
+    'stair railings San Francisco',
+    'deck rails Oakland',
+    'guardrails San Jose',
+    'custom metalwork Berkeley',
+    'metal fabrication Palo Alto',
+    'residential railings Bay Area',
+    'commercial railings San Francisco',
+    'fence repair California',
+  ],
+  openGraph: {
+    title: 'Steady Fence & Railing | San Francisco Bay Area',
+    description:
+      'Get a quote in a minute and a railing in a week. The shortest lead time in the San Francisco Bay Area.',
+    type: 'website',
+    locale: 'en_US',
+    url: 'https://steadyfnr.com',
+  },
 }
 
 export default async function HomePage() {
