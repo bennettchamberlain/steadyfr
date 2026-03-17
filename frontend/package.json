@@ -5,11 +5,11 @@
     "prebuild": "sanity typegen generate",
     "build": "next build",
     "predev": "npm run sanity:typegen",
-    "dev": "next dev",
+    "dev": "next dev -p 3061",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "sanity:typegen": "cd ../studio && sanity schema extract --enforce-required-fields --path ../sanity.schema.json && cd ../frontend && sanity typegen generate",
-    "start": "next start",
+    "start": "next start -p 3061",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
