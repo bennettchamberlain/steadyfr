@@ -15,6 +15,7 @@ import type {
 import {PRICING} from '../utils/pricingConstants'
 import {PDF_CONFIG} from '../utils/pdfConstants'
 import {trackMetaEvent} from '@/app/components/MetaPixel'
+import {trackDataHashEvent} from '@/app/components/DataHashGateway'
 import {trackGAEvent} from '@/app/components/GoogleAnalytics'
 
 interface QuoteSummaryProps {
@@ -281,7 +282,18 @@ export function QuoteSummary({
         infill: infill,
         total_length: materials.topRailFeet,
       })
-      
+      // Lead event - mirrored to DataHash Signals Gateway
+      trackDataHashEvent('Lead', {
+        content_name: 'Railing Quote Request',
+        content_category: 'Quote',
+        value: price.total,
+        currency: 'USD',
+        quote_value: price.total,
+        style: style,
+        infill: infill,
+        total_length: materials.topRailFeet,
+      })
+
       // Purchase event - standard conversion event for Meta Pixel
       trackMetaEvent('Purchase', {
         content_name: 'Quote Completed',
@@ -290,7 +302,15 @@ export function QuoteSummary({
         currency: 'USD',
         quote_value: price.total,
       })
-      
+      // Purchase event - mirrored to DataHash Signals Gateway
+      trackDataHashEvent('Purchase', {
+        content_name: 'Quote Completed',
+        content_category: 'Quote',
+        value: price.total,
+        currency: 'USD',
+        quote_value: price.total,
+      })
+
       // CompleteRegistration - form completion conversion event
       trackMetaEvent('CompleteRegistration', {
         content_name: 'Quote Form Completed',
@@ -925,6 +945,12 @@ export function QuoteSummary({
                 currency: 'USD',
               })
               trackMetaEvent('Lead', {
+                content_name: 'Quote Submit Initiated',
+                content_category: 'Quote',
+                value: price.total,
+                currency: 'USD',
+              })
+              trackDataHashEvent('Lead', {
                 content_name: 'Quote Submit Initiated',
                 content_category: 'Quote',
                 value: price.total,

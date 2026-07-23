@@ -2,6 +2,7 @@
 
 import {trackGAEvent} from './GoogleAnalytics'
 import {trackMetaEvent} from './MetaPixel'
+import {trackDataHashEvent} from './DataHashGateway'
 
 /**
  * Unified analytics tracking that sends events to both Google Analytics and Facebook Pixel
@@ -93,8 +94,21 @@ export const unifiedTracking = {
         currency: 'USD',
       }
     )
+    // Mirror Lead to DataHash Signals Gateway
+    trackDataHashEvent('Lead', {
+      content_name: params?.content_name,
+      content_category: params?.content_category,
+      value: params?.value,
+      currency: 'USD',
+    })
     // Also track as Purchase for Facebook conversion tracking
     trackMetaEvent('Purchase', {
+      content_name: params?.content_name,
+      value: params?.value || 0,
+      currency: 'USD',
+    })
+    // Mirror Purchase to DataHash Signals Gateway
+    trackDataHashEvent('Purchase', {
       content_name: params?.content_name,
       value: params?.value || 0,
       currency: 'USD',
