@@ -116,10 +116,10 @@ export default function ContactPage() {
                     </div>
                     <h2 className="text-2xl font-bold text-white mb-2">Call or Text</h2>
                     <a
-                      href="tel:5108497343"
+                      href="tel:4156357014"
                       className="text-xl text-gray-300 hover:text-white transition-colors"
                     >
-                      (510) 849-7343
+                      (415) 635-7014
                     </a>
                   </div>
 
