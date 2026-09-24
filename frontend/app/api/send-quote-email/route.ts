@@ -33,23 +33,33 @@ interface QuoteEmailData {
   diagramImage: string // Base64 encoded image
 }
 
+// Brevo SMTP credentials come from environment variables (Vercel project settings,
+// or .env.local when running locally). Never hardcode them here.
+const BREVO_SMTP_USER = process.env.BREVO_SMTP_USER
+const BREVO_SMTP_PASS = process.env.BREVO_SMTP_PASS
+
 // Create transporter for Brevo SMTP
+// Only created when both credentials are set, so a missing variable returns an
+// error response from POST instead of crashing the route.
 // Note: Removed debug: true and logger: true as they can prevent actual email sending
-const transporter = nodemailer.createTransport({
-  host: 'smtp-relay.brevo.com',
-  port: 587,
-  secure: false, // true for 465, false for other ports
-  auth: {
-    user: 'a29434001@smtp-brevo.com',
-    pass: '9rCqOfGUQdYgIJ1y',
-  },
-  // Enable TLS
-  requireTLS: true,
-  tls: {
-    // Do not fail on invalid certs
-    rejectUnauthorized: false,
-  },
-})
+const transporter =
+  BREVO_SMTP_USER && BREVO_SMTP_PASS
+    ? nodemailer.createTransport({
+        host: 'smtp-relay.brevo.com',
+        port: 587,
+        secure: false, // true for 465, false for other ports
+        auth: {
+          user: BREVO_SMTP_USER,
+          pass: BREVO_SMTP_PASS,
+        },
+        // Enable TLS
+        requireTLS: true,
+        tls: {
+          // Do not fail on invalid certs
+          rejectUnauthorized: false,
+        },
+      })
+    : null
 
 // Log transporter configuration (without sensitive data) - only once at module load
 declare global {
@@ -57,13 +67,20 @@ declare global {
   var transporterLogged: boolean | undefined
 }
 if (!global.transporterLogged) {
-  console.log('[send-quote-email] Transporter configured:', {
-    host: 'smtp-relay.brevo.com',
-    port: 587,
-    secure: false,
-    authUser: 'a29434001@smtp-brevo.com',
-    requireTLS: true,
-  })
+  if (transporter) {
+    console.log('[send-quote-email] Transporter configured:', {
+      host: 'smtp-relay.brevo.com',
+      port: 587,
+      secure: false,
+      authUser: BREVO_SMTP_USER,
+      requireTLS: true,
+    })
+  } else {
+    console.error('[send-quote-email] Brevo SMTP is not configured. Missing environment variables:', [
+      !BREVO_SMTP_USER && 'BREVO_SMTP_USER',
+      !BREVO_SMTP_PASS && 'BREVO_SMTP_PASS',
+    ].filter(Boolean))
+  }
   global.transporterLogged = true
 }
 
@@ -305,6 +322,18 @@ function generateEmailHTML(data: QuoteEmailData): string {
 }
 
 export async function POST(request: NextRequest) {
+  // Fail gracefully if the Brevo environment variables are missing
+  if (!transporter) {
+    console.error('[send-quote-email] Cannot send quote: BREVO_SMTP_USER / BREVO_SMTP_PASS are not set')
+    return NextResponse.json(
+      {
+        error:
+          'We could not email your quote right now. Please call (415) 635-7014 or email sales@steadyfnr.com.',
+      },
+      {status: 503}
+    )
+  }
+
   try {
     const data: QuoteEmailData = await request.json()
 
