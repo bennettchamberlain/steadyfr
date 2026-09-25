@@ -19,6 +19,8 @@ interface ProjectDetailProps {
         _type?: string
       } | null
       alt?: string | null
+      hotspot?: {x: number; y: number} | null
+      crop?: {top: number; bottom: number; left: number; right: number} | null
     }> | null
   }
 }
@@ -140,11 +142,13 @@ export default function ProjectDetail({project}: ProjectDetailProps) {
                 currentImage.alt ||
                 `${project.projectName} - Image ${currentImageIndex + 1}`
               }
+              hotspot={currentImage.hotspot ?? undefined}
+              crop={currentImage.crop ?? undefined}
               className="max-h-[75vh] max-w-full object-contain"
               width={1920}
               height={1080}
               sizes="100vw"
-              mode="cover"
+              mode="contain"
             />
           )}
 
@@ -209,6 +213,8 @@ export default function ProjectDetail({project}: ProjectDetailProps) {
                       <Image
                         id={image.asset._ref}
                         alt={`Thumbnail ${idx + 1}`}
+                        hotspot={image.hotspot ?? undefined}
+                        crop={image.crop ?? undefined}
                         className="w-full h-full object-cover"
                         width={80}
                         height={80}

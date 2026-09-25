@@ -110,7 +110,9 @@ const galleryProjectFields = /* groq */ `
   order,
   "photoGallery": photoGallery[]{
     asset,
-    alt
+    alt,
+    hotspot,
+    crop
   }
 `
 

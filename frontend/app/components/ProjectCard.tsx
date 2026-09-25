@@ -15,6 +15,8 @@ interface ProjectCardProps {
         _type?: string
       } | null
       alt?: string | null
+      hotspot?: {x: number; y: number} | null
+      crop?: {top: number; bottom: number; left: number; right: number} | null
     }> | null
   }
 }
@@ -32,6 +34,8 @@ export default function ProjectCard({project}: ProjectCardProps) {
           <Image
             id={firstImage.asset._ref}
             alt={firstImage.alt || project.projectName || 'Project image'}
+            hotspot={firstImage.hotspot ?? undefined}
+            crop={firstImage.crop ?? undefined}
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
             width={600}
             height={450}
