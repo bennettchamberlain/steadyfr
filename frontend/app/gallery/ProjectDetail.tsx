@@ -100,35 +100,39 @@ export default function ProjectDetail({project}: ProjectDetailProps) {
 
   return (
     <div
-      className={`fixed inset-0 z-[60] flex items-center justify-center bg-black/95 p-4 transition-opacity duration-300 ease-out ${
+      className={`fixed inset-0 z-[60] overflow-y-auto bg-black/95 transition-opacity duration-300 ease-out ${
         visible ? 'opacity-100' : 'opacity-0'
       }`}
       onClick={handleClose}
     >
-      <div
-        className={`relative max-w-7xl w-full h-full flex flex-col transition-all duration-300 ease-out ${
-          visible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
-        }`}
-        onClick={(e) => e.stopPropagation()}
+      {/* Close button: fixed to the viewport so it stays reachable while scrolling */}
+      <button
+        onClick={(e) => {
+          e.stopPropagation()
+          handleClose()
+        }}
+        className="fixed top-4 right-4 z-[70] text-white hover:text-gray-300 transition-colors"
+        aria-label="Back to gallery"
       >
-        {/* Close button -> dismiss overlay / back to gallery */}
-        <button
-          onClick={handleClose}
-          className="absolute top-4 right-4 z-10 text-white hover:text-gray-300 transition-colors"
-          aria-label="Back to gallery"
-        >
-          <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
-        </button>
+        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M6 18L18 6M6 6l12 12"
+          />
+        </svg>
+      </button>
 
-        {/* Main image */}
-        <div className="flex-1 flex items-center justify-center relative">
+      <div className="flex min-h-full items-center justify-center p-4">
+        <div
+          className={`relative w-full max-w-7xl flex flex-col transition-all duration-300 ease-out ${
+            visible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
+          }`}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Main image */}
+          <div className="relative flex items-center justify-center">
           {currentImage?.asset?._ref && (
             <Image
               id={currentImage.asset._ref}
@@ -136,7 +140,7 @@ export default function ProjectDetail({project}: ProjectDetailProps) {
                 currentImage.alt ||
                 `${project.projectName} - Image ${currentImageIndex + 1}`
               }
-              className="max-h-full max-w-full object-contain"
+              className="max-h-[75vh] max-w-full object-contain"
               width={1920}
               height={1080}
               sizes="100vw"
@@ -215,6 +219,7 @@ export default function ProjectDetail({project}: ProjectDetailProps) {
                 ))}
               </div>
             )}
+            </div>
           </div>
         </div>
       </div>
