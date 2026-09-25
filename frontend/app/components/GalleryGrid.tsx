@@ -1,10 +1,10 @@
 'use client'
 
-import {useState} from 'react'
-import ImageModal from './ImageModal'
+import Link from 'next/link'
 import ProjectCard from './ProjectCard'
 import {trackGAEvent} from './GoogleAnalytics'
 import {trackMetaEvent} from './MetaPixel'
+import {projectSlug} from '@/app/gallery/slugify'
 
 interface GalleryProject {
   _id: string
@@ -27,11 +27,17 @@ interface GalleryGridProps {
 }
 
 export default function GalleryGrid({projects, columns = 3}: GalleryGridProps) {
-  const [selectedProject, setSelectedProject] = useState<GalleryProject | null>(null)
-  const [isModalOpen, setIsModalOpen] = useState(false)
-
   const handleProjectClick = (project: GalleryProject) => {
-    // Track gallery project click
+    // Mark that this navigation came from a gallery card, so the project page's
+    // close button can go *back* (restoring the grid's scroll position) rather
+    // than pushing a fresh /gallery route that resets scroll to the top.
+    try {
+      sessionStorage.setItem('galleryReturn', '1')
+    } catch {
+      // sessionStorage may be unavailable (private mode); non-critical
+    }
+
+    // Track gallery project click (navigation now goes to the project page)
     const projectName = project.projectName || 'Unknown Project'
     trackGAEvent('gallery_project_click', {
       event_category: 'gallery',
@@ -40,20 +46,12 @@ export default function GalleryGrid({projects, columns = 3}: GalleryGridProps) {
       project_location: project.location || '',
       project_categories: project.categories?.join(', ') || '',
     })
-    // Track Meta Pixel event
     trackMetaEvent('ViewContent', {
       content_name: projectName,
       content_category: 'Gallery',
       content_ids: [project._id],
       content_type: 'product',
     })
-    setSelectedProject(project)
-    setIsModalOpen(true)
-  }
-
-  const closeModal = () => {
-    setIsModalOpen(false)
-    setTimeout(() => setSelectedProject(null), 300)
   }
 
   const gridCols = {
@@ -71,23 +69,18 @@ export default function GalleryGrid({projects, columns = 3}: GalleryGridProps) {
   }
 
   return (
-    <>
-      <div className={`grid grid-cols-1 gap-6 ${gridCols[columns]}`}>
-        {projects.map((project) => (
-          <ProjectCard
-            key={project._id}
-            project={project}
-            onClick={() => handleProjectClick(project)}
-          />
-        ))}
-      </div>
-      {selectedProject && (
-        <ImageModal
-          project={selectedProject}
-          isOpen={isModalOpen}
-          onClose={closeModal}
-        />
-      )}
-    </>
+    <div className={`grid grid-cols-1 gap-6 ${gridCols[columns]}`}>
+      {projects.map((project) => (
+        <Link
+          key={project._id}
+          href={`/gallery/${projectSlug(project.projectName, project._id)}`}
+          onClick={() => handleProjectClick(project)}
+          prefetch
+          className="block"
+        >
+          <ProjectCard project={project} />
+        </Link>
+      ))}
+    </div>
   )
 }

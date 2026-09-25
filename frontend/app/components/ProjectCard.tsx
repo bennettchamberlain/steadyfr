@@ -16,17 +16,15 @@ interface ProjectCardProps {
       alt?: string | null
     }> | null
   }
-  onClick?: () => void
 }
 
-export default function ProjectCard({project, onClick}: ProjectCardProps) {
+export default function ProjectCard({project}: ProjectCardProps) {
   const firstImage = project.photoGallery?.[0]
   const categories = project.categories || []
 
   return (
     <div
       className="group cursor-pointer overflow-hidden rounded-lg bg-gray-900 transition-transform hover:scale-[1.02]"
-      onClick={onClick}
     >
       {firstImage?.asset?._ref && (
         <div className="relative aspect-[4/3] overflow-hidden">
