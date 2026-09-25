@@ -1,8 +1,9 @@
 'use client'
 
-import {useMemo, useState} from 'react'
+import {useState} from 'react'
 import {useRouter, usePathname, useSearchParams} from 'next/navigation'
 import GalleryGrid from '@/app/components/GalleryGrid'
+import {GALLERY_CATEGORIES} from '@/app/gallery/categories'
 
 interface GalleryProject {
   _id: string
@@ -18,26 +19,17 @@ interface GalleryProject {
 
 const ALL = 'all'
 
-// "traditional-handrail" -> "Traditional handrail"
-function formatCategory(cat: string): string {
-  const spaced = cat.replace(/-/g, ' ')
-  return spaced.charAt(0).toUpperCase() + spaced.slice(1)
-}
+// Fixed set/order of categories shown as filter pills.
+const categories = GALLERY_CATEGORIES
 
 export default function GalleryWithFilters({projects}: {projects: GalleryProject[]}) {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
 
-  // Categories present in the actual data, so the pills stay in sync with content.
-  const categories = useMemo(() => {
-    const set = new Set<string>()
-    for (const p of projects) for (const c of p.categories || []) set.add(c)
-    return Array.from(set).sort()
-  }, [projects])
-
   const urlFilter = searchParams.get('filter')
-  const initial = urlFilter && categories.includes(urlFilter) ? urlFilter : ALL
+  const initial =
+    urlFilter && categories.some((c) => c.value === urlFilter) ? urlFilter : ALL
   const [active, setActive] = useState(initial)
 
   const filtered =
@@ -71,11 +63,11 @@ export default function GalleryWithFilters({projects}: {projects: GalleryProject
           </button>
           {categories.map((cat) => (
             <button
-              key={cat}
-              onClick={() => selectFilter(cat)}
-              className={`${pillBase} ${active === cat ? pillActive : pillInactive}`}
+              key={cat.value}
+              onClick={() => selectFilter(cat.value)}
+              className={`${pillBase} ${active === cat.value ? pillActive : pillInactive}`}
             >
-              {formatCategory(cat)}
+              {cat.label}
             </button>
           ))}
         </div>

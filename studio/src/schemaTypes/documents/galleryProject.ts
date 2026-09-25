@@ -32,15 +32,11 @@ export const galleryProject = defineType({
       of: [{type: 'string'}],
       options: {
         list: [
-          {title: 'Traditional Handrail', value: 'traditional-handrail'},
-          {title: 'Guardrail with Balusters', value: 'guardrail-balusters'},
-          {title: 'Vertical Picket', value: 'vertical-picket'},
           {title: 'Cable Rail', value: 'cable-rail'},
-          {title: 'Ornate Balusters', value: 'ornate-balusters'},
+          {title: 'Picket', value: 'picket'},
+          {title: 'Slat', value: 'slat'},
+          {title: 'No Infill', value: 'no-infill'},
           {title: 'Custom', value: 'custom'},
-          {title: 'Stair Railing', value: 'stair-railing'},
-          {title: 'Deck Rail', value: 'deck-rail'},
-          {title: 'Gate', value: 'gate'},
         ],
       },
       validation: (rule) => rule.required().min(1),

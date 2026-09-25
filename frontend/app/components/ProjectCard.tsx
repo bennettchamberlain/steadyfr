@@ -1,6 +1,7 @@
 'use client'
 
 import Image from './SanityImage'
+import {categoryLabel} from '@/app/gallery/categories'
 
 interface ProjectCardProps {
   project: {
@@ -51,7 +52,7 @@ export default function ProjectCard({project}: ProjectCardProps) {
                 key={idx}
                 className="text-xs px-2 py-1 bg-gray-800 text-gray-300 rounded"
               >
-                {category.replace(/-/g, ' ')}
+                {categoryLabel(category)}
               </span>
             ))}
             {categories.length > 3 && (

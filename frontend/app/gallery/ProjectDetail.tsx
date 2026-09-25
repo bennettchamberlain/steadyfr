@@ -4,6 +4,7 @@ import {useState, useEffect, useCallback} from 'react'
 import {useRouter} from 'next/navigation'
 import Link from 'next/link'
 import Image from '@/app/components/SanityImage'
+import {categoryLabel} from '@/app/gallery/categories'
 
 interface ProjectDetailProps {
   project: {
@@ -182,7 +183,7 @@ export default function ProjectDetail({project}: ProjectDetailProps) {
                     key={idx}
                     className="text-sm px-3 py-1 bg-gray-800 text-gray-300 rounded-full"
                   >
-                    {category.replace(/-/g, ' ')}
+                    {categoryLabel(category)}
                   </span>
                 ))}
               </div>
