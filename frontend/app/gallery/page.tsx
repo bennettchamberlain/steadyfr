@@ -1,4 +1,6 @@
+import {Suspense} from 'react'
 import GalleryGrid from '@/app/components/GalleryGrid'
+import GalleryWithFilters from '@/app/gallery/GalleryWithFilters'
 import {allGalleryProjectsQuery} from '@/sanity/lib/queries'
 import {sanityFetch} from '@/sanity/lib/live'
 
@@ -6,6 +8,12 @@ export const metadata = {
   title: 'Gallery | Steady Fence & Railing',
   description:
     'Browse our portfolio of railing projects throughout the San Francisco Bay Area. Stair railings, deck rails, guardrails, gates, and custom metalwork.',
+  // Canonicalize all filtered views (/gallery?filter=...) to the single gallery
+  // page so search engines consolidate signals here instead of indexing thin,
+  // near-duplicate filtered variants.
+  alternates: {
+    canonical: 'https://steadyfnr.com/gallery',
+  },
 }
 
 export default async function GalleryPage() {
@@ -51,7 +59,9 @@ export default async function GalleryPage() {
       <section className="py-20 bg-gray-950 min-h-screen">
         <div className="container px-4 sm:px-6">
           {projects && projects.length > 0 ? (
-            <GalleryGrid projects={projects} columns={3} />
+            <Suspense fallback={<GalleryGrid projects={projects} columns={3} />}>
+              <GalleryWithFilters projects={projects} />
+            </Suspense>
           ) : (
             <div className="text-center py-20">
               <p className="text-gray-400 text-lg mb-4">No projects available yet.</p>
