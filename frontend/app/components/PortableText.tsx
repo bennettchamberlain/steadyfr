@@ -32,6 +32,7 @@ export default function CustomPortableText({
               id={value.asset._ref}
               alt={value.alt || ''}
               width={672}
+              hotspot={value.hotspot}
               crop={value.crop}
               mode="cover"
               className="rounded-sm"

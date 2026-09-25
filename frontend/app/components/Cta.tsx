@@ -59,6 +59,7 @@ export default function CTA({block}: CtaProps) {
               id={image.asset._ref}
               alt="Demo image"
               width={704}
+              hotspot={image.hotspot}
               crop={image.crop}
               mode="cover"
               className="rounded-sm"
