@@ -518,15 +518,12 @@ San Francisco Bay Area`
     return NextResponse.json({
       success: true,
       messageId: info.messageId,
-      accepted: info.accepted,
-      response: info.response,
     })
   } catch (error) {
     console.error('[send-quote-email] Error sending email:', error)
     return NextResponse.json(
       {
         error: 'Failed to send email',
-        details: error instanceof Error ? error.message : 'Unknown error',
       },
       {status: 500}
     )
