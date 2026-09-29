@@ -1,7 +1,11 @@
 'use client'
 
 import {useEffect} from 'react'
-import {trackGAEvent} from '@/app/components/GoogleAnalytics'
+import {
+  trackGAEvent,
+  trackGoogleAdsConversion,
+  CONTACT_CONVERSION_SEND_TO,
+} from '@/app/components/GoogleAnalytics'
 import {trackMetaEvent} from '@/app/components/MetaPixel'
 import {trackDataHashEvent} from '@/app/components/DataHashGateway'
 
@@ -33,6 +37,8 @@ export default function ContactPageTracker() {
         content_category: 'Contact',
         contact_method: 'email',
       })
+      // Google Ads conversion
+      trackGoogleAdsConversion(CONTACT_CONVERSION_SEND_TO)
     }
     if (emailLink) {
       emailLink.addEventListener('click', handleEmailClick)
@@ -57,6 +63,8 @@ export default function ContactPageTracker() {
         content_category: 'Contact',
         contact_method: 'phone',
       })
+      // Google Ads conversion
+      trackGoogleAdsConversion(CONTACT_CONVERSION_SEND_TO)
     }
     if (phoneLink) {
       phoneLink.addEventListener('click', handlePhoneClick)
