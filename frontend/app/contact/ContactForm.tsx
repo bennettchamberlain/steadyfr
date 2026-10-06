@@ -1,6 +1,6 @@
 'use client'
 
-import {useState} from 'react'
+import {useState, useEffect} from 'react'
 import {
   trackGAEvent,
   trackGoogleAdsConversion,
@@ -137,6 +137,7 @@ interface State {
   files: File[]; additional: string
   idx: number; submitting: boolean; submitted: boolean; submitError: string
   errName: string; errEmail: string; errPhone: string; errContact: string
+  booked: Record<string, Array<[number, number]>>
 }
 
 const now = new Date()
@@ -149,11 +150,30 @@ const initial: State = {
   files: [], additional: '',
   idx: 0, submitting: false, submitted: false, submitError: '',
   errName: '', errEmail: '', errPhone: '', errContact: '',
+  booked: {},
 }
 
 export default function ContactForm() {
   const [s, setS] = useState<State>(initial)
   const set = (patch: Partial<State>) => setS((prev) => ({...prev, ...patch}))
+
+  // Pull existing bookings from Notion so already-taken times are greyed out.
+  useEffect(() => {
+    const startD = midnight(new Date())
+    const endD = midnight(new Date())
+    endD.setDate(endD.getDate() + 120)
+    fetch(`/api/availability?start=${toIso(startD)}&end=${toIso(endD)}`)
+      .then((r) => (r.ok ? r.json() : {booked: {}}))
+      .then((d) => setS((prev) => ({...prev, booked: d.booked || {}})))
+      .catch(() => {})
+  }, [])
+
+  const slotStep = (k: 'shop' | 'call') => (k === 'shop' ? 60 : 30)
+  const overlapsBooked = (iso: string, m: number, dur: number) =>
+    (s.booked[iso] || []).some(([x, y]) => m < y && x < m + dur)
+  // Rule-based slots minus anything already booked in Notion.
+  const availMins = (k: 'shop' | 'call', date: Date) =>
+    daySlotMins(k, date).filter((m) => !overlapsBooked(toIso(date), m, slotStep(k)))
 
   const hasBiz = !!s.company.trim()
   const effPath = hasBiz ? s.path : 'scheduleCall'
@@ -262,7 +282,7 @@ export default function ContactForm() {
       d.setDate(d.getDate() + i)
       return d
     })
-    const sets = days.map((d) => new Set(daySlotMins('call', d)))
+    const sets = days.map((d) => new Set(availMins('call', d)))
     const all = new Set<number>()
     sets.forEach((st) => st.forEach((m) => all.add(m)))
     const rows = [...all].sort((a, b) => a - b)
@@ -321,7 +341,7 @@ export default function ContactForm() {
     for (let d = 1; d <= days; d++) {
       const date = new Date(y, m, d)
       const iso = toIso(date)
-      const dis = daySlotMins('shop', date).length === 0
+      const dis = availMins('shop', date).length === 0
       const sel = s.visitDate === iso
       cells.push(
         <button
@@ -365,7 +385,7 @@ export default function ContactForm() {
   }
 
   function Slots() {
-    const mins = s.visitDate ? daySlotMins(kind, new Date(s.visitDate + 'T00:00')) : []
+    const mins = s.visitDate ? availMins(kind, new Date(s.visitDate + 'T00:00')) : []
     if (!s.visitDate) return null
     if (!mins.length) return <p className="text-gray-400 text-sm">No availability that day — pick another.</p>
     return (
