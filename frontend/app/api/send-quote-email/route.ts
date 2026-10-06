@@ -1,5 +1,6 @@
 import {NextRequest, NextResponse} from 'next/server'
 import nodemailer from 'nodemailer'
+import {createWebsiteLead} from '@/lib/notionLead'
 
 // Ensure this route uses the Node.js runtime so we can use nodemailer
 export const runtime = 'nodejs'
@@ -514,6 +515,22 @@ San Francisco Bay Area`
       messageId: info.messageId,
       acceptedRecipients: info.accepted,
     })
+
+    const styleLabel = data.style === 'victorian' ? 'Victorian Top Rail' : 'Rectangle Top Rail'
+    const notionResult = await createWebsiteLead({
+      name: data.name,
+      email: recipientEmail,
+      zip: data.zipcode,
+      source: 'Quote',
+      notes: [
+        `${styleLabel}, ${data.infill}`,
+        `Length ${data.materials.topRailFeet.toFixed(1)} ft`,
+        `Estimate $${data.price.total.toLocaleString(undefined, {maximumFractionDigits: 0})}`,
+      ].join('. '),
+    })
+    if (!notionResult.ok) {
+      console.error('[send-quote-email] Notion write failed:', notionResult.error)
+    }
     
     return NextResponse.json({
       success: true,

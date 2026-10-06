@@ -1,5 +1,6 @@
 import {NextRequest, NextResponse} from 'next/server'
 import nodemailer from 'nodemailer'
+import {appointmentFromSlot, createWebsiteLead} from '@/lib/notionLead'
 
 // Node runtime required for nodemailer
 export const runtime = 'nodejs'
@@ -193,6 +194,38 @@ export async function POST(request: NextRequest) {
       {error: 'Could not send your message. Please email sales@steadyfnr.com directly.'},
       {status: 502},
     )
+  }
+
+  const kind = data.path === 'visitShop' ? 'shop' : 'call'
+  const parsed =
+    data.visitDate && data.slot && !data.convenience
+      ? appointmentFromSlot(data.slot, kind)
+      : null
+  const notionResult = await createWebsiteLead({
+    name: data.name.trim(),
+    email: data.email,
+    phone: data.phone,
+    company: data.company,
+    street: data.street,
+    city: data.city,
+    state: data.region,
+    zip: data.zip,
+    propertyType: data.propType,
+    project: data.mode === 'specs' ? 'Specs' : data.mode === 'talk' ? 'Wants to talk' : undefined,
+    location: data.mode === 'specs' ? data.location : undefined,
+    railType: data.mode === 'specs' ? data.railType : undefined,
+    application: data.mode === 'specs' ? data.application : undefined,
+    infill: data.mode === 'specs' ? data.infill : undefined,
+    files: (data.files ?? []).map((file) => file.name),
+    notes: data.additional,
+    source: kind === 'shop' ? 'Shop visit' : 'Call',
+    visit:
+      parsed && data.visitDate
+        ? {date: data.visitDate, time: parsed.time, durationMinutes: parsed.durationMinutes}
+        : undefined,
+  })
+  if (!notionResult.ok) {
+    console.error('[send-contact] Notion write failed:', notionResult.error)
   }
 
   return NextResponse.json({ok: true})
