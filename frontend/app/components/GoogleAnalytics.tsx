@@ -5,6 +5,10 @@ import {usePathname, useSearchParams} from 'next/navigation'
 import {useEffect, Suspense} from 'react'
 
 const GA_MEASUREMENT_ID = 'G-PV51QJQLR9'
+// Google Ads (conversion tracking) — shares the same gtag.js already loaded for GA
+const GOOGLE_ADS_ID = 'AW-18264152079'
+// Conversion action: "Contact conversion"
+export const CONTACT_CONVERSION_SEND_TO = 'AW-18264152079/wNbYCLr48sccEI-wg4VE'
 
 declare global {
   interface Window {
@@ -53,6 +57,7 @@ export default function GoogleAnalytics() {
             gtag('config', '${GA_MEASUREMENT_ID}', {
               page_path: window.location.pathname,
             });
+            gtag('config', '${GOOGLE_ADS_ID}');
           `,
         }}
       />
@@ -73,6 +78,16 @@ export function trackGAEvent(
 ) {
   if (typeof window !== 'undefined' && window.gtag) {
     window.gtag('event', eventName, params)
+  }
+}
+
+/**
+ * Fire a Google Ads conversion.
+ * Usage: trackGoogleAdsConversion(CONTACT_CONVERSION_SEND_TO)
+ */
+export function trackGoogleAdsConversion(sendTo: string) {
+  if (typeof window !== 'undefined' && window.gtag) {
+    window.gtag('event', 'conversion', {send_to: sendTo})
   }
 }
 

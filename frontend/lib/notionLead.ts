@@ -3,17 +3,51 @@ const TIME_ZONE = 'America/Los_Angeles'
 const DATABASE_ID =
   process.env.NOTION_DATABASE_ID?.trim() || '3f101274-8342-804a-b00a-d041a2867b1b'
 
-export type LeadSource = 'Quote' | 'Site visit'
+export type LeadSource = 'Quote' | 'Call' | 'Shop visit'
 
 export type WebsiteLead = {
   name: string
-  email: string
+  email?: string
   phone?: string
   zip?: string
   notes?: string
   source: LeadSource
-  /** Pacific wall-clock site visit. Omit to log an all-day lead on today's Pacific date. */
-  visit?: {date: string; time: string}
+  /**
+   * Pacific wall-clock appointment. Omit to log an all-day lead on today's Pacific date.
+   * durationMinutes defaults to 60.
+   */
+  visit?: {date: string; time: string; durationMinutes?: number}
+}
+
+/** Turn a form slot like "9:00 AM" or "9:00 AM – 10:00 AM" into a Pacific start time. */
+export function appointmentFromSlot(
+  slot: string,
+  kind: 'shop' | 'call',
+): {time: string; durationMinutes: number} | null {
+  const parts = slot.split(/\s*[–—-]\s*/).map((part) => part.trim()).filter(Boolean)
+  const start = parseClock(parts[0] || '')
+  if (!start) return null
+
+  const end = parts[1] ? parseClock(parts[1]) : null
+  if (end) {
+    const [startHour, startMinute] = start.split(':').map(Number)
+    const [endHour, endMinute] = end.split(':').map(Number)
+    const duration = endHour * 60 + endMinute - (startHour * 60 + startMinute)
+    if (duration > 0) return {time: start, durationMinutes: duration}
+  }
+
+  return {time: start, durationMinutes: kind === 'shop' ? 60 : 30}
+}
+
+function parseClock(label: string): string | null {
+  const match = label.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i)
+  if (!match) return null
+  let hour = Number(match[1])
+  const minute = match[2]
+  const meridiem = match[3].toUpperCase()
+  if (meridiem === 'PM' && hour !== 12) hour += 12
+  if (meridiem === 'AM' && hour === 12) hour = 0
+  return `${String(hour).padStart(2, '0')}:${minute}`
 }
 
 function wallClock(instant: Date, timeZone: string) {
@@ -81,7 +115,8 @@ function pacificInstant(date: string, time: string): Date {
 function dateProperty(lead: WebsiteLead) {
   if (lead.visit?.date && lead.visit.time) {
     const start = pacificInstant(lead.visit.date, lead.visit.time)
-    const end = new Date(start.getTime() + 60 * 60 * 1000)
+    const minutes = lead.visit.durationMinutes ?? 60
+    const end = new Date(start.getTime() + minutes * 60 * 1000)
     return {
       date: {
         start: wallClock(start, TIME_ZONE),
