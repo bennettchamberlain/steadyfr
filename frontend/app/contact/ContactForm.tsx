@@ -218,14 +218,22 @@ export default function ContactForm() {
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify(payload),
       })
-      if (!res.ok) throw new Error('send failed')
+      const body = (await res.json().catch(() => ({}))) as {error?: string; notionError?: string}
+      if (!res.ok) {
+        const message = body.notionError || body.error || 'Could not send. Email sales@steadyfnr.com directly.'
+        console.error('[steady contact] /api/send-contact', res.status, body)
+        set({submitting: false, submitError: message})
+        return
+      }
       trackGAEvent('generate_lead', {event_category: 'contact', event_label: 'contact_form', currency: 'USD'})
       trackMetaEvent('Lead', {content_name: 'Contact Form', content_category: 'Contact'})
       trackDataHashEvent('Lead', {content_name: 'Contact Form', content_category: 'Contact'})
       trackGoogleAdsConversion(CONTACT_CONVERSION_SEND_TO)
       set({submitting: false, submitted: true})
-    } catch {
-      set({submitting: false, submitError: 'Could not send — please email sales@steadyfnr.com directly.'})
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Could not send. Email sales@steadyfnr.com directly.'
+      console.error('[steady contact]', message)
+      set({submitting: false, submitError: message})
     }
   }
 
