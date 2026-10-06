@@ -292,8 +292,8 @@ function generateEmailHTML(data: QuoteEmailData): string {
                   </tr>
                   <tr>
                     <td style="padding-top: 15px; text-align: center;">
-                      <a href="tel:4156357014" style="display: inline-block; padding: 12px 24px; background-color: #252837; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 14px; border: 1px solid #383d51;">
-                        Call (415) 635-7014
+                      <a href="tel:4153473270" style="display: inline-block; padding: 12px 24px; background-color: #252837; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 14px; border: 1px solid #383d51;">
+                        Call (415) 347-3270
                       </a>
                     </td>
                   </tr>
@@ -329,7 +329,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         error:
-          'We could not email your quote right now. Please call (415) 635-7014 or email sales@steadyfnr.com.',
+          'We could not email your quote right now. Please call (415) 347-3270 or email sales@steadyfnr.com.',
       },
       {status: 503}
     )
@@ -402,7 +402,7 @@ This is a preliminary estimate based on typical conditions. Final pricing may va
 Ready to get started? Contact us to schedule a site visit and finalize your railing project.
 
 Email: sales@steadyfnr.com
-Phone: (415) 635-7014
+Phone: (415) 347-3270
 
 Steady Fence & Railing
 San Francisco Bay Area`

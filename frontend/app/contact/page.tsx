@@ -69,10 +69,10 @@ export default function ContactPage() {
                 </div>
                 <div className="mt-1 text-[15px]">
                   <a
-                    href="tel:4156357014"
+                    href="tel:4153473270"
                     className="text-white border-b border-gray-700 hover:border-white transition-colors"
                   >
-                    (415) 635-7014
+                    (415) 347-3270
                   </a>
                 </div>
               </div>
