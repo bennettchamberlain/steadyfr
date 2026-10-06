@@ -226,7 +226,16 @@ export async function POST(request: NextRequest) {
   })
   if (!notionResult.ok) {
     console.error('[send-contact] Notion write failed:', notionResult.error)
+    return NextResponse.json(
+      {
+        ok: false,
+        emailed: true,
+        notionError: notionResult.error,
+        error: `Notion did not save this lead: ${notionResult.error}`,
+      },
+      {status: 502},
+    )
   }
 
-  return NextResponse.json({ok: true})
+  return NextResponse.json({ok: true, notionOk: true})
 }
