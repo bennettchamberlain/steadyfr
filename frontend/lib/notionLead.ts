@@ -9,7 +9,18 @@ export type WebsiteLead = {
   name: string
   email?: string
   phone?: string
+  company?: string
+  street?: string
+  city?: string
+  state?: string
   zip?: string
+  propertyType?: string
+  project?: string
+  location?: string[]
+  railType?: string[]
+  application?: string[]
+  infill?: string[]
+  files?: string[]
   notes?: string
   source: LeadSource
   /**
@@ -133,6 +144,14 @@ function richText(value: string) {
   return {rich_text: [{text: {content: value.slice(0, 2000)}}]}
 }
 
+function multiSelect(values?: string[]) {
+  const names = (values ?? []).map((value) => value.trim()).filter(Boolean)
+  if (!names.length) return undefined
+  return {multi_select: names.map((name) => ({name}))}
+}
+
+const EMAIL_OK = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
 export async function createWebsiteLead(
   lead: WebsiteLead,
 ): Promise<{ok: true; id: string} | {ok: false; error: string}> {
@@ -149,10 +168,35 @@ export async function createWebsiteLead(
     Date: dateProperty(lead),
   }
 
-  if (lead.email) properties.Email = {email: lead.email}
-  if (lead.phone) properties.Phone = {phone_number: lead.phone}
-  if (lead.zip) properties.Zip = richText(lead.zip)
-  if (lead.notes) properties.Notes = richText(lead.notes)
+  const email = lead.email?.trim()
+  if (email && EMAIL_OK.test(email)) properties.Email = {email}
+  const phone = lead.phone?.trim()
+  if (phone) properties.Phone = {phone_number: phone}
+  const textFields: Array<[string, string | undefined]> = [
+    ['Company', lead.company],
+    ['Street', lead.street],
+    ['City', lead.city],
+    ['State', lead.state],
+    ['Zip', lead.zip],
+    ['Notes', lead.notes],
+    ['Files', lead.files?.filter(Boolean).join(', ')],
+  ]
+  for (const [key, value] of textFields) {
+    const trimmed = value?.trim()
+    if (trimmed) properties[key] = richText(trimmed)
+  }
+  if (lead.propertyType?.trim()) properties['Property type'] = {select: {name: lead.propertyType.trim()}}
+  if (lead.project?.trim()) properties.Project = {select: {name: lead.project.trim()}}
+  const multiFields: Array<[string, string[] | undefined]> = [
+    ['Location', lead.location],
+    ['Rail type', lead.railType],
+    ['Application', lead.application],
+    ['Infill', lead.infill],
+  ]
+  for (const [key, values] of multiFields) {
+    const property = multiSelect(values)
+    if (property) properties[key] = property
+  }
 
   const response = await fetch('https://api.notion.com/v1/pages', {
     method: 'POST',

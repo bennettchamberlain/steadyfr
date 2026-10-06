@@ -201,17 +201,23 @@ export async function POST(request: NextRequest) {
     data.visitDate && data.slot && !data.convenience
       ? appointmentFromSlot(data.slot, kind)
       : null
-  const notes = rows
-    .filter(([label]) => label !== 'Name' && label !== 'Email' && label !== 'Phone')
-    .map(([label, value]) => `${label}: ${value}`)
-    .join('\n')
-
   const notionResult = await createWebsiteLead({
-    name: data.name,
+    name: data.name.trim(),
     email: data.email,
     phone: data.phone,
+    company: data.company,
+    street: data.street,
+    city: data.city,
+    state: data.region,
     zip: data.zip,
-    notes,
+    propertyType: data.propType,
+    project: data.mode === 'specs' ? 'Specs' : data.mode === 'talk' ? 'Wants to talk' : undefined,
+    location: data.mode === 'specs' ? data.location : undefined,
+    railType: data.mode === 'specs' ? data.railType : undefined,
+    application: data.mode === 'specs' ? data.application : undefined,
+    infill: data.mode === 'specs' ? data.infill : undefined,
+    files: (data.files ?? []).map((file) => file.name),
+    notes: data.additional,
     source: kind === 'shop' ? 'Shop visit' : 'Call',
     visit:
       parsed && data.visitDate
