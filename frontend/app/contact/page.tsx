@@ -1,6 +1,5 @@
-import Link from 'next/link'
-import {TrackedLink} from '@/app/components/TrackedLink'
 import ContactPageTracker from './ContactPageTracker'
+import ContactForm from './ContactForm'
 
 export const metadata = {
   title: 'Contact Us | Steady Fence & Railing',
@@ -123,32 +122,17 @@ export default function ContactPage() {
                     </a>
                   </div>
 
-                  <div className="border-t border-gray-800 pt-8">
-                    <div className="text-center">
-                      <p className="text-gray-400 mb-6">
-                        Prefer to get a quote online? Use our quick quote form.
-                      </p>
-                      <TrackedLink
-                        href="/#quote-widget"
-                        className="inline-flex items-center justify-center px-8 py-4 bg-white text-gray-900 font-semibold rounded-md hover:bg-gray-100 transition-colors"
-                        eventName="InitiateCheckout"
-                        eventParams={{
-                          content_name: 'Contact Page CTA - Get a Quote',
-                        }}
-                        gaEventName="quote_cta_click"
-                        gaEventParams={{
-                          event_category: 'quote',
-                          event_label: 'contact_page_get_quote',
-                          page: 'contact',
-                        }}
-                      >
-                        Get a Quote
-                      </TrackedLink>
-                    </div>
-                  </div>
                 </div>
               </div>
             </div>
+
+            {/* OR divider + appointment form */}
+            <div className="flex items-center gap-4 my-10">
+              <div className="h-px flex-1 bg-gray-800" />
+              <span className="font-mono text-xs tracking-[0.2em] text-gray-500">OR</span>
+              <div className="h-px flex-1 bg-gray-800" />
+            </div>
+            <ContactForm />
 
             {/* Additional Info */}
             <div className="mt-12 text-center">
