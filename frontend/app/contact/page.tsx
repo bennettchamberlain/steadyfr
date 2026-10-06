@@ -1,5 +1,5 @@
-import Link from 'next/link'
 import {TrackedLink} from '@/app/components/TrackedLink'
+import ContactForm from './ContactForm'
 import ContactPageTracker from './ContactPageTracker'
 
 export const metadata = {
@@ -69,6 +69,10 @@ export default function ContactPage() {
               />
               <div className="relative z-10">
                 <div className="space-y-8">
+                  <ContactForm />
+
+                  <div className="border-t border-gray-800"></div>
+
                   {/* Email */}
                   <div className="text-center">
                     <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-800 rounded-full mb-4">
