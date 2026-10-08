@@ -193,12 +193,7 @@ export default function ContactForm() {
   const cur = seq[idx]
   const reviewIdx = seq.indexOf('review')
 
-  const emailFilled = !!s.email.trim()
-  const phoneFilled = !!s.phone.trim()
-  const emailValid = !emailFilled || emailOk(s.email)
-  const phoneValid = !phoneFilled || phoneOk(s.phone)
-  const hasContact = (emailFilled && emailOk(s.email)) || (phoneFilled && phoneOk(s.phone))
-  const step1Valid = !!s.name.trim() && hasContact && emailValid && phoneValid
+  const step1Valid = !!s.name.trim() && emailOk(s.email) && phoneOk(s.phone)
   const canSkip = step1Valid && reviewIdx >= 0 && cur !== 'review'
 
   function advance() {
@@ -206,9 +201,9 @@ export default function ContactForm() {
       if (!step1Valid) {
         set({
           errName: s.name.trim() ? '' : 'Please add your name.',
-          errEmail: emailFilled && !emailValid ? 'Enter a valid email address.' : '',
-          errPhone: phoneFilled && !phoneValid ? 'Enter a valid phone number.' : '',
-          errContact: !emailFilled && !phoneFilled ? 'Add an email or phone number so we can reach you.' : '',
+          errEmail: !s.email.trim() ? 'Email is required.' : !emailOk(s.email) ? 'Enter a valid email address.' : '',
+          errPhone: !s.phone.trim() ? 'Phone is required.' : !phoneOk(s.phone) ? 'Enter a valid phone number.' : '',
+          errContact: '',
         })
         return
       }
@@ -460,12 +455,12 @@ export default function ContactForm() {
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label className={labelCls} htmlFor="c_email">Email</label>
+            <label className={labelCls} htmlFor="c_email">Email<span className="text-sky-400 ml-0.5">*</span></label>
             <input id="c_email" type="email" className={inputCls} placeholder="you@email.com" value={s.email} onChange={(e) => set({email: e.target.value, errEmail: '', errContact: ''})} />
             {s.errEmail && <div className="text-red-300 text-[13px] mt-1.5">{s.errEmail}</div>}
           </div>
           <div>
-            <label className={labelCls} htmlFor="c_phone">Phone</label>
+            <label className={labelCls} htmlFor="c_phone">Phone<span className="text-sky-400 ml-0.5">*</span></label>
             <input id="c_phone" type="tel" className={inputCls} placeholder="(415) 555-0100" value={s.phone} onChange={(e) => set({phone: formatPhone(e.target.value), errPhone: '', errContact: ''})} />
             {s.errPhone && <div className="text-red-300 text-[13px] mt-1.5">{s.errPhone}</div>}
           </div>
