@@ -259,8 +259,10 @@ export async function POST(request: NextRequest) {
       parsed && data.visitDate
         ? {date: data.visitDate, time: parsed.time, durationMinutes: parsed.durationMinutes}
         : undefined,
-    // Flexible "we'll reach out" leads are marked on the calendar for the day after they submit.
-    allDayDate: data.convenience ? pacificDatePlus(1) : undefined,
+    // Any lead without a concrete booked slot — whether they tapped the flexible
+    // button or skipped scheduling entirely — counts as flexible and is marked on
+    // the calendar for the day after they submit.
+    allDayDate: booked ? undefined : pacificDatePlus(1),
   })
   if (!notionResult.ok) {
     console.error('[send-contact] Notion write failed:', notionResult.error)
