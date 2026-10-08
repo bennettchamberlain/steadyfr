@@ -272,9 +272,20 @@ export default function ContactForm() {
 
   function CallWeek() {
     const today = midnight(new Date())
+    // After 6 PM Pacific (end of the business day) roll the 8-day window forward a
+    // day. Computed here on render/page load — an already-open page is never
+    // force-reloaded when the clock hits 6.
+    const pacHour = Number(
+      new Intl.DateTimeFormat('en-US', {
+        timeZone: 'America/Los_Angeles',
+        hour: '2-digit',
+        hourCycle: 'h23',
+      }).format(new Date()),
+    )
+    const startOffset = pacHour >= 18 ? 1 : 0
     const days = Array.from({length: 8}, (_, i) => {
       const d = new Date(today)
-      d.setDate(d.getDate() + i)
+      d.setDate(d.getDate() + startOffset + i)
       return d
     })
     const sets = days.map((d) => new Set(availMins('call', d)))
@@ -380,19 +391,32 @@ export default function ContactForm() {
   }
 
   function Slots() {
-    const mins = s.visitDate ? availMins(kind, new Date(s.visitDate + 'T00:00')) : []
     if (!s.visitDate) return null
-    if (!mins.length) return <p className="text-gray-400 text-sm">No availability that day — pick another.</p>
+    const d = new Date(s.visitDate + 'T00:00')
+    const all = daySlotMins(kind, d) // rule-based; already-booked ones are shown greyed out
+    if (!all.length) return <p className="text-gray-400 text-sm">No availability that day — pick another.</p>
+    const iso = toIso(d)
     return (
       <div className="mb-[18px]">
         <div className={glCls}>{kind === 'shop' ? 'Available times · 1 hr' : 'Available times · 30 min'}</div>
         <div className="grid gap-2.5" style={{gridTemplateColumns: 'repeat(auto-fill, minmax(132px, 1fr))'}}>
-          {mins.map((m) => {
+          {all.map((m) => {
             const t = slotLabel(kind, m)
+            const taken = overlapsBooked(iso, m, slotStep(kind))
             const sel = s.slot === t
             return (
-              <button key={m} type="button" onClick={() => set({slot: t})}
-                className={`rounded-lg border py-2.5 px-1.5 text-[13px] font-mono cursor-pointer transition-colors ${sel ? 'bg-sky-500/15 border-sky-500 text-white' : 'bg-gray-800 border-gray-700 text-white hover:border-gray-500'}`}>
+              <button
+                key={m}
+                type="button"
+                disabled={taken}
+                onClick={() => !taken && set({slot: t})}
+                className={`rounded-lg border py-2.5 px-1.5 text-[13px] font-mono transition-colors ${
+                  taken
+                    ? 'bg-gray-800/40 border-transparent text-gray-600 line-through cursor-not-allowed'
+                    : sel
+                      ? 'bg-sky-500/15 border-sky-500 text-white cursor-pointer'
+                      : 'bg-gray-800 border-gray-700 text-white hover:border-gray-500 cursor-pointer'
+                }`}>
                 {t}
               </button>
             )
