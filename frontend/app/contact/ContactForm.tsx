@@ -434,7 +434,7 @@ export default function ContactForm() {
     }
     add('Name', s.name); add('Email', s.email); add('Phone', s.phone); add('Company / firm', s.company)
     add('Connect via', effPath ? PATHS[effPath].t : '')
-    if (effPath === 'scheduleCall' && s.convenience) add('Scheduling', 'Flexible — contact at your convenience')
+    if (s.convenience) add('Scheduling', effPath === 'visitShop' ? "Flexible — we'll reach out to find a time" : 'Flexible — contact at your convenience')
     else if (s.visitDate) add(effPath === 'visitShop' ? 'Shop visit' : 'Call time', fmtDate(s.visitDate) + (s.slot ? ` · ${s.slot}` : ''))
     const addr = [s.street, s.city, [s.region, s.zip].filter(Boolean).join(' ')].filter(Boolean).join(', ')
     add('Property', addr); add('Property type', s.propType)
@@ -518,6 +518,10 @@ export default function ContactForm() {
         <p className="text-gray-400 text-sm mb-[18px]">Pick a date, then choose a one-hour time block.</p>
         <MonthCalendar />
         <Slots />
+        <button type="button" onClick={() => set({convenience: !s.convenience, visitDate: s.convenience ? s.visitDate : '', slot: s.convenience ? s.slot : ''})}
+          className={`block w-full mt-4 rounded-xl border px-4 py-3.5 text-sm text-center transition-colors ${s.convenience ? 'bg-sky-500/15 border-sky-500 text-white' : 'bg-gray-800 border-gray-600 border-dashed text-white hover:border-sky-500/50'}`}>
+          Scheduling Can Be Hard: Click Here And We&apos;ll Reach Out To Find A Time That Works
+        </button>
       </>
     ) : (
       <>
@@ -529,7 +533,7 @@ export default function ContactForm() {
         )}
         <button type="button" onClick={() => set({convenience: !s.convenience, visitDate: s.convenience ? s.visitDate : '', slot: s.convenience ? s.slot : ''})}
           className={`block w-full mt-4 rounded-xl border px-4 py-3.5 text-sm text-center transition-colors ${s.convenience ? 'bg-sky-500/15 border-sky-500 text-white' : 'bg-gray-800 border-gray-600 border-dashed text-white hover:border-sky-500/50'}`}>
-          Scheduling Can Be Hard: Let Us Contact You At Our Convenience
+          Scheduling Can Be Hard: Click Here And We&apos;ll Contact You
         </button>
       </>
     )
