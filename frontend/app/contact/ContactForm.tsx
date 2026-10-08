@@ -519,7 +519,7 @@ export default function ContactForm() {
         <MonthCalendar />
         <Slots />
         <button type="button" onClick={() => set({convenience: !s.convenience, visitDate: s.convenience ? s.visitDate : '', slot: s.convenience ? s.slot : ''})}
-          className={`block w-full mt-4 rounded-xl border px-4 py-3.5 text-sm text-center transition-colors ${s.convenience ? 'bg-sky-500/15 border-sky-500 text-white' : 'bg-gray-800 border-gray-600 border-dashed text-white hover:border-sky-500/50'}`}>
+          className={`block w-full mt-4 rounded-xl border px-4 py-3.5 text-sm text-center transition-colors ${s.convenience ? 'bg-sky-500/15 border-sky-500 text-white' : 'bg-gray-800 border-gray-700 text-white hover:border-gray-600'}`}>
           Scheduling Can Be Hard: Click Here And We&apos;ll Reach Out To Find A Time That Works
         </button>
       </>
@@ -532,7 +532,7 @@ export default function ContactForm() {
           <p className="text-gray-400 text-sm mt-3">Selected: <b className="text-white">{fmtDate(s.visitDate)} · {s.slot}</b></p>
         )}
         <button type="button" onClick={() => set({convenience: !s.convenience, visitDate: s.convenience ? s.visitDate : '', slot: s.convenience ? s.slot : ''})}
-          className={`block w-full mt-4 rounded-xl border px-4 py-3.5 text-sm text-center transition-colors ${s.convenience ? 'bg-sky-500/15 border-sky-500 text-white' : 'bg-gray-800 border-gray-600 border-dashed text-white hover:border-sky-500/50'}`}>
+          className={`block w-full mt-4 rounded-xl border px-4 py-3.5 text-sm text-center transition-colors ${s.convenience ? 'bg-sky-500/15 border-sky-500 text-white' : 'bg-gray-800 border-gray-700 text-white hover:border-gray-600'}`}>
           Scheduling Can Be Hard: Click Here And We&apos;ll Contact You
         </button>
       </>
