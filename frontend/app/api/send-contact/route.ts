@@ -75,9 +75,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({error: 'Invalid request.'}, {status: 400})
   }
 
-  if (!data.name?.trim() || (!data.email?.trim() && !data.phone?.trim())) {
+  if (!data.name?.trim() || !data.email?.trim() || !data.phone?.trim()) {
     return NextResponse.json(
-      {error: 'Name and an email or phone are required.'},
+      {error: 'Name, email, and phone are required.'},
       {status: 400},
     )
   }
@@ -130,21 +130,52 @@ export async function POST(request: NextRequest) {
     )
     .join('')
 
+  const firstName = data.name.trim().split(/\s+/)[0] || 'there'
+  const fmtDay = (iso?: string) => {
+    if (!iso) return ''
+    try {
+      return new Date(iso + 'T00:00').toLocaleDateString('en-US', {weekday: 'long', month: 'long', day: 'numeric'})
+    } catch {
+      return iso
+    }
+  }
+  const booked = !!(data.visitDate && data.slot && !data.convenience)
+  let nextLine: string
+  if (booked && data.path === 'visitShop') {
+    nextLine = `You're booked to visit the shop on <b>${esc(fmtDay(data.visitDate))} · ${esc(data.slot || '')}</b>. We look forward to seeing you.`
+  } else if (booked) {
+    nextLine = `You asked us to call you on <b>${esc(fmtDay(data.visitDate))} · ${esc(data.slot || '')}</b>. We'll reach out then.`
+  } else {
+    nextLine = `We'll reach out shortly to find a time that works.`
+  }
+  const nextLineText = nextLine.replace(/<\/?b>/g, '')
+
   const htmlContent = `
   <div style="background:#030712;padding:24px;font-family:Arial,Helvetica,sans-serif">
     <div style="max-width:560px;margin:0 auto;background:#0d1320;border:1px solid #283142;border-radius:12px;overflow:hidden">
       <div style="background:#163861;padding:18px 20px">
-        <div style="color:#fff;font-size:18px;font-weight:700">New contact form submission</div>
-        <div style="color:#c7d3e6;font-size:13px;margin-top:2px">Steady Fence &amp; Railing — website</div>
+        <div style="color:#fff;font-size:18px;font-weight:700">We received your request</div>
+        <div style="color:#c7d3e6;font-size:13px;margin-top:2px">Steady Fence &amp; Railing</div>
       </div>
-      <table style="width:100%;border-collapse:collapse">${rowsHtml}</table>
+      <div style="padding:20px">
+        <p style="color:#f5f7fa;font-size:15px;margin:0 0 14px">Hi ${esc(firstName)},</p>
+        <p style="color:#c7d3e6;font-size:14px;line-height:1.6;margin:0 0 14px">Thanks for reaching out to Steady Fence &amp; Railing — your request came through and we'll be in touch soon.</p>
+        <p style="color:#c7d3e6;font-size:14px;line-height:1.6;margin:0 0 18px">${nextLine}</p>
+        <div style="color:#9aa3b2;font-size:11px;text-transform:uppercase;letter-spacing:.08em;margin:0 0 4px">What you sent us</div>
+        <table style="width:100%;border-collapse:collapse">${rowsHtml}</table>
+        <p style="color:#c7d3e6;font-size:14px;line-height:1.6;margin:18px 0 0">Questions in the meantime? Call or text <b style="color:#fff">(415) 347-3270</b> or just reply to this email.</p>
+        <p style="color:#6b7585;font-size:13px;margin:16px 0 0">— Steady Fence &amp; Railing<br>San Francisco Bay Area</p>
+      </div>
     </div>
   </div>`
 
   const textContent =
-    'New contact form submission\n\n' +
+    `Hi ${firstName},\n\n` +
+    `Thanks for reaching out to Steady Fence & Railing — your request came through and we'll be in touch soon.\n\n` +
+    `${nextLineText}\n\n` +
+    `What you sent us:\n` +
     rows.map(([k, v]) => `${k}: ${v}`).join('\n') +
-    '\n\n— Steady Fence & Railing website'
+    `\n\nQuestions? Call or text (415) 347-3270 or reply to this email.\n\n— Steady Fence & Railing\nSan Francisco Bay Area`
 
   // Attachments, capped at a total size to stay within email limits.
   const attachments: Array<{filename: string; content: Buffer; contentType: string}> = []
@@ -175,13 +206,13 @@ export async function POST(request: NextRequest) {
     : ''
 
   const mailOptions = {
-    from: '"Steady Fence & Railing Website" <sales@steadyfnr.com>',
-    to: 'sales@steadyfnr.com',
+    from: '"Steady Fence & Railing" <sales@steadyfnr.com>',
+    to: (data.email || '').trim(),
     bcc: 'help@superhotfab.com',
-    replyTo: data.email?.trim() || undefined,
-    subject: `New contact — ${data.name}${data.company ? ` (${data.company})` : ''}`,
+    replyTo: 'sales@steadyfnr.com',
+    subject: 'We received your request — Steady Fence & Railing',
     html: htmlContent + skippedNote,
-    text: textContent + (skipped.length ? `\n\nFiles too large to attach: ${skipped.join(', ')}` : ''),
+    text: textContent + (skipped.length ? `\n\nNote: some files were too large to attach: ${skipped.join(', ')}` : ''),
     attachments,
   }
 
