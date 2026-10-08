@@ -1,6 +1,6 @@
 import {NextRequest, NextResponse} from 'next/server'
 import nodemailer from 'nodemailer'
-import {appointmentFromSlot, createWebsiteLead} from '@/lib/notionLead'
+import {appointmentFromSlot, createWebsiteLead, pacificDatePlus} from '@/lib/notionLead'
 
 // Node runtime required for nodemailer
 export const runtime = 'nodejs'
@@ -259,6 +259,8 @@ export async function POST(request: NextRequest) {
       parsed && data.visitDate
         ? {date: data.visitDate, time: parsed.time, durationMinutes: parsed.durationMinutes}
         : undefined,
+    // Flexible "we'll reach out" leads are marked on the calendar for the day after they submit.
+    allDayDate: data.convenience ? pacificDatePlus(1) : undefined,
   })
   if (!notionResult.ok) {
     console.error('[send-contact] Notion write failed:', notionResult.error)

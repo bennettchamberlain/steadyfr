@@ -28,6 +28,11 @@ export type WebsiteLead = {
    * durationMinutes defaults to 60.
    */
   visit?: {date: string; time: string; durationMinutes?: number}
+  /**
+   * All-day lead on this specific Pacific date (YYYY-MM-DD) instead of today — used for
+   * flexible "we'll reach out" leads, which are marked for the day after submission.
+   */
+  allDayDate?: string
 }
 
 /** Turn a form slot like "9:00 AM" or "9:00 AM – 10:00 AM" into a Pacific start time. */
@@ -81,6 +86,12 @@ function wallClock(instant: Date, timeZone: string) {
 
 function pacificDateOnly(instant: Date) {
   return wallClock(instant, TIME_ZONE).slice(0, 10)
+}
+
+/** Pacific calendar date (YYYY-MM-DD) `days` from now — defaults to tomorrow. */
+export function pacificDatePlus(days = 1): string {
+  const [year, month, day] = pacificDateOnly(new Date()).split('-').map(Number)
+  return new Date(Date.UTC(year, month - 1, day + days)).toISOString().slice(0, 10)
 }
 
 /** Interpret a Pacific wall-clock date and time as an absolute instant. */
@@ -137,7 +148,7 @@ function dateProperty(lead: WebsiteLead) {
     }
   }
 
-  return {date: {start: pacificDateOnly(new Date())}}
+  return {date: {start: lead.allDayDate || pacificDateOnly(new Date())}}
 }
 
 function richText(value: string) {
