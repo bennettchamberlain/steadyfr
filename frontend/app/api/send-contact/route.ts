@@ -93,8 +93,13 @@ export async function POST(request: NextRequest) {
   add('Phone', data.phone)
   add('Company / firm', data.company)
   add('Connect via', data.path ? PATH_LABEL[data.path] : '')
-  if (data.path === 'scheduleCall' && data.convenience) {
-    add('Scheduling', 'Flexible — contact at their convenience')
+  if (data.convenience) {
+    add(
+      'Scheduling',
+      data.path === 'visitShop'
+        ? "Flexible — we'll reach out to find a time"
+        : 'Flexible — contact at their convenience',
+    )
   } else if (data.visitDate) {
     add(
       data.path === 'visitShop' ? 'Requested shop visit' : 'Requested call',
