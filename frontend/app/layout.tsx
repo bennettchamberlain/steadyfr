@@ -37,14 +37,12 @@ export async function generateMetadata(): Promise<Metadata> {
     : 'Get a quote in a minute and a railing in a week. The shortest lead time in the San Francisco Bay Area.'
 
   const ogImage = resolveOpenGraphImage(settings?.ogImage)
-  let metadataBase: URL | undefined = undefined
-  try {
-    metadataBase = settings?.ogImage?.metadataBase
-      ? new URL(settings.ogImage.metadataBase)
-      : undefined
-  } catch {
-    // ignore
-  }
+  // The canonical production domain. Per-page canonical URLs and the sitemap all
+  // resolve against this, so keep it in sync with the Primary Domain in Vercel
+  // (currently www). Setting it here — rather than per-page canonical being
+  // inherited from the root — is what prevents every page from claiming the
+  // homepage as its canonical.
+  const metadataBase = new URL('https://www.steadyfnr.com')
   return {
     metadataBase,
     title: {
@@ -93,7 +91,7 @@ export async function generateMetadata(): Promise<Metadata> {
     openGraph: {
       type: 'website',
       locale: 'en_US',
-      url: 'https://steadyfnr.com',
+      url: 'https://www.steadyfnr.com',
       title: title,
       description: description,
       siteName: 'Steady Fence & Railing',
@@ -104,9 +102,6 @@ export async function generateMetadata(): Promise<Metadata> {
       title: title,
       description: description,
       images: ogImage ? [ogImage.url] : [],
-    },
-    alternates: {
-      canonical: 'https://steadyfnr.com',
     },
     other: {
       'geo.region': 'US-CA',

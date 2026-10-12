@@ -45,6 +45,7 @@ export async function generateMetadata(props: Props, parent: ResolvingMetadata):
   const ogImage = resolveOpenGraphImage(post?.coverImage)
 
   return {
+    alternates: {canonical: `/posts/${params.slug}`},
     authors:
       post?.author?.firstName && post?.author?.lastName
         ? [{name: `${post.author.firstName} ${post.author.lastName}`}]

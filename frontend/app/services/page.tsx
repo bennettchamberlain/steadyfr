@@ -2,6 +2,7 @@ import Link from 'next/link'
 import {TrackedLink} from '@/app/components/TrackedLink'
 
 export const metadata = {
+  alternates: {canonical: '/services'},
   title: 'Services | Steady Fence & Railing',
   description:
     'Expert railing installation services in the San Francisco Bay Area. Traditional handrails, guardrails with balusters, cable rail, ornate balusters, and custom designs.',

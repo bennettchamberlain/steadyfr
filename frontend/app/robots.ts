@@ -7,6 +7,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: '/',
       disallow: ['/api/', '/studio/', '/_next/'],
     },
-    sitemap: 'https://steadyfnr.com/sitemap.xml',
+    sitemap: 'https://www.steadyfnr.com/sitemap.xml',
   }
 }
