@@ -7,6 +7,7 @@ import {sanityFetch} from '@/sanity/lib/live'
 import YelpLinkTracker from '@/app/components/YelpLinkTracker'
 
 export const metadata = {
+  alternates: {canonical: '/'},
   title: 'Steady Fence & Railing | San Francisco Bay Area Railing & Fence Installation',
   description:
     'Get a quote in a minute and a railing in a week. The shortest lead time in the San Francisco Bay Area. Quality railing installations including stair railings, deck rails, guardrails, and custom metalwork. Serving San Francisco, Oakland, San Jose, Berkeley, and Palo Alto.',

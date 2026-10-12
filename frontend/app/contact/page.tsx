@@ -2,6 +2,7 @@ import ContactPageTracker from './ContactPageTracker'
 import ContactForm from './ContactForm'
 
 export const metadata = {
+  alternates: {canonical: '/contact'},
   title: 'Contact Us | Steady Fence & Railing',
   description:
     'Contact Steady Fence & Railing in the San Francisco Bay Area. Email or call us for a free quote on your railing project.',

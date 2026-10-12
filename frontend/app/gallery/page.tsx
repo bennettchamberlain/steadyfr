@@ -12,7 +12,7 @@ export const metadata = {
   // page so search engines consolidate signals here instead of indexing thin,
   // near-duplicate filtered variants.
   alternates: {
-    canonical: 'https://steadyfnr.com/gallery',
+    canonical: '/gallery',
   },
 }
 
