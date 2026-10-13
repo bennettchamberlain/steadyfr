@@ -7,7 +7,6 @@ import {
   CONTACT_CONVERSION_SEND_TO,
 } from '@/app/components/GoogleAnalytics'
 import {trackMetaEvent} from '@/app/components/MetaPixel'
-import {trackDataHashEvent} from '@/app/components/DataHashGateway'
 
 // ---- pure helpers -------------------------------------------------------
 const emailOk = (v: string) => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v)
@@ -242,7 +241,6 @@ export default function ContactForm() {
       }
       trackGAEvent('generate_lead', {event_category: 'contact', event_label: 'contact_form', currency: 'USD'})
       trackMetaEvent('Lead', {content_name: 'Contact Form', content_category: 'Contact'})
-      trackDataHashEvent('Lead', {content_name: 'Contact Form', content_category: 'Contact'})
       trackGoogleAdsConversion(CONTACT_CONVERSION_SEND_TO)
       set({submitting: false, submitted: true})
     } catch (err) {

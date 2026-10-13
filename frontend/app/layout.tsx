@@ -11,7 +11,6 @@ import Toaster from '@/app/components/Toaster'
 import Footer from '@/app/components/Footer'
 import Header from '@/app/components/Header'
 import MetaPixel from '@/app/components/MetaPixel'
-import DataHashGateway from '@/app/components/DataHashGateway'
 import GoogleAnalytics from '@/app/components/GoogleAnalytics'
 import NavigationTracker from '@/app/components/NavigationTracker'
 import LocalBusinessSchema from '@/app/components/LocalBusinessSchema'
@@ -149,7 +148,6 @@ export default async function RootLayout({children}: {children: React.ReactNode}
         </section>
         <SpeedInsights />
         <MetaPixel />
-        <DataHashGateway />
         <GoogleAnalytics />
         <NavigationTracker />
         <LocalBusinessSchema />
