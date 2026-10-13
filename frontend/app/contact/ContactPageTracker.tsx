@@ -7,7 +7,6 @@ import {
   CONTACT_CONVERSION_SEND_TO,
 } from '@/app/components/GoogleAnalytics'
 import {trackMetaEvent} from '@/app/components/MetaPixel'
-import {trackDataHashEvent} from '@/app/components/DataHashGateway'
 
 export default function ContactPageTracker() {
   useEffect(() => {
@@ -32,11 +31,6 @@ export default function ContactPageTracker() {
         content_category: 'Contact',
         contact_method: 'email',
       })
-      trackDataHashEvent('Contact', {
-        content_name: 'Email Click',
-        content_category: 'Contact',
-        contact_method: 'email',
-      })
       // Google Ads conversion
       trackGoogleAdsConversion(CONTACT_CONVERSION_SEND_TO)
     }
@@ -54,11 +48,6 @@ export default function ContactPageTracker() {
         contact_value: '4153473270',
       })
       trackMetaEvent('Contact', {
-        content_name: 'Phone Click',
-        content_category: 'Contact',
-        contact_method: 'phone',
-      })
-      trackDataHashEvent('Contact', {
         content_name: 'Phone Click',
         content_category: 'Contact',
         contact_method: 'phone',
