@@ -1,4 +1,5 @@
 import {Suspense} from 'react'
+import ArticleCTA from '@/app/components/ArticleCTA'
 import GalleryGrid from '@/app/components/GalleryGrid'
 import GalleryWithFilters from '@/app/gallery/GalleryWithFilters'
 import {allGalleryProjectsQuery} from '@/sanity/lib/queries'
@@ -70,6 +71,15 @@ export default async function GalleryPage() {
               </p>
             </div>
           )}
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="pb-20 bg-gray-950">
+        <div className="container px-4 sm:px-6">
+          <div className="max-w-3xl mx-auto">
+            <ArticleCTA />
+          </div>
         </div>
       </section>
     </>

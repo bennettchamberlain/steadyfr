@@ -1,6 +1,6 @@
 import {Suspense} from 'react'
 import Link from 'next/link'
-import {TrackedLink} from '@/app/components/TrackedLink'
+import ArticleCTA from '@/app/components/ArticleCTA'
 import ServicesHub from '@/app/services/ServicesHub'
 import {GALLERY_CATEGORIES} from '@/app/gallery/categories'
 import {articlesQuery} from '@/sanity/lib/queries'
@@ -148,27 +148,8 @@ export default async function ServicesPage() {
       {/* CTA Section */}
       <section className="py-20 bg-gray-950">
         <div className="container px-4 sm:px-6">
-          <div className="max-w-3xl mx-auto text-center">
-            <h2 className="text-3xl sm:text-4xl font-bold text-white mb-6">Ready to Get Started?</h2>
-            <p className="text-gray-400 mb-8 text-lg">
-              Get a quote in a minute and have your railing installed in a week
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <TrackedLink
-                href="/#quote-widget"
-                className="inline-flex items-center justify-center px-8 py-4 bg-white text-gray-900 font-semibold rounded-md hover:bg-gray-100 transition-colors text-lg"
-                eventName="InitiateCheckout"
-                eventParams={{content_name: 'Services Page CTA - Get a Quote'}}
-              >
-                Get a Quote
-              </TrackedLink>
-              <Link
-                href="/gallery"
-                className="inline-flex items-center justify-center px-8 py-4 bg-gray-800 text-white font-semibold rounded-md hover:bg-gray-700 transition-colors text-lg border border-gray-700"
-              >
-                View Gallery
-              </Link>
-            </div>
+          <div className="max-w-3xl mx-auto">
+            <ArticleCTA />
           </div>
         </div>
       </section>
