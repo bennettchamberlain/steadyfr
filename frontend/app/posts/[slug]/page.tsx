@@ -97,6 +97,14 @@ export default async function PostPage(props: Props) {
                   />
                 )}
               </div>
+              {post.keyTakeaways?.length ? (
+                <div className="max-w-2xl rounded-xl border border-gray-700 border-l-4 border-l-sky-500 bg-sky-500/5 px-6 py-5">
+                  <PortableText
+                    className="prose-sm prose-p:my-1.5 prose-ul:my-2 prose-li:my-0.5"
+                    value={post.keyTakeaways as PortableTextBlock[]}
+                  />
+                </div>
+              ) : null}
               {post.content?.length && (
                 <PortableText
                   className="max-w-2xl prose-headings:font-medium prose-headings:tracking-tight"
@@ -104,6 +112,17 @@ export default async function PostPage(props: Props) {
                 />
               )}
               <ArticleCTA />
+              {post.worksCited?.length ? (
+                <section className="max-w-2xl mt-10 border-t border-gray-800 pt-6">
+                  <h2 className="mb-3 font-mono text-xs uppercase tracking-wider text-gray-500">
+                    Works Cited
+                  </h2>
+                  <PortableText
+                    className="prose-sm max-w-none prose-p:my-1 prose-p:text-gray-400"
+                    value={post.worksCited as PortableTextBlock[]}
+                  />
+                </section>
+              ) : null}
             </article>
           </div>
         </div>

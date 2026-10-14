@@ -95,6 +95,8 @@ export const postQuery = defineQuery(`
       ${linkReference}
     }
   },
+    keyTakeaways,
+    worksCited,
     ${postFields}
   }
 `)

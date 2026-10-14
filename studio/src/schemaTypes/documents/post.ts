@@ -59,6 +59,13 @@ export const post = defineType({
       },
     }),
     defineField({
+      name: 'keyTakeaways',
+      title: 'Key Takeaways / TL;DR',
+      description:
+        'Optional. Shown as a highlighted callout box near the top of the article, for readers who skim. A short intro line plus a few bullet points works well.',
+      type: 'blockContentTextOnly',
+    }),
+    defineField({
       name: 'coverImage',
       title: 'Cover Image',
       type: 'image',
@@ -98,6 +105,13 @@ export const post = defineType({
       title: 'Author',
       type: 'reference',
       to: [{type: 'person'}],
+    }),
+    defineField({
+      name: 'worksCited',
+      title: 'Works Cited',
+      description:
+        'Optional. Shown in a "Works Cited" section at the very bottom of the article, after the call-to-action. One source per line.',
+      type: 'blockContentTextOnly',
     }),
   ],
   // List preview configuration. https://www.sanity.io/docs/previews-list-views
