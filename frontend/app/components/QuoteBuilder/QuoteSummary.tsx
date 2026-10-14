@@ -16,6 +16,7 @@ import {PRICING} from '../utils/pricingConstants'
 import {PDF_CONFIG} from '../utils/pdfConstants'
 import {trackMetaEvent} from '@/app/components/MetaPixel'
 import {trackGAEvent} from '@/app/components/GoogleAnalytics'
+import FormConsentNotice from '@/app/components/FormConsentNotice'
 
 interface QuoteSummaryProps {
   style: RailStyle
@@ -935,7 +936,8 @@ export function QuoteSummary({
           >
             {isSubmitting ? 'Sending...' : 'Submit Quote & Get Email'}
           </button>
-          
+          <FormConsentNotice className="mt-3" sms={false} />
+
           {submitStatus === 'success' && (
             <div className="mt-3 p-3 bg-green-900/20 border border-green-700 rounded text-sm text-green-300">
               ✓ Quote sent successfully! Check your email for details.
