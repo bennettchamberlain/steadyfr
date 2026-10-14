@@ -20,7 +20,8 @@ export default function FormConsentNotice({
       <Link href="/privacy" className="underline hover:text-gray-300 transition-colors">
         Privacy Policy
       </Link>{' '}
-      and to be contacted by {sms ? 'phone, text, and email' : 'email'} about your request.
+      and to be contacted by Steady Fence &amp; Railing by{' '}
+      {sms ? 'phone, text, and email' : 'email'} about your request.
       {sms && ' Msg & data rates may apply; reply STOP to opt out, HELP for help.'}
     </p>
   )
