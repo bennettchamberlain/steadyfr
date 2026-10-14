@@ -22,6 +22,9 @@ export default function Footer() {
             <Link href="/contact" className="text-gray-400 hover:text-white transition-colors">
               Contact
             </Link>
+            <Link href="/privacy" className="text-gray-400 hover:text-white transition-colors">
+              Privacy
+            </Link>
           </nav>
           <div className="text-center md:text-right">
             <p className="text-gray-400 text-sm">
