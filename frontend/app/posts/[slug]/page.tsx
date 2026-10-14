@@ -111,7 +111,7 @@ export default async function PostPage(props: Props) {
                   value={post.content as PortableTextBlock[]}
                 />
               )}
-              <ArticleCTA />
+              <ArticleCTA className="mt-14" />
               {post.worksCited?.length ? (
                 <section className="max-w-2xl mt-10 border-t border-gray-800 pt-6">
                   <h2 className="mb-3 font-mono text-xs uppercase tracking-wider text-gray-500">

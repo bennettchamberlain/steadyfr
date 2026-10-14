@@ -5,9 +5,11 @@ import {TrackedLink} from '@/app/components/TrackedLink'
  * Conversion CTA shown at the end of every article so educational traffic has a
  * clear next step (get a quote or book a call), not just a read.
  */
-export default function ArticleCTA() {
+export default function ArticleCTA({className = ''}: {className?: string}) {
   return (
-    <aside className="mt-14 rounded-2xl border border-gray-800 bg-gray-900 p-8 sm:p-10 text-center">
+    <aside
+      className={`rounded-2xl border border-gray-800 bg-gray-900 p-8 sm:p-10 text-center ${className}`}
+    >
       <h2 className="text-2xl sm:text-3xl font-bold text-white">
         Thinking about a railing project?
       </h2>
