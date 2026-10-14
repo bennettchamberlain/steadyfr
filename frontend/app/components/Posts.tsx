@@ -15,17 +15,17 @@ const Post = ({post}: {post: AllPostsQueryResult[number]}) => {
     <article
       data-sanity={dataAttr({id: _id, type: 'post', path: 'title'}).toString()}
       key={_id}
-      className="border border-gray-200 rounded-sm p-6 bg-gray-50 flex flex-col justify-between transition-colors hover:bg-white relative"
+      className="border border-gray-800 rounded-lg p-6 bg-gray-900 flex flex-col justify-between transition-colors hover:border-gray-600 relative"
     >
-      <Link className="hover:text-brand underline transition-colors" href={`/posts/${slug}`}>
+      <Link className="hover:text-sky-400 transition-colors" href={`/posts/${slug}`}>
         <span className="absolute inset-0 z-10" />
       </Link>
       <div>
-        <h3 className="text-2xl mb-4">{title}</h3>
+        <h3 className="text-2xl mb-4 text-white">{title}</h3>
 
-        <p className="line-clamp-3 text-sm leading-6 text-gray-600 max-w-[70ch]">{excerpt}</p>
+        <p className="line-clamp-3 text-sm leading-6 text-gray-400 max-w-[70ch]">{excerpt}</p>
       </div>
-      <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-100">
+      <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-800">
         {author && author.firstName && author.lastName && (
           <div className="flex items-center">
             <Avatar person={author} small={true} />
@@ -49,8 +49,8 @@ const Posts = ({
   subHeading?: string
 }) => (
   <div>
-    {heading && <h2 className="text-3xl text-gray-900 sm:text-4xl lg:text-5xl">{heading}</h2>}
-    {subHeading && <p className="mt-2 text-lg leading-8 text-gray-600">{subHeading}</p>}
+    {heading && <h2 className="text-3xl text-white sm:text-4xl lg:text-5xl">{heading}</h2>}
+    {subHeading && <p className="mt-2 text-lg leading-8 text-gray-400">{subHeading}</p>}
     <div className="pt-6 space-y-6">{children}</div>
   </div>
 )
