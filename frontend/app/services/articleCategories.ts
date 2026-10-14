@@ -17,8 +17,8 @@ export const ARTICLE_CATEGORIES: ArticleCategoryOption[] = [
     blurb: 'Rail types, cable, pickets, slat, glass, finishes — what your railing is and looks like.',
   },
   {
-    value: 'steady-difference',
-    label: 'The Steady Difference',
+    value: 'craft-process',
+    label: 'Craft & Process',
     blurb: 'How we build it — laser cutting, scribing, fascia mounts, and the process behind every job.',
   },
   {

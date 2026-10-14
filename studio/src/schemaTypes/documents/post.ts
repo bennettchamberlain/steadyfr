@@ -51,7 +51,7 @@ export const post = defineType({
       options: {
         list: [
           {title: 'Railings & Infill', value: 'railings-infill'},
-          {title: 'The Steady Difference', value: 'steady-difference'},
+          {title: 'Craft & Process', value: 'craft-process'},
           {title: 'Code & Compliance', value: 'code-compliance'},
         ],
         layout: 'radio',
