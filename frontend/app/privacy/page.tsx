@@ -265,8 +265,8 @@ export default function PrivacyPage() {
                 signals, the Site does not currently respond to them.
               </li>
               <li>
-                <strong>Email and texts:</strong> You can reply to any email from us to ask us to
-                stop contacting you, and reply STOP to any text message to opt out of further texts.
+                <strong>Email and texts:</strong> You can reply to any email or text message from
+                us, or contact us directly, to ask us to stop contacting you.
               </li>
             </ul>
 
