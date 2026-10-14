@@ -71,6 +71,15 @@ export const allPostsQuery = defineQuery(`
   }
 `)
 
+// Articles for the Services content hub — same fields as posts, plus the
+// category used by the hub filter and nav dropdown.
+export const articlesQuery = defineQuery(`
+  *[_type == "post" && defined(slug.current)] | order(coalesce(date, _updatedAt) desc) {
+    ${postFields}
+    category
+  }
+`)
+
 export const morePostsQuery = defineQuery(`
   *[_type == "post" && _id != $skip && defined(slug.current)] | order(date desc, _updatedAt desc) [0...$limit] {
     ${postFields}

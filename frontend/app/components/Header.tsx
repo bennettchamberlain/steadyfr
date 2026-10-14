@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import {settingsQuery} from '@/sanity/lib/queries'
 import {sanityFetch} from '@/sanity/lib/live'
+import ServicesNavDropdown from '@/app/components/ServicesNavDropdown'
 
 export default async function Header() {
   let settings: {title?: string} | null = null
@@ -29,11 +30,7 @@ export default async function Header() {
               role="list"
               className="flex items-center gap-4 md:gap-6 leading-5 text-xs sm:text-sm tracking-tight"
             >
-              <li>
-                <Link href="/services" className="text-gray-300 hover:text-white transition-colors">
-                  Services
-                </Link>
-              </li>
+              <ServicesNavDropdown />
               <li>
                 <Link href="/gallery" className="text-gray-300 hover:text-white transition-colors">
                   Gallery
