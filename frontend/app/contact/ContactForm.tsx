@@ -7,6 +7,7 @@ import {
   CONTACT_CONVERSION_SEND_TO,
 } from '@/app/components/GoogleAnalytics'
 import {trackMetaEvent} from '@/app/components/MetaPixel'
+import FormConsentNotice from '@/app/components/FormConsentNotice'
 
 // ---- pure helpers -------------------------------------------------------
 const emailOk = (v: string) => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v)
@@ -649,6 +650,7 @@ export default function ContactForm() {
           <button type="button" className={btnPrimary} onClick={advance}>Continue</button>
         )}
       </div>
+      {cur === 'review' && <FormConsentNotice className="mt-3" />}
     </div>
   )
 }
