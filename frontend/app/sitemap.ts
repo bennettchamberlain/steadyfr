@@ -22,6 +22,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     {url: `${BASE_URL}/services`, lastModified: now, priority: 0.8, changeFrequency: 'monthly'},
     {url: `${BASE_URL}/gallery`, lastModified: now, priority: 0.8, changeFrequency: 'weekly'},
     {url: `${BASE_URL}/contact`, lastModified: now, priority: 0.8, changeFrequency: 'yearly'},
+    {url: `${BASE_URL}/privacy`, lastModified: now, priority: 0.3, changeFrequency: 'yearly'},
   ]
 
   // Sanity-managed pages and blog posts.
