@@ -1545,6 +1545,31 @@
         },
         "optional": true
       },
+      "category": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "union",
+          "of": [
+            {
+              "type": "string",
+              "value": "railing-types"
+            },
+            {
+              "type": "string",
+              "value": "infill-materials"
+            },
+            {
+              "type": "string",
+              "value": "code-compliance"
+            },
+            {
+              "type": "string",
+              "value": "process-pricing"
+            }
+          ]
+        },
+        "optional": true
+      },
       "coverImage": {
         "type": "objectAttribute",
         "value": {

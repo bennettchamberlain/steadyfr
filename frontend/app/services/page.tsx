@@ -1,17 +1,22 @@
+import {Suspense} from 'react'
 import Link from 'next/link'
 import {TrackedLink} from '@/app/components/TrackedLink'
+import ServicesHub from '@/app/services/ServicesHub'
+import {articlesQuery} from '@/sanity/lib/queries'
+import {sanityFetch} from '@/sanity/lib/live'
 
 export const metadata = {
   alternates: {canonical: '/services'},
-  title: 'Services | Steady Fence & Railing',
+  title: 'Services & Guides | Steady Fence & Railing',
   description:
-    'Expert railing installation services in the San Francisco Bay Area. Traditional handrails, guardrails with balusters, cable rail, ornate balusters, and custom designs.',
+    'Railing services plus in-depth guides on railing types, infill and materials, and code — handrails, guardrails, cable rail, balusters, and custom work in the San Francisco Bay Area.',
 }
 
 const serviceCategories = [
   {
     title: 'Traditional Handrail',
-    description: 'Classic handrail designs that combine timeless elegance with modern durability. Perfect for both interior and exterior applications.',
+    description:
+      'Classic handrail designs that combine timeless elegance with modern durability. Perfect for both interior and exterior applications.',
     icon: (
       <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -20,7 +25,8 @@ const serviceCategories = [
   },
   {
     title: 'Guardrail with Balusters',
-    description: 'Safety-focused guardrail systems featuring various baluster styles. Ideal for decks, balconies, and elevated areas.',
+    description:
+      'Safety-focused guardrail systems featuring various baluster styles. Ideal for decks, balconies, and elevated areas.',
     icon: (
       <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 12h16M4 18h16" />
@@ -32,73 +38,92 @@ const serviceCategories = [
 const balusterTypes = [
   {
     title: 'Vertical Picket',
-    description: 'Clean, modern vertical picket designs that provide safety without obstructing views. Perfect for contemporary homes.',
+    description:
+      'Clean, modern vertical picket designs that provide safety without obstructing views. Perfect for contemporary homes.',
   },
   {
     title: 'Cable Rail',
-    description: 'Minimalist cable rail systems that maximize visibility while maintaining safety. Ideal for scenic locations.',
+    description:
+      'Minimalist cable rail systems that maximize visibility while maintaining safety. Ideal for scenic locations.',
   },
   {
     title: 'Ornate Balusters',
-    description: 'Decorative baluster designs that add architectural interest and character to your railing system.',
+    description:
+      'Decorative baluster designs that add architectural interest and character to your railing system.',
   },
   {
     title: 'Custom',
-    description: 'Bespoke railing solutions tailored to your specific design vision and architectural requirements.',
+    description:
+      'Bespoke railing solutions tailored to your specific design vision and architectural requirements.',
   },
 ]
 
-export default function ServicesPage() {
+export default async function ServicesPage() {
+  const {data: articles} = await sanityFetch({query: articlesQuery})
+
   return (
     <>
       {/* Hero Section */}
-      <section 
+      <section
         className="relative py-20 flex items-center justify-center"
-        style={{
-          background: 'linear-gradient(to bottom, #163861, #163861, #163861)'
-        }}
+        style={{background: 'linear-gradient(to bottom, #163861, #163861, #163861)'}}
       >
-        <div 
+        <div
           className="absolute inset-0 opacity-25"
-          style={{
-            '--grid-color': '#ffffff',
-            backgroundImage: `
-              linear-gradient(to right, var(--grid-color) 2px, transparent 2px),
-              linear-gradient(to bottom, var(--grid-color) 2px, transparent 2px),
-              linear-gradient(to right, var(--grid-color) 3px, transparent 3px),
-              linear-gradient(to bottom, var(--grid-color) 3px, transparent 3px)
-            `,
-            backgroundSize: '25px 25px, 25px 25px, 125px 125px, 125px 125px'
-          } as React.CSSProperties}
+          style={
+            {
+              '--grid-color': '#ffffff',
+              backgroundImage: `
+                linear-gradient(to right, var(--grid-color) 2px, transparent 2px),
+                linear-gradient(to bottom, var(--grid-color) 2px, transparent 2px),
+                linear-gradient(to right, var(--grid-color) 3px, transparent 3px),
+                linear-gradient(to bottom, var(--grid-color) 3px, transparent 3px)
+              `,
+              backgroundSize: '25px 25px, 25px 25px, 125px 125px, 125px 125px',
+            } as React.CSSProperties
+          }
         />
         <div className="container relative z-10 px-4 sm:px-6">
           <div className="max-w-3xl mx-auto text-center">
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-white mb-6 tracking-tight">
-              Railing Services
+              Services &amp; Guides
             </h1>
             <p className="text-xl text-gray-400 mb-8 font-light">
-              Expert installation and craftsmanship for all your railing needs
+              Expert railing work — plus guides on materials, styles, and code to help you choose.
             </p>
           </div>
         </div>
       </section>
 
-      {/* Railing Categories Section */}
+      {/* Guides / Articles Hub */}
       <section className="py-20 bg-gray-950">
         <div className="container px-4 sm:px-6">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
-              Types of Railing
-            </h2>
+          <div className="text-center mb-10">
+            <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">Guides &amp; Resources</h2>
             <p className="text-gray-400 max-w-2xl mx-auto">
-              We offer a wide range of railing solutions to suit your style and safety requirements
+              Straight answers on railing types, materials, and code — from the shop that builds them.
             </p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto mb-20">
+          <Suspense fallback={<p className="text-center text-sm text-gray-500">Loading guides…</p>}>
+            <ServicesHub articles={articles} />
+          </Suspense>
+        </div>
+      </section>
+
+      {/* What We Build */}
+      <section className="py-20 bg-gray-900 border-y border-gray-800">
+        <div className="container px-4 sm:px-6">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">What We Build</h2>
+            <p className="text-gray-400 max-w-2xl mx-auto">
+              A full range of railing solutions to suit your style and safety requirements.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto mb-12">
             {serviceCategories.map((service, idx) => (
               <div
                 key={idx}
-                className="bg-gray-900 rounded-lg p-8 border border-gray-800 hover:border-gray-700 transition-colors"
+                className="bg-gray-800 rounded-lg p-8 border border-gray-700 hover:border-gray-600 transition-colors"
               >
                 <div className="text-white mb-4">{service.icon}</div>
                 <h3 className="text-2xl font-bold text-white mb-3">{service.title}</h3>
@@ -106,21 +131,7 @@ export default function ServicesPage() {
               </div>
             ))}
           </div>
-        </div>
-      </section>
-
-      {/* Baluster Types Section */}
-      <section className="py-20 bg-gray-900 border-y border-gray-800">
-        <div className="container px-4 sm:px-6">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
-              Baluster Types
-            </h2>
-            <p className="text-gray-400 max-w-2xl mx-auto">
-              Choose from various baluster styles to match your aesthetic preferences
-            </p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
             {balusterTypes.map((type, idx) => (
               <div
                 key={idx}
@@ -138,9 +149,7 @@ export default function ServicesPage() {
       <section className="py-20 bg-gray-950">
         <div className="container px-4 sm:px-6">
           <div className="max-w-3xl mx-auto text-center">
-            <h2 className="text-3xl sm:text-4xl font-bold text-white mb-6">
-              Ready to Get Started?
-            </h2>
+            <h2 className="text-3xl sm:text-4xl font-bold text-white mb-6">Ready to Get Started?</h2>
             <p className="text-gray-400 mb-8 text-lg">
               Get a quote in a minute and have your railing installed in a week
             </p>
@@ -149,9 +158,7 @@ export default function ServicesPage() {
                 href="/#quote-widget"
                 className="inline-flex items-center justify-center px-8 py-4 bg-white text-gray-900 font-semibold rounded-md hover:bg-gray-100 transition-colors text-lg"
                 eventName="InitiateCheckout"
-                eventParams={{
-                  content_name: 'Services Page CTA - Get a Quote',
-                }}
+                eventParams={{content_name: 'Services Page CTA - Get a Quote'}}
               >
                 Get a Quote
               </TrackedLink>

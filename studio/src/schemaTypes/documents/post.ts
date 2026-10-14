@@ -43,6 +43,22 @@ export const post = defineType({
       type: 'text',
     }),
     defineField({
+      name: 'category',
+      title: 'Category',
+      description:
+        'Which section of the Services hub this article belongs to (powers the Services page filter and nav dropdown).',
+      type: 'string',
+      options: {
+        list: [
+          {title: 'Railing Types', value: 'railing-types'},
+          {title: 'Infill & Materials', value: 'infill-materials'},
+          {title: 'Code & Compliance', value: 'code-compliance'},
+          {title: 'Process & Pricing', value: 'process-pricing'},
+        ],
+        layout: 'radio',
+      },
+    }),
+    defineField({
       name: 'coverImage',
       title: 'Cover Image',
       type: 'image',
