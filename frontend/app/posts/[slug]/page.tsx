@@ -3,6 +3,7 @@ import {notFound} from 'next/navigation'
 import {type PortableTextBlock} from 'next-sanity'
 import {Suspense} from 'react'
 
+import ArticleCTA from '@/app/components/ArticleCTA'
 import Avatar from '@/app/components/Avatar'
 import {MorePosts} from '@/app/components/Posts'
 import PortableText from '@/app/components/PortableText'
@@ -102,6 +103,7 @@ export default async function PostPage(props: Props) {
                   value={post.content as PortableTextBlock[]}
                 />
               )}
+              <ArticleCTA />
             </article>
           </div>
         </div>
