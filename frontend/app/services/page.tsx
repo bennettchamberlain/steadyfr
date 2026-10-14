@@ -2,6 +2,7 @@ import {Suspense} from 'react'
 import Link from 'next/link'
 import {TrackedLink} from '@/app/components/TrackedLink'
 import ServicesHub from '@/app/services/ServicesHub'
+import {GALLERY_CATEGORIES} from '@/app/gallery/categories'
 import {articlesQuery} from '@/sanity/lib/queries'
 import {sanityFetch} from '@/sanity/lib/live'
 
@@ -35,28 +36,18 @@ const serviceCategories = [
   },
 ]
 
-const balusterTypes = [
-  {
-    title: 'Vertical Picket',
-    description:
-      'Clean, modern vertical picket designs that provide safety without obstructing views. Perfect for contemporary homes.',
-  },
-  {
-    title: 'Cable Rail',
-    description:
-      'Minimalist cable rail systems that maximize visibility while maintaining safety. Ideal for scenic locations.',
-  },
-  {
-    title: 'Ornate Balusters',
-    description:
-      'Decorative baluster designs that add architectural interest and character to your railing system.',
-  },
-  {
-    title: 'Custom',
-    description:
-      'Bespoke railing solutions tailored to your specific design vision and architectural requirements.',
-  },
-]
+// Infill styles shown on the Services page — matched 1:1 to the gallery filter
+// categories (GALLERY_CATEGORIES is the source of truth for labels/values) so
+// each card deep-links to that filtered view of the gallery.
+const INFILL_DESCRIPTIONS: Record<string, string> = {
+  'cable-rail':
+    'Minimalist cable systems that maximize the view while keeping things safe — ideal for scenic, modern settings.',
+  picket: 'Clean vertical pickets that add rigidity and safety without obstructing the view.',
+  slat: 'Horizontal slat infill for a modern, screen-like look with a bit more privacy.',
+  'no-infill':
+    'An open top rail with no infill — the clearest possible view, for stairs and handrails where code allows.',
+  custom: 'Bespoke infill tailored to your design vision and architectural requirements.',
+}
 
 export default async function ServicesPage() {
   const {data: articles} = await sanityFetch({query: articlesQuery})
@@ -131,15 +122,24 @@ export default async function ServicesPage() {
               </div>
             ))}
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
-            {balusterTypes.map((type, idx) => (
-              <div
-                key={idx}
-                className="bg-gray-800 rounded-lg p-6 border border-gray-700 hover:border-gray-600 transition-colors"
+          <p className="text-center text-sm text-gray-500 mb-6">
+            Infill styles — tap any to see real projects in the gallery.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 max-w-7xl mx-auto">
+            {GALLERY_CATEGORIES.map((cat) => (
+              <Link
+                key={cat.value}
+                href={`/gallery?filter=${cat.value}`}
+                className="group flex flex-col bg-gray-800 rounded-lg p-6 border border-gray-700 hover:border-sky-500/60 transition-colors"
               >
-                <h3 className="text-xl font-semibold text-white mb-3">{type.title}</h3>
-                <p className="text-gray-400 text-sm leading-relaxed">{type.description}</p>
-              </div>
+                <h3 className="text-xl font-semibold text-white mb-3">{cat.label}</h3>
+                <p className="text-gray-400 text-sm leading-relaxed mb-4 flex-1">
+                  {INFILL_DESCRIPTIONS[cat.value]}
+                </p>
+                <span className="text-sky-400 text-sm font-medium group-hover:text-sky-300 transition-colors">
+                  View projects &rarr;
+                </span>
+              </Link>
             ))}
           </div>
         </div>
