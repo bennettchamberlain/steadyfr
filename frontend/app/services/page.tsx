@@ -1,10 +1,11 @@
 import {Suspense} from 'react'
-import Link from 'next/link'
 import ArticleCTA from '@/app/components/ArticleCTA'
+import InfillCarousel, {type InfillCarouselItem} from '@/app/components/InfillCarousel'
 import ServicesHub from '@/app/services/ServicesHub'
 import {GALLERY_CATEGORIES} from '@/app/gallery/categories'
-import {articlesQuery} from '@/sanity/lib/queries'
+import {articlesQuery, allGalleryProjectsQuery} from '@/sanity/lib/queries'
 import {sanityFetch} from '@/sanity/lib/live'
+import {urlForImage} from '@/sanity/lib/utils'
 
 export const metadata = {
   alternates: {canonical: '/services'},
@@ -50,7 +51,31 @@ const INFILL_DESCRIPTIONS: Record<string, string> = {
 }
 
 export default async function ServicesPage() {
-  const {data: articles} = await sanityFetch({query: articlesQuery})
+  const [{data: articles}, {data: galleryProjects}] = await Promise.all([
+    sanityFetch({query: articlesQuery}),
+    sanityFetch({query: allGalleryProjectsQuery}),
+  ])
+
+  // One featured gallery project per infill type for the carousel. Prefer
+  // projects flagged `featured`, otherwise the first match (already ordered).
+  const infillItems: InfillCarouselItem[] = GALLERY_CATEGORIES.map((cat) => {
+    const matches = (galleryProjects || []).filter(
+      (p) => (p.categories || []).includes(cat.value) && p.photoGallery?.length,
+    )
+    const chosen = matches.find((p) => p.featured) || matches[0]
+    const photo = chosen?.photoGallery?.[0]
+    const imageUrl = photo?.asset
+      ? urlForImage(photo).width(640).height(480).fit('crop').url()
+      : null
+    return {
+      value: cat.value,
+      label: cat.label,
+      blurb: INFILL_DESCRIPTIONS[cat.value],
+      href: `/gallery?filter=${cat.value}`,
+      imageUrl,
+      projectName: chosen?.projectName ?? null,
+    }
+  })
 
   return (
     <>
@@ -125,23 +150,7 @@ export default async function ServicesPage() {
           <p className="text-center text-sm text-gray-500 mb-6">
             Infill styles — tap any to see real projects in the gallery.
           </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 max-w-7xl mx-auto">
-            {GALLERY_CATEGORIES.map((cat) => (
-              <Link
-                key={cat.value}
-                href={`/gallery?filter=${cat.value}`}
-                className="group flex flex-col bg-gray-800 rounded-lg p-6 border border-gray-700 hover:border-sky-500/60 transition-colors"
-              >
-                <h3 className="text-xl font-semibold text-white mb-3">{cat.label}</h3>
-                <p className="text-gray-400 text-sm leading-relaxed mb-4 flex-1">
-                  {INFILL_DESCRIPTIONS[cat.value]}
-                </p>
-                <span className="text-sky-400 text-sm font-medium group-hover:text-sky-300 transition-colors">
-                  View projects &rarr;
-                </span>
-              </Link>
-            ))}
-          </div>
+          <InfillCarousel items={infillItems} />
         </div>
       </section>
 
