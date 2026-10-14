@@ -1552,19 +1552,15 @@
           "of": [
             {
               "type": "string",
-              "value": "railing-types"
+              "value": "railings-infill"
             },
             {
               "type": "string",
-              "value": "infill-materials"
+              "value": "steady-difference"
             },
             {
               "type": "string",
               "value": "code-compliance"
-            },
-            {
-              "type": "string",
-              "value": "process-pricing"
             }
           ]
         },

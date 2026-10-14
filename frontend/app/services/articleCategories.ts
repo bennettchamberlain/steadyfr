@@ -12,24 +12,19 @@ export interface ArticleCategoryOption {
 
 export const ARTICLE_CATEGORIES: ArticleCategoryOption[] = [
   {
-    value: 'railing-types',
-    label: 'Railing Types',
-    blurb: 'Cable vs. kit rail, guardrails, handrails, stair & deck rails.',
+    value: 'railings-infill',
+    label: 'Railings & Infill',
+    blurb: 'Rail types, cable, pickets, slat, glass, finishes — what your railing is and looks like.',
   },
   {
-    value: 'infill-materials',
-    label: 'Infill & Materials',
-    blurb: 'Balusters, cable, picket, slat, glass, and finishes.',
+    value: 'steady-difference',
+    label: 'The Steady Difference',
+    blurb: 'How we build it — laser cutting, scribing, fascia mounts, and the process behind every job.',
   },
   {
     value: 'code-compliance',
     label: 'Code & Compliance',
     blurb: 'Handrail vs. guardrail, heights, spacing, and permits.',
-  },
-  {
-    value: 'process-pricing',
-    label: 'Process & Pricing',
-    blurb: 'How quotes, lead times, and installation work.',
   },
 ]
 
