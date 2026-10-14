@@ -22,7 +22,7 @@ export default function FormConsentNotice({
       </Link>{' '}
       and to be contacted by Steady Fence &amp; Railing by{' '}
       {sms ? 'phone, text, and email' : 'email'} about your request.
-      {sms && ' Msg & data rates may apply; reply STOP to opt out, HELP for help.'}
+      {sms && ' Msg & data rates may apply.'}
     </p>
   )
 }
