@@ -12,6 +12,8 @@
  * ---------------------------------------------------------------------------------
  */
 
+export declare const internalGroqTypeReferenceTo: unique symbol
+
 // Source: ../sanity.schema.json
 export type PageReference = {
   _ref: string
@@ -242,6 +244,7 @@ export type Post = {
   content?: BlockContent
   excerpt?: string
   category?: 'railing-types' | 'infill-materials' | 'code-compliance' | 'process-pricing'
+  keyTakeaways?: BlockContentTextOnly
   coverImage?: {
     asset?: SanityImageAssetReference
     media?: unknown
@@ -252,6 +255,7 @@ export type Post = {
   }
   date?: string
   author?: PersonReference
+  worksCited?: BlockContentTextOnly
 }
 
 export type Person = {
@@ -464,14 +468,14 @@ export type SanityFileAsset = {
   title?: string
   description?: string
   altText?: string
-  sha1hash?: string
-  extension?: string
-  mimeType?: string
-  size?: number
-  assetId?: string
+  sha1hash: string
+  extension: string
+  mimeType: string
+  size: number
+  assetId: string
   uploadId?: string
-  path?: string
-  url?: string
+  path: string
+  url: string
   source?: SanityAssetSourceData
 }
 
@@ -493,14 +497,14 @@ export type SanityImageAsset = {
   title?: string
   description?: string
   altText?: string
-  sha1hash?: string
-  extension?: string
-  mimeType?: string
-  size?: number
-  assetId?: string
+  sha1hash: string
+  extension: string
+  mimeType: string
+  size: number
+  assetId: string
   uploadId?: string
-  path?: string
-  url?: string
+  path: string
+  url: string
   metadata?: SanityImageMetadata
   source?: SanityAssetSourceData
 }
@@ -552,8 +556,6 @@ export type AllSanitySchemaTypes =
   | SanityAssetSourceData
   | SanityImageAsset
   | Geopoint
-
-export declare const internalGroqTypeReferenceTo: unique symbol
 
 // Source: sanity/lib/queries.ts
 // Variable: settingsQuery
@@ -794,7 +796,7 @@ export type MorePostsQueryResult = Array<{
 
 // Source: sanity/lib/queries.ts
 // Variable: postQuery
-// Query: *[_type == "post" && slug.current == $slug] [0] {    content[]{    ...,    markDefs[]{      ...,        _type == "link" => {    "page": page->slug.current,    "post": post->slug.current  }    }  },      _id,  "status": select(_originalId in path("drafts.**") => "draft", "published"),  "title": coalesce(title, "Untitled"),  "slug": slug.current,  excerpt,  coverImage,  "date": coalesce(date, _updatedAt),  "author": author->{firstName, lastName, picture},  }
+// Query: *[_type == "post" && slug.current == $slug] [0] {    content[]{    ...,    markDefs[]{      ...,        _type == "link" => {    "page": page->slug.current,    "post": post->slug.current  }    }  },    keyTakeaways,    worksCited,      _id,  "status": select(_originalId in path("drafts.**") => "draft", "published"),  "title": coalesce(title, "Untitled"),  "slug": slug.current,  excerpt,  coverImage,  "date": coalesce(date, _updatedAt),  "author": author->{firstName, lastName, picture},  }
 export type PostQueryResult = {
   content: Array<
     | {
@@ -829,6 +831,8 @@ export type PostQueryResult = {
         markDefs: null
       }
   > | null
+  keyTakeaways: BlockContentTextOnly | null
+  worksCited: BlockContentTextOnly | null
   _id: string
   status: 'draft' | 'published'
   title: string
@@ -938,7 +942,7 @@ declare module '@sanity/client' {
     '\n  *[_type == "post" && defined(slug.current)] | order(date desc, _updatedAt desc) {\n    \n  _id,\n  "status": select(_originalId in path("drafts.**") => "draft", "published"),\n  "title": coalesce(title, "Untitled"),\n  "slug": slug.current,\n  excerpt,\n  coverImage,\n  "date": coalesce(date, _updatedAt),\n  "author": author->{firstName, lastName, picture},\n\n  }\n': AllPostsQueryResult
     '\n  *[_type == "post" && defined(slug.current)] | order(coalesce(date, _updatedAt) desc) {\n    \n  _id,\n  "status": select(_originalId in path("drafts.**") => "draft", "published"),\n  "title": coalesce(title, "Untitled"),\n  "slug": slug.current,\n  excerpt,\n  coverImage,\n  "date": coalesce(date, _updatedAt),\n  "author": author->{firstName, lastName, picture},\n\n    category\n  }\n': ArticlesQueryResult
     '\n  *[_type == "post" && _id != $skip && defined(slug.current)] | order(date desc, _updatedAt desc) [0...$limit] {\n    \n  _id,\n  "status": select(_originalId in path("drafts.**") => "draft", "published"),\n  "title": coalesce(title, "Untitled"),\n  "slug": slug.current,\n  excerpt,\n  coverImage,\n  "date": coalesce(date, _updatedAt),\n  "author": author->{firstName, lastName, picture},\n\n  }\n': MorePostsQueryResult
-    '\n  *[_type == "post" && slug.current == $slug] [0] {\n    content[]{\n    ...,\n    markDefs[]{\n      ...,\n      \n  _type == "link" => {\n    "page": page->slug.current,\n    "post": post->slug.current\n  }\n\n    }\n  },\n    \n  _id,\n  "status": select(_originalId in path("drafts.**") => "draft", "published"),\n  "title": coalesce(title, "Untitled"),\n  "slug": slug.current,\n  excerpt,\n  coverImage,\n  "date": coalesce(date, _updatedAt),\n  "author": author->{firstName, lastName, picture},\n\n  }\n': PostQueryResult
+    '\n  *[_type == "post" && slug.current == $slug] [0] {\n    content[]{\n    ...,\n    markDefs[]{\n      ...,\n      \n  _type == "link" => {\n    "page": page->slug.current,\n    "post": post->slug.current\n  }\n\n    }\n  },\n    keyTakeaways,\n    worksCited,\n    \n  _id,\n  "status": select(_originalId in path("drafts.**") => "draft", "published"),\n  "title": coalesce(title, "Untitled"),\n  "slug": slug.current,\n  excerpt,\n  coverImage,\n  "date": coalesce(date, _updatedAt),\n  "author": author->{firstName, lastName, picture},\n\n  }\n': PostQueryResult
     '\n  *[_type == "post" && defined(slug.current)]\n  {"slug": slug.current}\n': PostPagesSlugsResult
     '\n  *[_type == "page" && defined(slug.current)]\n  {"slug": slug.current}\n': PagesSlugsResult
     '\n  *[_type == "galleryProject"] | order(order asc, projectName asc) {\n    \n  _id,\n  projectName,\n  location,\n  categories,\n  description,\n  featured,\n  order,\n  "photoGallery": photoGallery[]{\n    asset,\n    alt,\n    hotspot,\n    crop\n  }\n\n  }\n': AllGalleryProjectsQueryResult
