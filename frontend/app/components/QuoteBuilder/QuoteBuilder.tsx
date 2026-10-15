@@ -1,6 +1,6 @@
 'use client'
 
-import React, {useEffect, useMemo, useRef, useState} from 'react'
+import {useEffect, useMemo, useRef, useState} from 'react'
 import {
   calculateMaterials,
   calculatePrice,
@@ -44,15 +44,7 @@ export function QuoteBuilder() {
   const formContentRef = useRef<HTMLDivElement | null>(null)
   const quoteSummaryDesktopRef = useRef<HTMLDivElement | null>(null)
   const quoteSummaryMobileRef = useRef<HTMLDivElement | null>(null)
-  const [isDiagramFixed, setIsDiagramFixed] = useState(false)
-  const [scrollY, setScrollY] = useState(0)
-  const originalLeftRef = useRef<number | null>(null)
-  const originalWidthRef = useRef<number | null>(null)
-  const scrollThresholdRef = useRef<number | null>(null)
-  const originalAbsoluteTopRef = useRef<number | null>(null)
-  const isDiagramFixedRef = useRef(false)
   const [isMounted, setIsMounted] = useState(false)
-  const resizeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Track client-side mount
   useEffect(() => {
@@ -84,162 +76,6 @@ export function QuoteBuilder() {
     }
   }, [sections.length])
 
-  // Centralized function to recalculate all positions
-  const recalculatePositions = React.useCallback(() => {
-    if (!isMounted || !diagramRef.current || !containerRef.current) return
-
-    const currentScrollY = window.scrollY
-    const topOffset = 100
-    const wasFixed = isDiagramFixedRef.current
-
-    // Use requestAnimationFrame to ensure layout has updated
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        if (!diagramRef.current || !containerRef.current) return
-
-        // If diagram is fixed, calculate new position without unfixing
-        // We measure the container's position to determine where diagram naturally sits
-        if (wasFixed) {
-          const containerRect = containerRef.current.getBoundingClientRect()
-          const diagramRect = diagramRef.current.getBoundingClientRect()
-          
-          // Calculate where the diagram would naturally be in the grid
-          // The diagram is in the right column, so its natural top matches container top
-          // and its left is offset by the left column width
-          const absoluteTop = containerRect.top + currentScrollY
-          
-          // Update stored positions (preserve current left/width if valid)
-          if (diagramRect.width > 0) {
-            originalLeftRef.current = diagramRect.left
-            originalWidthRef.current = diagramRect.width
-          }
-          originalAbsoluteTopRef.current = absoluteTop
-          
-          // Recalculate threshold based on new natural position
-          scrollThresholdRef.current = absoluteTop - topOffset
-          
-          // Keep it fixed if we're still past the threshold
-          const shouldBeFixed = currentScrollY >= scrollThresholdRef.current
-          if (shouldBeFixed !== isDiagramFixedRef.current) {
-            isDiagramFixedRef.current = shouldBeFixed
-            setIsDiagramFixed(shouldBeFixed)
-          }
-        } else {
-          // Not fixed, can measure normally
-          const diagramRect = diagramRef.current.getBoundingClientRect()
-
-          // Only update if we have valid measurements
-          if (diagramRect.width > 0 && diagramRect.height > 0) {
-            // Calculate absolute positions (viewport position + scroll offset)
-            const absoluteTop = diagramRect.top + currentScrollY
-
-            // Store original positions
-            originalLeftRef.current = diagramRect.left
-            originalWidthRef.current = diagramRect.width
-            originalAbsoluteTopRef.current = absoluteTop
-
-            // Calculate top threshold (when to start fixing)
-            scrollThresholdRef.current = absoluteTop - topOffset
-
-            // Determine if should be fixed (only based on top threshold)
-            const shouldBeFixed =
-              scrollThresholdRef.current !== null &&
-              currentScrollY >= scrollThresholdRef.current
-
-            isDiagramFixedRef.current = shouldBeFixed
-            setIsDiagramFixed(shouldBeFixed)
-          }
-        }
-      })
-    })
-  }, [isMounted])
-
-  // Simple scroll handler - only top threshold
-  useEffect(() => {
-    if (!isMounted) return
-
-    const handleScroll = () => {
-      if (!diagramRef.current) return
-
-      const currentScrollY = window.scrollY
-
-      // Update scroll position
-      setScrollY(currentScrollY)
-
-      // Check if we need to recalculate positions (first time or after resize)
-      if (
-        originalLeftRef.current === null ||
-        scrollThresholdRef.current === null
-      ) {
-        recalculatePositions()
-        return
-      }
-
-      // Check if should be fixed (only based on top threshold)
-      const shouldBeFixed = currentScrollY >= scrollThresholdRef.current
-
-      if (shouldBeFixed !== isDiagramFixedRef.current) {
-        isDiagramFixedRef.current = shouldBeFixed
-        setIsDiagramFixed(shouldBeFixed)
-      }
-    }
-
-    // Initial calculation
-    handleScroll()
-
-    // Resize handler - update left/width immediately, debounce full recalculation
-    const handleResize = () => {
-      // Immediately unfix diagram at start of resize to prevent it floating in space
-      if (isDiagramFixedRef.current) {
-        isDiagramFixedRef.current = false
-        setIsDiagramFixed(false)
-      }
-
-      // Update left and width immediately for horizontal resize (no lag)
-      if (diagramRef.current) {
-        const diagramRect = diagramRef.current.getBoundingClientRect()
-        if (diagramRect.width > 0) {
-          originalLeftRef.current = diagramRect.left
-          originalWidthRef.current = diagramRect.width
-        }
-      }
-
-      // Clear existing timeout
-      if (resizeTimeoutRef.current) {
-        clearTimeout(resizeTimeoutRef.current)
-      }
-
-      // Reset position refs to trigger full recalculation
-      originalAbsoluteTopRef.current = null
-      scrollThresholdRef.current = null
-
-      // Debounce full recalculation with requestAnimationFrame + timeout
-      resizeTimeoutRef.current = setTimeout(() => {
-        requestAnimationFrame(() => {
-          recalculatePositions()
-          handleScroll()
-        })
-      }, 150)
-    }
-
-    window.addEventListener('scroll', handleScroll, {passive: true})
-    window.addEventListener('resize', handleResize, {passive: true})
-
-    return () => {
-      window.removeEventListener('scroll', handleScroll)
-      window.removeEventListener('resize', handleResize)
-      if (resizeTimeoutRef.current) {
-        clearTimeout(resizeTimeoutRef.current)
-      }
-    }
-  }, [isMounted, recalculatePositions])
-
-  // Recalculate positions when form or diagram content changes
-  // Form size changes with currentStep, sections, and other form state
-  useEffect(() => {
-    if (!isMounted) return
-    recalculatePositions()
-  }, [isMounted, sections, currentStep, style, infill, picketStyle, railingEnd, recalculatePositions])
 
   // Auto-scroll to quote summary when step 5 is reached
   useEffect(() => {
@@ -389,33 +225,7 @@ export function QuoteBuilder() {
       </div>
 
       {/* Right: Live diagram + quick totals */}
-      <div
-        ref={diagramRef}
-        className={`space-y-2 ${
-          isDiagramFixed && 
-          isMounted && 
-          originalLeftRef.current !== null && 
-          originalWidthRef.current !== null
-            ? 'lg:fixed lg:z-30'
-            : ''
-        }`}
-        style={
-          isDiagramFixed && 
-          isMounted && 
-          originalLeftRef.current !== null && 
-          originalWidthRef.current !== null
-            ? (() => {
-                const topOffset = 100
-                
-                return {
-                  left: `${originalLeftRef.current}px`,
-                  top: `${topOffset}px`,
-                  width: `${originalWidthRef.current}px`,
-                }
-              })()
-            : undefined
-        }
-      >
+      <div ref={diagramRef} className="space-y-2 lg:sticky lg:top-24 lg:self-start">
         {sections.length > 0 && (
           <DiagramRenderer
             style={style}
