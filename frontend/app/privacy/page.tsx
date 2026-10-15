@@ -8,6 +8,7 @@ export const metadata = {
 }
 
 const EFFECTIVE_DATE = 'October 13, 2026'
+const LAST_UPDATED = 'October 15, 2026'
 
 // External link helper — opens in a new tab, styled as a subtle accent link.
 function Ext({href, children}: {href: string; children: React.ReactNode}) {
@@ -60,7 +61,7 @@ export default function PrivacyPage() {
       <section className="py-16 bg-gray-950">
         <div className="container px-4 sm:px-6">
           <div className="max-w-3xl mx-auto text-gray-300 leading-relaxed [&_h2]:text-xl [&_h2]:font-semibold [&_h2]:text-white [&_h2]:mt-10 [&_h2]:mb-3 [&_h3]:text-base [&_h3]:font-semibold [&_h3]:text-white [&_h3]:mt-6 [&_h3]:mb-2 [&_p]:mb-4 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-2 [&_ul]:mb-4 [&_strong]:text-white [&_strong]:font-semibold">
-            <p className="text-sm text-gray-500">Last updated: {EFFECTIVE_DATE}</p>
+            <p className="text-sm text-gray-500">Last updated: {LAST_UPDATED}</p>
 
             <p>
               Steady Fence &amp; Railing is a trade name (&ldquo;doing business as&rdquo;) of{' '}
@@ -97,13 +98,19 @@ export default function PrivacyPage() {
                 shop visit, or your indication that you&rsquo;d prefer we reach out flexibly.
               </li>
               <li>
-                <strong>Files you upload:</strong> photos, drawings, or documents (e.g., images or
-                PDFs) you attach to describe your project.
+                <strong>Files or links you share:</strong> photos, drawings, or documents (e.g.,
+                images or PDFs) you attach, or a link to your project, to help describe the work.
+              </li>
+              <li>
+                <strong>Billing and payment details:</strong> if you hire us for a project — for
+                example, to send invoices or process payment for the work. Payments may be handled
+                by a third-party payment processor.
               </li>
               <li>
                 <strong>Communications:</strong> the content of emails, text messages, and phone
-                calls you exchange with us. Our phone calls and text messages are handled through
-                our telephony provider, Dialpad (see Section 4).
+                calls you exchange with us, including any questions you send about our products or
+                services. Our phone calls and text messages are handled through our telephony
+                provider, Dialpad (see Section 4).
               </li>
             </ul>
             <h3>b) Information collected automatically</h3>
@@ -173,9 +180,12 @@ export default function PrivacyPage() {
                 advertising. You can opt out as described in Sections 5 and 6.
               </li>
               <li>
-                <strong>For legal and safety reasons</strong> &mdash; e.g., to comply with a law,
-                regulation, legal process, or governmental request, or to protect the rights,
-                property, or safety of Superhot Fabrication LLC, our customers, or others.
+                <strong>For legal, safety, and fraud-prevention reasons</strong> &mdash; e.g., to
+                comply with a law, regulation, subpoena, legal process, or governmental request; to
+                report suspected fraud or illegal activity to the appropriate authorities; or to
+                protect the rights, property, or safety of Superhot Fabrication LLC, our customers,
+                or others, including to appropriate persons where a communication suggests a risk of
+                harm.
               </li>
               <li>
                 <strong>In a business transfer</strong> &mdash; e.g., in connection with a merger,
