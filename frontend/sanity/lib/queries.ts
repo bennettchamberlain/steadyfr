@@ -128,7 +128,7 @@ const galleryProjectFields = /* groq */ `
 `
 
 export const allGalleryProjectsQuery = defineQuery(`
-  *[_type == "galleryProject"] | order(order asc, projectName asc) {
+  *[_type == "galleryProject"] | order(featured desc, order asc, projectName asc) {
     ${galleryProjectFields}
   }
 `)

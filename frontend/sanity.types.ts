@@ -877,7 +877,7 @@ export type PagesSlugsResult = Array<{
 
 // Source: sanity/lib/queries.ts
 // Variable: allGalleryProjectsQuery
-// Query: *[_type == "galleryProject"] | order(order asc, projectName asc) {      _id,  projectName,  location,  categories,  description,  featured,  order,  "photoGallery": photoGallery[]{    asset,    alt,    hotspot,    crop  }  }
+// Query: *[_type == "galleryProject"] | order(featured desc, order asc, projectName asc) {      _id,  projectName,  location,  categories,  description,  featured,  order,  "photoGallery": photoGallery[]{    asset,    alt,    hotspot,    crop  }  }
 export type AllGalleryProjectsQueryResult = Array<{
   _id: string
   projectName: string
@@ -945,7 +945,7 @@ declare module '@sanity/client' {
     '\n  *[_type == "post" && slug.current == $slug] [0] {\n    content[]{\n    ...,\n    markDefs[]{\n      ...,\n      \n  _type == "link" => {\n    "page": page->slug.current,\n    "post": post->slug.current\n  }\n\n    }\n  },\n    keyTakeaways,\n    worksCited,\n    \n  _id,\n  "status": select(_originalId in path("drafts.**") => "draft", "published"),\n  "title": coalesce(title, "Untitled"),\n  "slug": slug.current,\n  excerpt,\n  coverImage,\n  "date": coalesce(date, _updatedAt),\n  "author": author->{firstName, lastName, picture},\n\n  }\n': PostQueryResult
     '\n  *[_type == "post" && defined(slug.current)]\n  {"slug": slug.current}\n': PostPagesSlugsResult
     '\n  *[_type == "page" && defined(slug.current)]\n  {"slug": slug.current}\n': PagesSlugsResult
-    '\n  *[_type == "galleryProject"] | order(order asc, projectName asc) {\n    \n  _id,\n  projectName,\n  location,\n  categories,\n  description,\n  featured,\n  order,\n  "photoGallery": photoGallery[]{\n    asset,\n    alt,\n    hotspot,\n    crop\n  }\n\n  }\n': AllGalleryProjectsQueryResult
+    '\n  *[_type == "galleryProject"] | order(featured desc, order asc, projectName asc) {\n    \n  _id,\n  projectName,\n  location,\n  categories,\n  description,\n  featured,\n  order,\n  "photoGallery": photoGallery[]{\n    asset,\n    alt,\n    hotspot,\n    crop\n  }\n\n  }\n': AllGalleryProjectsQueryResult
     '\n  *[_type == "galleryProject" && featured == true] | order(order asc) [0...3] {\n    \n  _id,\n  projectName,\n  location,\n  categories,\n  description,\n  featured,\n  order,\n  "photoGallery": photoGallery[]{\n    asset,\n    alt,\n    hotspot,\n    crop\n  }\n\n  }\n': FeaturedGalleryProjectsQueryResult
     '\n  *[_type == "galleryProject" && _id == $id][0] {\n    \n  _id,\n  projectName,\n  location,\n  categories,\n  description,\n  featured,\n  order,\n  "photoGallery": photoGallery[]{\n    asset,\n    alt,\n    hotspot,\n    crop\n  }\n\n  }\n': GalleryProjectQueryResult
   }
