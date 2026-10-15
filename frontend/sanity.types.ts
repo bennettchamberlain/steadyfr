@@ -243,7 +243,7 @@ export type Post = {
   slug: Slug
   content?: BlockContent
   excerpt?: string
-  category?: 'railings-infill' | 'steady-difference' | 'code-compliance'
+  category?: 'railings-infill' | 'craft-process' | 'code-compliance'
   keyTakeaways?: BlockContentTextOnly
   coverImage?: {
     asset?: SanityImageAssetReference
@@ -759,7 +759,7 @@ export type ArticlesQueryResult = Array<{
       _type: 'image'
     }
   } | null
-  category: 'code-compliance' | 'railings-infill' | 'steady-difference' | null
+  category: 'code-compliance' | 'craft-process' | 'railings-infill' | null
 }>
 
 // Source: sanity/lib/queries.ts
