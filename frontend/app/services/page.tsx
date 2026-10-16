@@ -18,20 +18,30 @@ const serviceCategories = [
   {
     title: 'Traditional Handrail',
     description:
-      'Classic handrail designs that combine timeless elegance with modern durability. Perfect for both interior and exterior applications.',
+      'Classic handrails that pair timeless looks with modern durability — interior or exterior.',
     icon: (
-      <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 12l14-9.8M5 12V22M19 2.2V12.2" />
       </svg>
     ),
   },
   {
     title: 'Guardrail with Balusters',
     description:
-      'Safety-focused guardrail systems featuring various baluster styles. Ideal for decks, balconies, and elevated areas.',
+      'Safety-focused guardrails in a range of baluster styles — decks, balconies, and elevated spans.',
     icon: (
-      <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 12h16M4 18h16" />
+      </svg>
+    ),
+  },
+  {
+    title: 'Screens & Partitions',
+    description:
+      'Decorative screens, stair dividers, and fence panels that define a space without closing off light or view.',
+    icon: (
+      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 2.2V22M9 2.2V22M14 2.2V22M19 2.2V22" />
       </svg>
     ),
   },
@@ -135,15 +145,17 @@ export default async function ServicesPage() {
               A full range of railing solutions to suit your style and safety requirements.
             </p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto mb-12">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 max-w-5xl mx-auto mb-14">
             {serviceCategories.map((service, idx) => (
               <div
                 key={idx}
-                className="bg-gray-800 rounded-lg p-8 border border-gray-700 hover:border-gray-600 transition-colors"
+                className="rounded-xl border border-gray-800 bg-gray-900/60 p-6 hover:border-gray-700 transition-colors"
               >
-                <div className="text-white mb-4">{service.icon}</div>
-                <h3 className="text-2xl font-bold text-white mb-3">{service.title}</h3>
-                <p className="text-gray-400 leading-relaxed">{service.description}</p>
+                <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-sky-500/10 text-sky-400">
+                  {service.icon}
+                </div>
+                <h3 className="text-lg font-semibold text-white mb-1.5">{service.title}</h3>
+                <p className="text-gray-400 text-sm leading-relaxed">{service.description}</p>
               </div>
             ))}
           </div>
