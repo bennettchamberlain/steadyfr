@@ -1,15 +1,18 @@
 import Link from 'next/link'
-import {settingsQuery} from '@/sanity/lib/queries'
+import {settingsQuery, featuredArticleQuery} from '@/sanity/lib/queries'
 import {sanityFetch} from '@/sanity/lib/live'
 import ServicesNavDropdown from '@/app/components/ServicesNavDropdown'
 
 export default async function Header() {
   let settings: {title?: string} | null = null
+  let featured: {title?: string | null; slug?: string | null} | null = null
   try {
-    const result = await sanityFetch({
-      query: settingsQuery,
-    })
-    settings = result.data
+    const [settingsResult, featuredResult] = await Promise.all([
+      sanityFetch({query: settingsQuery}),
+      sanityFetch({query: featuredArticleQuery}),
+    ])
+    settings = settingsResult.data
+    featured = featuredResult.data
   } catch (error) {
     console.error('Error fetching settings for header:', error)
     // Continue with defaults if fetch fails
@@ -30,7 +33,7 @@ export default async function Header() {
               role="list"
               className="flex items-center gap-4 md:gap-6 leading-5 text-xs sm:text-sm tracking-tight"
             >
-              <ServicesNavDropdown />
+              <ServicesNavDropdown featured={featured} />
               <li>
                 <Link href="/gallery" className="text-gray-300 hover:text-white transition-colors">
                   Gallery

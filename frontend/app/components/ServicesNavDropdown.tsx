@@ -9,7 +9,11 @@ import {ARTICLE_CATEGORIES} from '@/app/services/articleCategories'
  * the caret opens a menu of categories that deep-link into the hub filter.
  * Opens on hover (desktop) and on click/tap (works on touch).
  */
-export default function ServicesNavDropdown() {
+export default function ServicesNavDropdown({
+  featured,
+}: {
+  featured?: {title?: string | null; slug?: string | null} | null
+}) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLLIElement>(null)
 
@@ -64,6 +68,22 @@ export default function ServicesNavDropdown() {
       {open && (
         <div className="absolute left-0 top-full z-50 w-64 pt-3">
           <ul className="rounded-xl border border-gray-800 bg-gray-900 p-1.5 shadow-xl shadow-black/40">
+            {featured?.slug && (
+              <li className="mb-1">
+                <Link
+                  href={`/posts/${featured.slug}`}
+                  onClick={() => setOpen(false)}
+                  className="block rounded-md border border-sky-500/40 bg-sky-500/10 px-3 py-2 transition-colors hover:bg-sky-500/20"
+                >
+                  <span className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-sky-300">
+                    <span aria-hidden>★</span> Featured guide
+                  </span>
+                  <span className="mt-0.5 block text-sm font-medium text-white">
+                    {featured.title}
+                  </span>
+                </Link>
+              </li>
+            )}
             <li>
               <Link href="/services" onClick={() => setOpen(false)} className={itemCls}>
                 All guides
