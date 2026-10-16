@@ -21,7 +21,7 @@ const serviceCategories = [
       'Classic handrails that pair timeless looks with modern durability — interior or exterior.',
     icon: (
       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 12l14-9.8M5 12V22M19 2.2V12.2" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 13.8l14-9.8M5 13.8V20M19 4V10.2" />
       </svg>
     ),
   },
@@ -31,7 +31,7 @@ const serviceCategories = [
       'Safety-focused guardrails in a range of baluster styles — decks, balconies, and elevated spans.',
     icon: (
       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 12h16M4 18h16" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 4h16M4 12h16M4 20h16" />
       </svg>
     ),
   },
