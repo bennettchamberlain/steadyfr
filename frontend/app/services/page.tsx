@@ -31,7 +31,7 @@ const serviceCategories = [
       'Safety-focused guardrails in a range of baluster styles — decks, balconies, and elevated spans.',
     icon: (
       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 2.2h16M4 8.8h16M4 15.4h16M4 22h16" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 12h16M4 18h16" />
       </svg>
     ),
   },
