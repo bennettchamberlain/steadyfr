@@ -80,6 +80,14 @@ export const articlesQuery = defineQuery(`
   }
 `)
 
+// The flagship guide highlighted at the top of the Services nav dropdown.
+export const featuredArticleQuery = defineQuery(`
+  *[_type == "post" && defined(slug.current) && featured == true] | order(coalesce(date, _updatedAt) desc) [0] {
+    "title": coalesce(title, "Untitled"),
+    "slug": slug.current
+  }
+`)
+
 export const morePostsQuery = defineQuery(`
   *[_type == "post" && _id != $skip && defined(slug.current)] | order(date desc, _updatedAt desc) [0...$limit] {
     ${postFields}

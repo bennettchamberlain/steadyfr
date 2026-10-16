@@ -58,6 +58,14 @@ export const post = defineType({
       },
     }),
     defineField({
+      name: 'featured',
+      title: 'Featured guide',
+      description:
+        'Flagship this article. It appears as a highlighted entry at the top of the Services nav dropdown. If more than one is featured, the most recent is shown.',
+      type: 'boolean',
+      initialValue: false,
+    }),
+    defineField({
       name: 'keyTakeaways',
       title: 'Key Takeaways / TL;DR',
       description:
