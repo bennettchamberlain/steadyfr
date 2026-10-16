@@ -21,7 +21,7 @@ const serviceCategories = [
       'Classic handrails that pair timeless looks with modern durability — interior or exterior.',
     icon: (
       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 11l14-6M5 11V23M19 5V17" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 12l14-9.8M5 12V22M19 2.2V12.2" />
       </svg>
     ),
   },
