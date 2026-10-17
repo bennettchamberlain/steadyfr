@@ -954,6 +954,13 @@
         },
         "optional": true
       },
+      "infillFeatured": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "boolean"
+        },
+        "optional": true
+      },
       "order": {
         "type": "objectAttribute",
         "value": {

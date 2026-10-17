@@ -66,13 +66,14 @@ export default async function ServicesPage() {
     sanityFetch({query: allGalleryProjectsQuery}),
   ])
 
-  // One featured gallery project per infill type for the carousel. Prefer
-  // projects flagged `featured`, otherwise the first match (already ordered).
+  // One project per infill type for the carousel. Prefer projects flagged with
+  // the dedicated `infillFeatured` toggle (separate from the home-page
+  // `featured`), otherwise the first match (already ordered).
   const infillItems: InfillCarouselItem[] = GALLERY_CATEGORIES.map((cat) => {
     const matches = (galleryProjects || []).filter(
       (p) => (p.categories || []).includes(cat.value) && p.photoGallery?.length,
     )
-    const chosen = matches.find((p) => p.featured) || matches[0]
+    const chosen = matches.find((p) => p.infillFeatured) || matches[0]
     const photo = chosen?.photoGallery?.[0]
     const imageUrl = photo?.asset
       ? urlForImage(photo).width(640).height(480).fit('crop').url()

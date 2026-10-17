@@ -76,9 +76,16 @@ export const galleryProject = defineType({
     }),
     defineField({
       name: 'featured',
-      title: 'Featured',
+      title: 'Featured (home page)',
+      description: 'Show on the home page preview and pin to the top of the gallery.',
+      type: 'boolean',
+      initialValue: false,
+    }),
+    defineField({
+      name: 'infillFeatured',
+      title: 'Feature in Services infill carousel',
       description:
-        'Show on the home page preview, pin to the top of the gallery, and use as the highlighted photo in the Services infill carousel.',
+        'Use this project as the highlighted photo for its infill type on the Services page carousel. Independent of the home-page Featured toggle.',
       type: 'boolean',
       initialValue: false,
     }),
