@@ -126,6 +126,7 @@ const galleryProjectFields = /* groq */ `
   categories,
   description,
   featured,
+  infillFeatured,
   order,
   "photoGallery": photoGallery[]{
     asset,
