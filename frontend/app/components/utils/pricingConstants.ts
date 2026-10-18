@@ -63,6 +63,23 @@ export const PRICING = {
   laborModifier: 1.0, // Multiplier for total labor cost
 } as const
 
+// LABOR by railing type (new model):
+//   labor per railing = (length in ft × perFoot) + (posts × perPost)
+// Cable uses the angled rate on angled (stair) sections.
+export const LABOR_RATES = {
+  pickets: {perFoot: 200, perPost: 100}, // vertical picket guardrail (placeholder rate)
+  cableFlat: {perFoot: 100, perPost: 200}, // cable railing
+  cableAngled: {perFoot: 100, perPost: 250}, // angled cable railing
+  slats: {perFoot: 120, perPost: 100}, // horizontal bar railing
+  none: {perFoot: 75, perPost: 150}, // handrail - no infill
+} as const
+
+// INSTALL (new model): per linear foot of rail + per post.
+export const INSTALL_RATES = {
+  perFoot: 20, // $/ft
+  perPost: 100, // $/post
+} as const
+
 // Geometry / spacing configuration
 export const STANCHION_MAX_SPACING = {
   default: 6, // ft, non‑cable infills
