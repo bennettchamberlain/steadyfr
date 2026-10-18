@@ -1,5 +1,7 @@
 import {
   ANGLED_SECTION_DEGREES,
+  INSTALL_RATES,
+  LABOR_RATES,
   MAX_PICKET_CLEAR_GAP_INCHES,
   PICKET_SPACING_INCHES,
   PICKET_WIDTHS,
@@ -321,20 +323,22 @@ export function calculatePrice(
   const materialsTotal =
     railCost + stanchionCost + picketCost + cableCost + slatCost + cableSectionFees + slatSectionFees
 
-  // Calculate labor based on infill type
+  // Labor (per railing type): labor = (length in ft × $/LF) + (posts × $/post).
+  // Cable uses the angled rate on angled (stair) sections. Posts are counted
+  // per section with shared boundaries de-duplicated, matching stanchionCount.
+  const maxLaborSpacing =
+    infill === 'cable' ? STANCHION_MAX_SPACING.cable : STANCHION_MAX_SPACING.default
   let labor = 0
-
-  if (usesPickets) {
-    // Pickets: labor per picket + labor per stanchion
-    labor = materials.picketCount * PRICING.labor.pickets.perPicket + materials.stanchionCount * PRICING.labor.pickets.perStanchion
-  } else if (infill === 'cable') {
-    // Cable: labor per stanchion + labor per section
-    labor = materials.stanchionCount * PRICING.labor.cable.perStanchion + sectionCount * PRICING.labor.cable.perSection
-  } else if (infill === 'slats') {
-    // Slats: labor per stanchion + labor per section
-    labor = materials.stanchionCount * PRICING.labor.slats.perStanchion + sectionCount * PRICING.labor.slats.perSection
+  let firstContributing = true
+  for (const section of sections) {
+    const railLength = getRailLengthFeet(section)
+    if (railLength <= 0) continue
+    const localPosts = calculateStanchionPositions(railLength, maxLaborSpacing).length
+    const postsInSection = localPosts - (firstContributing ? 0 : 1)
+    firstContributing = false
+    const rate = laborRateFor(infill, section.type, usesPickets)
+    labor += railLength * rate.perFoot + postsInSection * rate.perPost
   }
-  // If infill is 'none', labor remains 0
 
   // Add railing end labor cost (applied to both start and end, so multiply by 2)
   if (railingEnd && railingEnd !== 'none') {
@@ -348,8 +352,9 @@ export function calculatePrice(
   const materialsWithModifier = materialsTotal * PRICING.materialsModifier
   const laborWithModifier = labor * PRICING.laborModifier
 
-  // Calculate install cost: base fee + per foot charge
-  const install = PRICING.install.baseFee + materials.topRailFeet * PRICING.install.perFoot
+  // Install: per linear foot of rail + per post.
+  const install =
+    materials.topRailFeet * INSTALL_RATES.perFoot + materials.stanchionCount * INSTALL_RATES.perPost
 
   const total = materialsWithModifier + laborWithModifier + install
 
@@ -359,6 +364,23 @@ export function calculatePrice(
     install: roundToTwo(install),
     total: roundToTwo(total),
   }
+}
+
+/**
+ * Pick the labor rate (per-foot + per-post) for a section, by infill type.
+ * Cable uses the angled rate on angled (stair) sections.
+ */
+function laborRateFor(
+  infill: InfillType,
+  sectionType: SectionConfig['type'],
+  usesPickets: boolean,
+): {perFoot: number; perPost: number} {
+  if (usesPickets) return LABOR_RATES.pickets
+  if (infill === 'cable') {
+    return sectionType === 'angled' ? LABOR_RATES.cableAngled : LABOR_RATES.cableFlat
+  }
+  if (infill === 'slats') return LABOR_RATES.slats
+  return LABOR_RATES.none
 }
 
 function getRailLengthFeet(section: SectionConfig): number {
