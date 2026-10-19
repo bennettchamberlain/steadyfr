@@ -26,6 +26,8 @@ export type WebsiteLead = {
   notes?: string
   /** Quote estimate total in dollars → "Estimate" column (falls back to Notes). */
   estimateTotal?: number
+  /** Quote project length in feet → "Length (ft)" column (falls back to Notes). */
+  lengthFeet?: number
   /** Google Ads click ids captured on the landing page, for offline conversion tracking. */
   gclid?: string
   gbraid?: string
@@ -263,6 +265,10 @@ export async function createWebsiteLead(
     const dollars = Math.round(lead.estimateTotal)
     properties.Estimate = {number: dollars}
     optionalColumns.push({name: 'Estimate', fallbackNote: `Estimate: $${dollars.toLocaleString('en-US')}`})
+  }
+  if (typeof lead.lengthFeet === 'number' && Number.isFinite(lead.lengthFeet)) {
+    properties['Length (ft)'] = {number: lead.lengthFeet}
+    optionalColumns.push({name: 'Length (ft)', fallbackNote: `Length: ${lead.lengthFeet} ft`})
   }
   const fbclid = lead.fbclid?.trim()
   if (fbclid) {

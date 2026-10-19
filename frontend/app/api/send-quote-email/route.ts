@@ -523,8 +523,9 @@ San Francisco Bay Area`
       acceptedRecipients: info.accepted,
     })
 
-    const styleLabel = data.style === 'victorian' ? 'Victorian top rail' : 'Rectangle top rail'
-    // Readable infill label for the Notes breakdown.
+    const money = (n: number) => `$${n.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`
+    // Readable labels — the funneled Infill column loses the specific variant
+    // (twisted vs ornamental, round vs square), so we keep it in Notes.
     const INFILL_LABELS: Record<string, string> = {
       none: 'No pickets / infill',
       pickets: 'Vertical pickets',
@@ -533,27 +534,48 @@ San Francisco Bay Area`
       cable: 'Cable rail',
       slats: 'Horizontal slats',
     }
-    // Map the quote infill to the existing "Infill" column's tag names so the
-    // quote reuses the same options the contact form uses (no duplicate tags).
-    const INFILL_TAGS: Record<string, string> = {
-      none: 'No Infill',
-      pickets: 'Picket',
-      twistedPickets: 'Picket',
-      ornamentalPickets: 'Picket',
-      cable: 'Cable Rail',
-      slats: 'Slat',
-    }
-    const infillLabel = INFILL_LABELS[data.infill] || data.infill
-    const infillTag = INFILL_TAGS[data.infill]
-    const money = (n: number) => `$${n.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`
+    const RAILING_END_LABELS: Record<string, string> = {foldDown: 'Fold down', foldBack: 'Fold back'}
 
-    // Full breakdown lives in Notes; Estimate and Infill get their own columns.
+    // Funnel style + infill + picket sub-option into one of the "Infill" column's
+    // existing tags (Cable Rail / No Infill / Slat / Picket / Custom).
+    const infillColumnTag = (() => {
+      switch (data.infill) {
+        case 'cable':
+          return 'Cable Rail'
+        case 'none':
+          return 'No Infill'
+        case 'slats':
+          return 'Slat'
+        case 'twistedPickets':
+        case 'ornamentalPickets':
+          return 'Custom'
+        case 'pickets':
+          return data.style === 'rectangle' && (data.picketStyle === 'round' || data.picketStyle === 'square')
+            ? 'Custom'
+            : 'Picket'
+        default:
+          return undefined
+      }
+    })()
+
+    // Columns: Rail type (top-rail style), Infill, Application (stairs if any
+    // angled section, else deck), Length (ft), Estimate.
+    const railTypeTag = data.style === 'victorian' ? 'Victorian' : 'Rectangular'
+    const hasAngledSection = (data.sections || []).some((s) => s.type === 'angled')
+    const applicationTag = hasAngledSection ? 'Stairs' : 'Deck'
+    const lengthFeet = Math.round(data.materials.topRailFeet * 10) / 10
+
+    const isRectPicket = data.style === 'rectangle' && data.infill === 'pickets'
+    const infillDetail =
+      isRectPicket && data.picketStyle
+        ? `${INFILL_LABELS[data.infill] || data.infill} (${data.picketStyle})`
+        : INFILL_LABELS[data.infill] || data.infill
+    const railingEndLabel = data.railingEnd ? RAILING_END_LABELS[data.railingEnd] : undefined
+
+    // Notes keeps the finer detail that has no column of its own.
     const notesLines: Array<string | false | undefined> = [
-      `Rail style: ${styleLabel}`,
-      `Infill: ${infillLabel}`,
-      data.picketStyle && `Picket style: ${data.picketStyle}`,
-      data.railingEnd && `Railing end: ${data.railingEnd}`,
-      `Length: ${data.materials.topRailFeet.toFixed(1)} ft`,
+      `Infill detail: ${infillDetail}`,
+      railingEndLabel && `Railing end: ${railingEndLabel}`,
       data.materials.stanchionCount > 0 && `Posts: ${data.materials.stanchionCount}`,
       data.materials.picketCount > 0 && `Pickets: ${data.materials.picketCount}`,
       data.materials.cableFeet > 0 && `Cable: ${data.materials.cableFeet.toFixed(1)} ft`,
@@ -561,7 +583,6 @@ San Francisco Bay Area`
       `Materials: ${money(data.price.materials)}`,
       `Labor: ${money(data.price.labor)}`,
       `Install: ${money(data.price.install)}`,
-      `Estimate total: $${data.price.total.toLocaleString('en-US', {maximumFractionDigits: 0})}`,
     ]
 
     const notionResult = await createWebsiteLead({
@@ -569,7 +590,10 @@ San Francisco Bay Area`
       email: recipientEmail,
       zip: data.zipcode,
       source: 'Quote',
-      infill: infillTag ? [infillTag] : undefined,
+      railType: [railTypeTag],
+      infill: infillColumnTag ? [infillColumnTag] : undefined,
+      application: [applicationTag],
+      lengthFeet,
       estimateTotal: data.price.total,
       notes: notesLines.filter(Boolean).join('\n'),
       gclid: data.gclid,
