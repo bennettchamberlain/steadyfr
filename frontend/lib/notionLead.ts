@@ -1,3 +1,5 @@
+import type {LeadUtm} from './adClickIds'
+
 const NOTION_VERSION = '2022-06-28'
 const TIME_ZONE = 'America/Los_Angeles'
 const DATABASE_ID =
@@ -28,6 +30,10 @@ export type WebsiteLead = {
   gclid?: string
   gbraid?: string
   wbraid?: string
+  /** Meta (Facebook/Instagram) click id → "Meta click ID" column (falls back to Notes). */
+  fbclid?: string
+  /** Campaign tags (utm_*) → "Source / Campaign" column (falls back to Notes). */
+  utm?: LeadUtm
   source: LeadSource
   /**
    * Pacific wall-clock appointment. Omit to log an all-day lead on today's Pacific date.
@@ -161,6 +167,20 @@ function richText(value: string) {
   return {rich_text: [{text: {content: value.slice(0, 2000)}}]}
 }
 
+/** "google / cpc · Spring Railings · term: cable railing · ad: 12345" from UTMs. */
+function composeSourceCampaign(utm?: LeadUtm): string {
+  if (!utm) return ''
+  const sourceMedium = [utm.source?.trim(), utm.medium?.trim()].filter(Boolean).join(' / ')
+  return [
+    sourceMedium,
+    utm.campaign?.trim(),
+    utm.term?.trim() && `term: ${utm.term.trim()}`,
+    utm.content?.trim() && `ad: ${utm.content.trim()}`,
+  ]
+    .filter(Boolean)
+    .join(' · ')
+}
+
 function multiSelect(values?: string[]) {
   const names = (values ?? []).map((value) => value.trim()).filter(Boolean)
   if (!names.length) return undefined
@@ -203,6 +223,8 @@ export async function createWebsiteLead(
   // export); otherwise the labelled gbraid/wbraid fallback.
   const gclidColumnValue = lead.gclid?.trim() || adClickIds.join(' ')
   const adClickNote = adClickIds.length ? `Ad click: ${adClickIds.join(' ')}` : ''
+  // "source / medium · campaign · term: … · ad: …" from the UTM tags.
+  const sourceCampaign = composeSourceCampaign(lead.utm)
 
   const textFields: Array<[string, string | undefined]> = [
     ['Company', lead.company],
@@ -241,6 +263,15 @@ export async function createWebsiteLead(
     const dollars = Math.round(lead.estimateTotal)
     properties.Estimate = {number: dollars}
     optionalColumns.push({name: 'Estimate', fallbackNote: `Estimate: $${dollars.toLocaleString('en-US')}`})
+  }
+  const fbclid = lead.fbclid?.trim()
+  if (fbclid) {
+    properties['Meta click ID'] = richText(fbclid)
+    optionalColumns.push({name: 'Meta click ID', fallbackNote: `Meta ad click (fbclid): ${fbclid}`})
+  }
+  if (sourceCampaign) {
+    properties['Source / Campaign'] = richText(sourceCampaign)
+    optionalColumns.push({name: 'Source / Campaign', fallbackNote: `Source / Campaign: ${sourceCampaign}`})
   }
 
   // Notes is set last so missing-column fallbacks can be appended to it.
