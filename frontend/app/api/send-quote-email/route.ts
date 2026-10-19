@@ -9,6 +9,7 @@ export const runtime = 'nodejs'
 interface QuoteEmailData {
   name: string
   contact: string
+  phone?: string
   zipcode: string
   style: string
   infill: string
@@ -168,6 +169,12 @@ function generateEmailHTML(data: QuoteEmailData): string {
                   <tr>
                     <td style="padding: 8px 0; color: #9499ad; font-size: 14px;">Contact:</td>
                     <td style="padding: 8px 0; color: #ffffff; font-size: 14px; font-weight: 500;">${data.contact}</td>
+                  </tr>
+                  ` : ''}
+                  ${data.phone ? `
+                  <tr>
+                    <td style="padding: 8px 0; color: #9499ad; font-size: 14px;">Phone:</td>
+                    <td style="padding: 8px 0; color: #ffffff; font-size: 14px; font-weight: 500;">${data.phone}</td>
                   </tr>
                   ` : ''}
                   ${data.zipcode ? `
@@ -392,6 +399,7 @@ Thank you for requesting a quote! Below are the details of your custom railing c
 
 ${data.name ? `Name: ${data.name}` : ''}
 ${data.contact ? `Contact: ${data.contact}` : ''}
+${data.phone ? `Phone: ${data.phone}` : ''}
 ${data.zipcode ? `Zipcode: ${data.zipcode}` : ''}
 
 Configuration:
@@ -588,6 +596,7 @@ San Francisco Bay Area`
     const notionResult = await createWebsiteLead({
       name: data.name,
       email: recipientEmail,
+      phone: data.phone,
       zip: data.zipcode,
       source: 'Quote',
       railType: [railTypeTag],

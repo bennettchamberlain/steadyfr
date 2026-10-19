@@ -57,6 +57,7 @@ export function QuoteSummary({
 
   const [name, setName] = useState('')
   const [contact, setContact] = useState('')
+  const [phone, setPhone] = useState('')
   const [zipcode, setZipcode] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle')
@@ -188,12 +189,18 @@ export function QuoteSummary({
   }
 
   const handleSubmitQuote = async () => {
+    if (!name.trim()) {
+      setSubmitStatus('error')
+      setErrorMessage('Please provide your name')
+      return
+    }
+
     if (!contact) {
       setSubmitStatus('error')
       setErrorMessage('Please provide your email address')
       return
     }
-    
+
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!emailRegex.test(contact)) {
@@ -219,6 +226,7 @@ export function QuoteSummary({
       const emailData = {
         name,
         contact,
+        phone,
         zipcode,
         style,
         infill,
@@ -392,6 +400,10 @@ export function QuoteSummary({
       }
       if (contact) {
         pdf.text(`Contact: ${contact}`, margin, yPos)
+        yPos += PDF_CONFIG.spacing.afterItem
+      }
+      if (phone) {
+        pdf.text(`Phone: ${phone}`, margin, yPos)
         yPos += PDF_CONFIG.spacing.afterItem
       }
       if (zipcode) {
@@ -778,7 +790,7 @@ export function QuoteSummary({
         <div className="space-y-3">
           <div>
             <label htmlFor="quote-name" className="block text-xs text-gray-400 mb-1">
-              Name
+              Name <span className="text-red-400">*</span>
             </label>
             <input
               id="quote-name"
@@ -815,6 +827,7 @@ export function QuoteSummary({
               }}
               className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-white text-sm focus:outline-none focus:border-white"
               placeholder="Enter your name"
+              required
             />
           </div>
           <div>
@@ -861,6 +874,47 @@ export function QuoteSummary({
             <p className="mt-1 text-xs text-gray-500">
               We'll send your quote to this email address
             </p>
+          </div>
+          <div>
+            <label htmlFor="quote-phone" className="block text-xs text-gray-400 mb-1">
+              Phone Number <span className="text-gray-500">(optional)</span>
+            </label>
+            <input
+              id="quote-phone"
+              name="quote-phone"
+              type="tel"
+              autoComplete="tel"
+              value={phone}
+              onChange={(e) => {
+                setPhone(e.target.value)
+                if (e.target.value.length > 0) {
+                  trackGAEvent('form_field_interaction', {
+                    event_category: 'quote_form',
+                    event_label: 'phone_field_filled',
+                    field_name: 'phone',
+                  })
+                  trackMetaEvent('ViewContent', {
+                    content_name: 'Phone Field Filled',
+                    content_category: 'Quote Form',
+                    field_name: 'phone',
+                  })
+                }
+              }}
+              onFocus={() => {
+                trackGAEvent('form_field_focus', {
+                  event_category: 'quote_form',
+                  event_label: 'phone_field_focused',
+                  field_name: 'phone',
+                })
+                trackMetaEvent('ViewContent', {
+                  content_name: 'Phone Field Focused',
+                  content_category: 'Quote Form',
+                  field_name: 'phone',
+                })
+              }}
+              className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-white text-sm focus:outline-none focus:border-white"
+              placeholder="(415) 555-0100"
+            />
           </div>
           <div>
             <label htmlFor="quote-zipcode" className="block text-xs text-gray-400 mb-1">
