@@ -1,0 +1,13 @@
+[
+  {
+    "gclid": "EAIaIQobChMI-EXAMPLE-DO-NOT-USE-1234567890",
+    "closedAt": "2026-01-15T14:30:00-08:00",
+    "value": 5200
+  },
+  {
+    "gclid": "Cj0KCQiA-EXAMPLE-DO-NOT-USE-0987654321",
+    "closedAt": "2026-01-18",
+    "value": 3800,
+    "currency": "USD"
+  }
+]
