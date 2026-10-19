@@ -520,17 +520,55 @@ San Francisco Bay Area`
       acceptedRecipients: info.accepted,
     })
 
-    const styleLabel = data.style === 'victorian' ? 'Victorian Top Rail' : 'Rectangle Top Rail'
+    const styleLabel = data.style === 'victorian' ? 'Victorian top rail' : 'Rectangle top rail'
+    // Readable infill label for the Notes breakdown.
+    const INFILL_LABELS: Record<string, string> = {
+      none: 'No pickets / infill',
+      pickets: 'Vertical pickets',
+      twistedPickets: 'Twisted pickets',
+      ornamentalPickets: 'Extra ornamental pickets',
+      cable: 'Cable rail',
+      slats: 'Horizontal slats',
+    }
+    // Map the quote infill to the existing "Infill" column's tag names so the
+    // quote reuses the same options the contact form uses (no duplicate tags).
+    const INFILL_TAGS: Record<string, string> = {
+      none: 'No Infill',
+      pickets: 'Picket',
+      twistedPickets: 'Picket',
+      ornamentalPickets: 'Picket',
+      cable: 'Cable Rail',
+      slats: 'Slat',
+    }
+    const infillLabel = INFILL_LABELS[data.infill] || data.infill
+    const infillTag = INFILL_TAGS[data.infill]
+    const money = (n: number) => `$${n.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`
+
+    // Full breakdown lives in Notes; Estimate and Infill get their own columns.
+    const notesLines: Array<string | false | undefined> = [
+      `Rail style: ${styleLabel}`,
+      `Infill: ${infillLabel}`,
+      data.picketStyle && `Picket style: ${data.picketStyle}`,
+      data.railingEnd && `Railing end: ${data.railingEnd}`,
+      `Length: ${data.materials.topRailFeet.toFixed(1)} ft`,
+      data.materials.stanchionCount > 0 && `Posts: ${data.materials.stanchionCount}`,
+      data.materials.picketCount > 0 && `Pickets: ${data.materials.picketCount}`,
+      data.materials.cableFeet > 0 && `Cable: ${data.materials.cableFeet.toFixed(1)} ft`,
+      data.materials.slatFeet > 0 && `Slats: ${data.materials.slatFeet.toFixed(1)} ft`,
+      `Materials: ${money(data.price.materials)}`,
+      `Labor: ${money(data.price.labor)}`,
+      `Install: ${money(data.price.install)}`,
+      `Estimate total: $${data.price.total.toLocaleString('en-US', {maximumFractionDigits: 0})}`,
+    ]
+
     const notionResult = await createWebsiteLead({
       name: data.name,
       email: recipientEmail,
       zip: data.zipcode,
       source: 'Quote',
-      notes: [
-        `${styleLabel}, ${data.infill}`,
-        `Length ${data.materials.topRailFeet.toFixed(1)} ft`,
-        `Estimate $${data.price.total.toLocaleString(undefined, {maximumFractionDigits: 0})}`,
-      ].join('. '),
+      infill: infillTag ? [infillTag] : undefined,
+      estimateTotal: data.price.total,
+      notes: notesLines.filter(Boolean).join('\n'),
       gclid: data.gclid,
       gbraid: data.gbraid,
       wbraid: data.wbraid,
