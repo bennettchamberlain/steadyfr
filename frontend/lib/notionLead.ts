@@ -22,6 +22,8 @@ export type WebsiteLead = {
   infill?: string[]
   files?: string[]
   notes?: string
+  /** Quote estimate total in dollars → "Estimate" column (falls back to Notes). */
+  estimateTotal?: number
   /** Google Ads click ids captured on the landing page, for offline conversion tracking. */
   gclid?: string
   gbraid?: string
@@ -208,7 +210,6 @@ export async function createWebsiteLead(
     ['City', lead.city],
     ['State', lead.state],
     ['Zip', lead.zip],
-    ['Notes', lead.notes],
     ['Files', lead.files?.filter(Boolean).join(', ')],
   ]
   for (const [key, value] of textFields) {
@@ -228,7 +229,23 @@ export async function createWebsiteLead(
     if (property) properties[key] = property
   }
 
-  if (gclidColumnValue) properties.Gclid = richText(gclidColumnValue)
+  // "Optional" columns are ones a given database may not have yet (added over
+  // time / different per deployment). Each carries a Notes fallback so that if
+  // the column is missing, its value still lands on the lead (see retry below).
+  const optionalColumns: Array<{name: string; fallbackNote: string}> = []
+  if (gclidColumnValue) {
+    properties.Gclid = richText(gclidColumnValue)
+    optionalColumns.push({name: 'Gclid', fallbackNote: adClickNote})
+  }
+  if (typeof lead.estimateTotal === 'number' && Number.isFinite(lead.estimateTotal)) {
+    const dollars = Math.round(lead.estimateTotal)
+    properties.Estimate = {number: dollars}
+    optionalColumns.push({name: 'Estimate', fallbackNote: `Estimate: $${dollars.toLocaleString('en-US')}`})
+  }
+
+  // Notes is set last so missing-column fallbacks can be appended to it.
+  let notesValue = lead.notes?.trim() || ''
+  if (notesValue) properties.Notes = richText(notesValue)
 
   async function postPage(): Promise<
     {ok: true; id: string} | {ok: false; status: number; error: string}
@@ -261,17 +278,21 @@ export async function createWebsiteLead(
 
   let result = await postPage()
 
-  // If the database has no "Gclid" column yet, Notion rejects the whole create.
-  // Drop the column, fold the ids into Notes instead, and retry so the lead
-  // still saves. (Safe from duplicates: we only retry when the create failed.)
-  const gclidPropError =
-    !result.ok &&
-    result.status === 400 &&
-    /gclid|is not a property|property that exists/i.test(result.error)
-  if (gclidPropError && 'Gclid' in properties) {
-    delete properties.Gclid
-    const notesWithAdClick = [lead.notes?.trim(), adClickNote].filter(Boolean).join('\n')
-    if (notesWithAdClick) properties.Notes = richText(notesWithAdClick)
+  // If the database is missing one of the optional columns, Notion rejects the
+  // whole create with "<Name> is not a property that exists." Drop that column,
+  // fold its value into Notes, and retry — the lead still saves. We only retry
+  // when the create failed, so there's no risk of a duplicate page.
+  let guard = 0
+  while (!result.ok && result.status === 400 && guard < optionalColumns.length + 1) {
+    guard++
+    const missing = /^(.+?) is not a property that exists/i.exec(result.error)?.[1]?.trim()
+    const column = missing ? optionalColumns.find((c) => c.name === missing) : undefined
+    if (!column || !(column.name in properties)) break
+    delete properties[column.name]
+    if (column.fallbackNote) {
+      notesValue = [notesValue, column.fallbackNote].filter(Boolean).join('\n')
+      properties.Notes = richText(notesValue)
+    }
     result = await postPage()
   }
 
