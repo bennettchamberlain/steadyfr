@@ -32,6 +32,10 @@ interface QuoteEmailData {
     type: string
   }>
   diagramImage: string // Base64 encoded image
+  // Google Ads click ids captured on the landing page (offline conversion tracking).
+  gclid?: string
+  gbraid?: string
+  wbraid?: string
 }
 
 // Brevo SMTP credentials come from environment variables (Vercel project settings,
@@ -527,6 +531,9 @@ San Francisco Bay Area`
         `Length ${data.materials.topRailFeet.toFixed(1)} ft`,
         `Estimate $${data.price.total.toLocaleString(undefined, {maximumFractionDigits: 0})}`,
       ].join('. '),
+      gclid: data.gclid,
+      gbraid: data.gbraid,
+      wbraid: data.wbraid,
     })
     if (!notionResult.ok) {
       console.error('[send-quote-email] Notion write failed:', notionResult.error)

@@ -17,6 +17,7 @@ import {PDF_CONFIG} from '../utils/pdfConstants'
 import {trackMetaEvent} from '@/app/components/MetaPixel'
 import {trackGAEvent} from '@/app/components/GoogleAnalytics'
 import FormConsentNotice from '@/app/components/FormConsentNotice'
+import {getAdClickIds} from '@/lib/adClickIds'
 
 interface QuoteSummaryProps {
   style: RailStyle
@@ -238,6 +239,7 @@ export function QuoteSummary({
         },
         sections,
         diagramImage: diagramImage || '',
+        ...getAdClickIds(), // gclid / gbraid / wbraid for offline conversion tracking
       }
 
       console.log('[QuoteSummary] Sending email request to /api/send-quote-email...', {

@@ -22,6 +22,10 @@ export type WebsiteLead = {
   infill?: string[]
   files?: string[]
   notes?: string
+  /** Google Ads click ids captured on the landing page, for offline conversion tracking. */
+  gclid?: string
+  gbraid?: string
+  wbraid?: string
   source: LeadSource
   /**
    * Pacific wall-clock appointment. Omit to log an all-day lead on today's Pacific date.
@@ -183,13 +187,27 @@ export async function createWebsiteLead(
   if (email && EMAIL_OK.test(email)) properties.Email = {email}
   const phone = lead.phone?.trim()
   if (phone) properties.Phone = {phone_number: phone}
+
+  // Fold any Google Ads click ids into the Notes value. Stored as `key=value`
+  // so a closed-won job can be matched back to the click for an offline
+  // conversion upload. Kept in Notes (rather than a dedicated property) so the
+  // lead always saves even if the Notion database has no gclid column.
+  const adClickIds = [
+    lead.gclid?.trim() && `gclid=${lead.gclid.trim()}`,
+    lead.gbraid?.trim() && `gbraid=${lead.gbraid.trim()}`,
+    lead.wbraid?.trim() && `wbraid=${lead.wbraid.trim()}`,
+  ].filter(Boolean) as string[]
+  const notesValue = [lead.notes?.trim(), adClickIds.length ? `Ad click: ${adClickIds.join(' ')}` : '']
+    .filter(Boolean)
+    .join('\n')
+
   const textFields: Array<[string, string | undefined]> = [
     ['Company', lead.company],
     ['Street', lead.street],
     ['City', lead.city],
     ['State', lead.state],
     ['Zip', lead.zip],
-    ['Notes', lead.notes],
+    ['Notes', notesValue],
     ['Files', lead.files?.filter(Boolean).join(', ')],
   ]
   for (const [key, value] of textFields) {
