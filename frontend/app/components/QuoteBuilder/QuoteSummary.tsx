@@ -992,7 +992,7 @@ export function QuoteSummary({
           >
             {isSubmitting ? 'Sending...' : 'Submit Quote & Get Email'}
           </button>
-          <FormConsentNotice className="mt-3" sms={false} />
+          <FormConsentNotice className="mt-3" sms />
 
           {submitStatus === 'success' && (
             <div className="mt-3 p-3 bg-green-900/20 border border-green-700 rounded text-sm text-green-300">
