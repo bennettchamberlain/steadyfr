@@ -1,47 +1,61 @@
-// Ad click-ID capture for offline conversion tracking.
+// Ad click-ID + campaign (UTM) capture for attribution and offline conversions.
 //
-// When someone arrives from an ad, the landing URL carries a click identifier:
-//   - Google/YouTube: `gclid` (standard), or `gbraid` / `wbraid` for
-//     iOS/privacy-safe campaigns.
-//   - Meta (Facebook/Instagram): `fbclid`.
-// We stash whichever is present in localStorage on landing and read it back when
-// a lead form is submitted, so the click can later be matched to a closed job
-// and reported to the ad platform as an offline conversion.
+// When someone arrives from an ad or a tagged link, the landing URL can carry:
+//   - a click identifier — Google/YouTube `gclid` (or `gbraid`/`wbraid` for
+//     iOS/privacy-safe campaigns), or Meta (FB/Instagram) `fbclid`; and
+//   - UTM campaign tags — utm_source/medium/campaign/term/content — which say
+//     which source, campaign, keyword (term) and specific ad (content) sent them.
 //
-// The pixels (gtag / Meta Pixel) already use these for *online* attribution
-// automatically; this is only about persisting the raw id so we can report
-// conversions that happen offline (a lead that closes later by phone).
+// We stash whatever is present in localStorage on landing (last touch wins) and
+// read it back when a lead form is submitted, so a lead can be tied to its
+// campaign/ad and, when it closes, reported to the ad platform as an offline
+// conversion.
+//
+// The pixels (gtag / Meta Pixel) already handle *online* attribution; this is
+// about persisting the raw values so we can attribute conversions that happen
+// offline (a lead that closes later by phone).
 
 const STORAGE_KEY = 'steady_ad_click_ids'
 
-// Google's click-ID attribution window is up to 90 days. After that the id is no
-// longer useful for a conversion upload, so we treat stored ids as expired.
+// Click-ID attribution windows run up to ~90 days; after that a stored value is
+// no longer useful for a conversion upload, so we treat it as expired.
 const MAX_AGE_MS = 90 * 24 * 60 * 60 * 1000
+
+export type LeadUtm = {
+  source?: string
+  medium?: string
+  campaign?: string
+  term?: string
+  content?: string
+}
 
 export type AdClickIds = {
   gclid?: string
   gbraid?: string
   wbraid?: string
   fbclid?: string
+  utm?: LeadUtm
 }
 
-type StoredAdClickIds = AdClickIds & {capturedAt: number}
+const CLICK_ID_KEYS = ['gclid', 'gbraid', 'wbraid', 'fbclid'] as const
+const UTM_KEYS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content'] as const
+const ALL_KEYS = [...CLICK_ID_KEYS, ...UTM_KEYS] as const
 
-const PARAM_KEYS = ['gclid', 'gbraid', 'wbraid', 'fbclid'] as const
+type StoredTracking = Partial<Record<(typeof ALL_KEYS)[number], string>> & {capturedAt: number}
 
 /**
- * Read gclid/gbraid/wbraid from the current URL and, if any are present, persist
- * them (overwriting any older click — last click wins, matching Google's model).
- * Safe to call on every page load; a no-op when there are no ad params or when
- * storage is unavailable (private mode, SSR, blocked cookies).
+ * Read click ids and UTM tags from the current URL and, if any are present,
+ * persist them (overwriting any older values — last touch wins). Safe to call on
+ * every page load; a no-op when there are no tracking params or when storage is
+ * unavailable (private mode, SSR, blocked cookies).
  */
 export function captureAdClickIds(): void {
   if (typeof window === 'undefined') return
 
-  let found: AdClickIds = {}
+  const found: Partial<Record<(typeof ALL_KEYS)[number], string>> = {}
   try {
     const params = new URLSearchParams(window.location.search)
-    for (const key of PARAM_KEYS) {
+    for (const key of ALL_KEYS) {
       const value = params.get(key)?.trim()
       if (value) found[key] = value.slice(0, 512)
     }
@@ -49,9 +63,9 @@ export function captureAdClickIds(): void {
     return
   }
 
-  if (!found.gclid && !found.gbraid && !found.wbraid && !found.fbclid) return
+  if (Object.keys(found).length === 0) return
 
-  const record: StoredAdClickIds = {...found, capturedAt: Date.now()}
+  const record: StoredTracking = {...found, capturedAt: Date.now()}
   try {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(record))
   } catch {
@@ -60,8 +74,8 @@ export function captureAdClickIds(): void {
 }
 
 /**
- * Return the stored click ids, or an empty object if none are stored, storage is
- * unavailable, or the stored click is older than the 90-day attribution window.
+ * Return the stored click ids and UTMs, or an empty object if none are stored,
+ * storage is unavailable, or the stored touch is older than the 90-day window.
  */
 export function getAdClickIds(): AdClickIds {
   if (typeof window === 'undefined') return {}
@@ -75,15 +89,24 @@ export function getAdClickIds(): AdClickIds {
   if (!raw) return {}
 
   try {
-    const parsed = JSON.parse(raw) as Partial<StoredAdClickIds>
+    const parsed = JSON.parse(raw) as Partial<StoredTracking>
     if (typeof parsed.capturedAt === 'number' && Date.now() - parsed.capturedAt > MAX_AGE_MS) {
       return {}
     }
+
     const out: AdClickIds = {}
-    for (const key of PARAM_KEYS) {
+    for (const key of CLICK_ID_KEYS) {
       const value = parsed[key]
       if (typeof value === 'string' && value) out[key] = value
     }
+
+    const utm: LeadUtm = {}
+    for (const key of UTM_KEYS) {
+      const value = parsed[key]
+      if (typeof value === 'string' && value) utm[key.slice(4) as keyof LeadUtm] = value
+    }
+    if (Object.keys(utm).length) out.utm = utm
+
     return out
   } catch {
     return {}

@@ -1,6 +1,7 @@
 import {NextRequest, NextResponse} from 'next/server'
 import nodemailer from 'nodemailer'
 import {createWebsiteLead} from '@/lib/notionLead'
+import type {LeadUtm} from '@/lib/adClickIds'
 
 // Ensure this route uses the Node.js runtime so we can use nodemailer
 export const runtime = 'nodejs'
@@ -32,11 +33,12 @@ interface QuoteEmailData {
     type: string
   }>
   diagramImage: string // Base64 encoded image
-  // Ad click ids captured on the landing page (offline conversion tracking).
+  // Ad click ids + campaign tags captured on the landing page (attribution).
   gclid?: string
   gbraid?: string
   wbraid?: string
   fbclid?: string
+  utm?: LeadUtm
 }
 
 // Brevo SMTP credentials come from environment variables (Vercel project settings,
@@ -574,6 +576,7 @@ San Francisco Bay Area`
       gbraid: data.gbraid,
       wbraid: data.wbraid,
       fbclid: data.fbclid,
+      utm: data.utm,
     })
     if (!notionResult.ok) {
       console.error('[send-quote-email] Notion write failed:', notionResult.error)

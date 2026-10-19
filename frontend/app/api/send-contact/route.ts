@@ -1,6 +1,7 @@
 import {NextRequest, NextResponse} from 'next/server'
 import nodemailer from 'nodemailer'
 import {appointmentFromSlot, createWebsiteLead, pacificDatePlus} from '@/lib/notionLead'
+import type {LeadUtm} from '@/lib/adClickIds'
 
 // Node runtime required for nodemailer
 export const runtime = 'nodejs'
@@ -32,11 +33,12 @@ interface ContactData {
   infill?: string[]
   additional?: string
   files?: ContactFile[]
-  // Ad click ids captured on the landing page (offline conversion tracking).
+  // Ad click ids + campaign tags captured on the landing page (attribution).
   gclid?: string
   gbraid?: string
   wbraid?: string
   fbclid?: string
+  utm?: LeadUtm
 }
 
 // Brevo SMTP credentials come from environment variables.
@@ -137,6 +139,15 @@ export async function POST(request: NextRequest) {
     .filter(Boolean)
     .join(' ')
   add('Ad click', adClickId)
+  const sourceCampaign = [
+    [data.utm?.source, data.utm?.medium].filter(Boolean).join(' / '),
+    data.utm?.campaign,
+    data.utm?.term && `term: ${data.utm.term}`,
+    data.utm?.content && `ad: ${data.utm.content}`,
+  ]
+    .filter(Boolean)
+    .join(' · ')
+  add('Source / campaign', sourceCampaign)
 
   const rowsHtml = rows
     .map(
@@ -272,6 +283,7 @@ export async function POST(request: NextRequest) {
     gbraid: data.gbraid,
     wbraid: data.wbraid,
     fbclid: data.fbclid,
+    utm: data.utm,
     source: kind === 'shop' ? 'Shop visit' : 'Call',
     visit:
       parsed && data.visitDate
