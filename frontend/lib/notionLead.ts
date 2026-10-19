@@ -28,6 +28,8 @@ export type WebsiteLead = {
   gclid?: string
   gbraid?: string
   wbraid?: string
+  /** Meta (Facebook/Instagram) click id — stored in Notes (no dedicated column). */
+  fbclid?: string
   source: LeadSource
   /**
    * Pacific wall-clock appointment. Omit to log an all-day lead on today's Pacific date.
@@ -203,6 +205,8 @@ export async function createWebsiteLead(
   // export); otherwise the labelled gbraid/wbraid fallback.
   const gclidColumnValue = lead.gclid?.trim() || adClickIds.join(' ')
   const adClickNote = adClickIds.length ? `Ad click: ${adClickIds.join(' ')}` : ''
+  // Meta click id has no dedicated column, so it always goes into Notes.
+  const fbclidNote = lead.fbclid?.trim() ? `Meta ad click (fbclid): ${lead.fbclid.trim()}` : ''
 
   const textFields: Array<[string, string | undefined]> = [
     ['Company', lead.company],
@@ -243,8 +247,9 @@ export async function createWebsiteLead(
     optionalColumns.push({name: 'Estimate', fallbackNote: `Estimate: $${dollars.toLocaleString('en-US')}`})
   }
 
-  // Notes is set last so missing-column fallbacks can be appended to it.
-  let notesValue = lead.notes?.trim() || ''
+  // Notes is set last so missing-column fallbacks can be appended to it. The
+  // Meta click id (fbclid) always goes here since it has no dedicated column.
+  let notesValue = [lead.notes?.trim(), fbclidNote].filter(Boolean).join('\n')
   if (notesValue) properties.Notes = richText(notesValue)
 
   async function postPage(): Promise<

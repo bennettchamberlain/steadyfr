@@ -32,10 +32,11 @@ interface QuoteEmailData {
     type: string
   }>
   diagramImage: string // Base64 encoded image
-  // Google Ads click ids captured on the landing page (offline conversion tracking).
+  // Ad click ids captured on the landing page (offline conversion tracking).
   gclid?: string
   gbraid?: string
   wbraid?: string
+  fbclid?: string
 }
 
 // Brevo SMTP credentials come from environment variables (Vercel project settings,
@@ -572,6 +573,7 @@ San Francisco Bay Area`
       gclid: data.gclid,
       gbraid: data.gbraid,
       wbraid: data.wbraid,
+      fbclid: data.fbclid,
     })
     if (!notionResult.ok) {
       console.error('[send-quote-email] Notion write failed:', notionResult.error)

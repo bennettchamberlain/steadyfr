@@ -1,13 +1,16 @@
-// Google Ads click-ID capture for offline conversion tracking.
+// Ad click-ID capture for offline conversion tracking.
 //
-// When someone arrives from a Google/YouTube ad, the landing URL carries a click
-// identifier: `gclid` (standard), or `gbraid` / `wbraid` for iOS/privacy-safe
-// campaigns. We stash whichever is present in localStorage on landing and read it
-// back when a lead form is submitted, so the click can later be matched to a
-// closed job and uploaded to Google Ads as an offline conversion.
+// When someone arrives from an ad, the landing URL carries a click identifier:
+//   - Google/YouTube: `gclid` (standard), or `gbraid` / `wbraid` for
+//     iOS/privacy-safe campaigns.
+//   - Meta (Facebook/Instagram): `fbclid`.
+// We stash whichever is present in localStorage on landing and read it back when
+// a lead form is submitted, so the click can later be matched to a closed job
+// and reported to the ad platform as an offline conversion.
 //
-// gtag already uses these for *online* attribution automatically; this is only
-// about persisting the raw id so we can report conversions that happen offline.
+// The pixels (gtag / Meta Pixel) already use these for *online* attribution
+// automatically; this is only about persisting the raw id so we can report
+// conversions that happen offline (a lead that closes later by phone).
 
 const STORAGE_KEY = 'steady_ad_click_ids'
 
@@ -19,11 +22,12 @@ export type AdClickIds = {
   gclid?: string
   gbraid?: string
   wbraid?: string
+  fbclid?: string
 }
 
 type StoredAdClickIds = AdClickIds & {capturedAt: number}
 
-const PARAM_KEYS = ['gclid', 'gbraid', 'wbraid'] as const
+const PARAM_KEYS = ['gclid', 'gbraid', 'wbraid', 'fbclid'] as const
 
 /**
  * Read gclid/gbraid/wbraid from the current URL and, if any are present, persist
@@ -45,7 +49,7 @@ export function captureAdClickIds(): void {
     return
   }
 
-  if (!found.gclid && !found.gbraid && !found.wbraid) return
+  if (!found.gclid && !found.gbraid && !found.wbraid && !found.fbclid) return
 
   const record: StoredAdClickIds = {...found, capturedAt: Date.now()}
   try {
