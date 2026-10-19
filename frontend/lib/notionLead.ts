@@ -22,6 +22,10 @@ export type WebsiteLead = {
   infill?: string[]
   files?: string[]
   notes?: string
+  /** Google Ads click ids captured on the landing page, for offline conversion tracking. */
+  gclid?: string
+  gbraid?: string
+  wbraid?: string
   source: LeadSource
   /**
    * Pacific wall-clock appointment. Omit to log an all-day lead on today's Pacific date.
@@ -183,6 +187,21 @@ export async function createWebsiteLead(
   if (email && EMAIL_OK.test(email)) properties.Email = {email}
   const phone = lead.phone?.trim()
   if (phone) properties.Phone = {phone_number: phone}
+
+  // Google Ads click ids, for matching a closed job back to the click on an
+  // offline conversion upload. Primary home is a dedicated "Gclid" property;
+  // if that column doesn't exist in the database we fall back to folding the
+  // ids into Notes so the lead still saves (see the retry below).
+  const adClickIds = [
+    lead.gclid?.trim() && `gclid=${lead.gclid.trim()}`,
+    lead.gbraid?.trim() && `gbraid=${lead.gbraid.trim()}`,
+    lead.wbraid?.trim() && `wbraid=${lead.wbraid.trim()}`,
+  ].filter(Boolean) as string[]
+  // The dedicated column holds the raw gclid when present (cleanest for CSV
+  // export); otherwise the labelled gbraid/wbraid fallback.
+  const gclidColumnValue = lead.gclid?.trim() || adClickIds.join(' ')
+  const adClickNote = adClickIds.length ? `Ad click: ${adClickIds.join(' ')}` : ''
+
   const textFields: Array<[string, string | undefined]> = [
     ['Company', lead.company],
     ['Street', lead.street],
@@ -209,24 +228,55 @@ export async function createWebsiteLead(
     if (property) properties[key] = property
   }
 
-  const response = await fetch('https://api.notion.com/v1/pages', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Notion-Version': NOTION_VERSION,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      parent: {database_id: DATABASE_ID},
-      properties,
-    }),
-  })
+  if (gclidColumnValue) properties.Gclid = richText(gclidColumnValue)
 
-  if (!response.ok) {
-    const err = (await response.json().catch(() => ({}))) as {message?: string}
-    return {ok: false, error: err.message || `Notion request failed (${response.status})`}
+  async function postPage(): Promise<
+    {ok: true; id: string} | {ok: false; status: number; error: string}
+  > {
+    const response = await fetch('https://api.notion.com/v1/pages', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Notion-Version': NOTION_VERSION,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        parent: {database_id: DATABASE_ID},
+        properties,
+      }),
+    })
+
+    if (!response.ok) {
+      const err = (await response.json().catch(() => ({}))) as {message?: string}
+      return {
+        ok: false,
+        status: response.status,
+        error: err.message || `Notion request failed (${response.status})`,
+      }
+    }
+
+    const data = (await response.json()) as {id: string}
+    return {ok: true, id: data.id}
   }
 
-  const data = (await response.json()) as {id: string}
-  return {ok: true, id: data.id}
+  let result = await postPage()
+
+  // If the database has no "Gclid" column yet, Notion rejects the whole create.
+  // Drop the column, fold the ids into Notes instead, and retry so the lead
+  // still saves. (Safe from duplicates: we only retry when the create failed.)
+  const gclidPropError =
+    !result.ok &&
+    result.status === 400 &&
+    /gclid|is not a property|property that exists/i.test(result.error)
+  if (gclidPropError && 'Gclid' in properties) {
+    delete properties.Gclid
+    const notesWithAdClick = [lead.notes?.trim(), adClickNote].filter(Boolean).join('\n')
+    if (notesWithAdClick) properties.Notes = richText(notesWithAdClick)
+    result = await postPage()
+  }
+
+  if (!result.ok) {
+    return {ok: false, error: result.error}
+  }
+  return {ok: true, id: result.id}
 }

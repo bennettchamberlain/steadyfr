@@ -8,6 +8,7 @@ import {
 } from '@/app/components/GoogleAnalytics'
 import {trackMetaEvent} from '@/app/components/MetaPixel'
 import FormConsentNotice from '@/app/components/FormConsentNotice'
+import {getAdClickIds} from '@/lib/adClickIds'
 
 // ---- pure helpers -------------------------------------------------------
 const emailOk = (v: string) => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v)
@@ -226,6 +227,7 @@ export default function ContactForm() {
       street: s.street, city: s.city, region: s.region, zip: s.zip, propType: s.propType,
       mode: s.mode, location: s.location, railType: s.railType, application: s.application, infill: s.infill,
       additional: s.additional, files,
+      ...getAdClickIds(), // gclid / gbraid / wbraid for offline conversion tracking
     }
     try {
       const res = await fetch('/api/send-contact', {

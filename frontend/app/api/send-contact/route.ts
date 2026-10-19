@@ -32,6 +32,10 @@ interface ContactData {
   infill?: string[]
   additional?: string
   files?: ContactFile[]
+  // Google Ads click ids captured on the landing page (offline conversion tracking).
+  gclid?: string
+  gbraid?: string
+  wbraid?: string
 }
 
 // Brevo SMTP credentials come from environment variables.
@@ -123,6 +127,14 @@ export async function POST(request: NextRequest) {
     add('Infill', data.infill)
   }
   add('Notes', data.additional)
+  const adClickId = [
+    data.gclid && `gclid=${data.gclid}`,
+    data.gbraid && `gbraid=${data.gbraid}`,
+    data.wbraid && `wbraid=${data.wbraid}`,
+  ]
+    .filter(Boolean)
+    .join(' ')
+  add('Ad click', adClickId)
 
   const rowsHtml = rows
     .map(
@@ -254,6 +266,9 @@ export async function POST(request: NextRequest) {
     infill: data.mode === 'specs' ? data.infill : undefined,
     files: (data.files ?? []).map((file) => file.name),
     notes: data.additional,
+    gclid: data.gclid,
+    gbraid: data.gbraid,
+    wbraid: data.wbraid,
     source: kind === 'shop' ? 'Shop visit' : 'Call',
     visit:
       parsed && data.visitDate

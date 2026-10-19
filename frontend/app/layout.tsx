@@ -12,6 +12,7 @@ import Footer from '@/app/components/Footer'
 import Header from '@/app/components/Header'
 import MetaPixel from '@/app/components/MetaPixel'
 import GoogleAnalytics from '@/app/components/GoogleAnalytics'
+import AdClickCapture from '@/app/components/AdClickCapture'
 import NavigationTracker from '@/app/components/NavigationTracker'
 import LocalBusinessSchema from '@/app/components/LocalBusinessSchema'
 import * as demo from '@/sanity/lib/demo'
@@ -149,6 +150,7 @@ export default async function RootLayout({children}: {children: React.ReactNode}
         <SpeedInsights />
         <MetaPixel />
         <GoogleAnalytics />
+        <AdClickCapture />
         <NavigationTracker />
         <LocalBusinessSchema />
       </body>
