@@ -13,6 +13,7 @@ import Header from '@/app/components/Header'
 import MetaPixel from '@/app/components/MetaPixel'
 import GoogleAnalytics from '@/app/components/GoogleAnalytics'
 import AdClickCapture from '@/app/components/AdClickCapture'
+import TapConversionTracker from '@/app/components/TapConversionTracker'
 import NavigationTracker from '@/app/components/NavigationTracker'
 import LocalBusinessSchema from '@/app/components/LocalBusinessSchema'
 import * as demo from '@/sanity/lib/demo'
@@ -151,6 +152,7 @@ export default async function RootLayout({children}: {children: React.ReactNode}
         <MetaPixel />
         <GoogleAnalytics />
         <AdClickCapture />
+        <TapConversionTracker />
         <NavigationTracker />
         <LocalBusinessSchema />
       </body>

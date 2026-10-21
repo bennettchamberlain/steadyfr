@@ -12,6 +12,9 @@ const GOOGLE_ADS_ID = 'AW-18264152079'
 export const CONTACT_CONVERSION_SEND_TO = 'AW-18264152079/wNbYCLr48sccEI-wg4VE'
 // Conversion action: "Lead – Quote request" (quote form submit)
 export const QUOTE_CONVERSION_SEND_TO = 'AW-18264152079/y2cPCP3IgKUdEI-wg4VE'
+// Conversion actions: website tap-to-contact (fire site-wide on tel:/mailto: taps)
+export const PHONE_TAP_CONVERSION_SEND_TO = 'AW-18264152079/HKczCKidhKUdEI-wg4VE'
+export const EMAIL_TAP_CONVERSION_SEND_TO = 'AW-18264152079/a-AHCLKqhKUdEI-wg4VE'
 
 declare global {
   interface Window {
