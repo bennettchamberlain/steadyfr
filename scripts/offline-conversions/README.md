@@ -12,6 +12,35 @@ or weeks later by phone or in person.
 
 ---
 
+## Recurring workflow (do this each time jobs close)
+
+The Google Ads side is **already set up once** — there's a saved Data Manager
+**File upload** connection with the 10-field mapping, pointed at the
+**"Converted"** conversion action. So the repeat process is just:
+
+1. **In Notion**, for each won job: set **`Lead Stage` → `Finished`**, and fill in
+   **`Sold at`** (final price) and **`Sold on`** (close date).
+2. **Generate the file** (from the repo root, `steadyfr/`, with the Notion token):
+   ```bash
+   NOTION_TOKEN=... node scripts/offline-conversions/build-conversions-csv.mjs --from-notion --out /tmp/offline-conversions.csv
+   ```
+   It pulls every `Finished` lead, writes the Data Manager CSV, and prints any it
+   skipped (no gclid/gbraid/wbraid) and why.
+3. **Upload in Google Ads:** Data Manager → the **offline conversions** connection
+   → **Upload file** → choose the CSV. The saved mapping handles the rest.
+4. **Check the run:** *Rows imported* vs *Rows with errors*. `Transaction ID` (the
+   Notion page id) dedupes, so re-uploading the same lead won't double-count.
+5. Reporting appears in Google Ads within ~24h, attributed to the campaign/keyword
+   that earned the click.
+
+Notes:
+- `NOTION_TOKEN` is **not** in `.env.local` — it lives in Vercel's env. Copy it
+  from there to run locally.
+- iOS clicks (gbraid/wbraid) are included automatically.
+- Leads with no ad click id are skipped — they didn't come from a Google ad.
+
+---
+
 ## One-time setup in Google Ads
 
 Do this once, so there's a conversion action for the upload to import into.
