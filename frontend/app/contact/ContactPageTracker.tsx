@@ -1,11 +1,7 @@
 'use client'
 
 import {useEffect} from 'react'
-import {
-  trackGAEvent,
-  trackGoogleAdsConversion,
-  CONTACT_CONVERSION_SEND_TO,
-} from '@/app/components/GoogleAnalytics'
+import {trackGAEvent} from '@/app/components/GoogleAnalytics'
 import {trackMetaEvent} from '@/app/components/MetaPixel'
 
 export default function ContactPageTracker() {
@@ -31,8 +27,8 @@ export default function ContactPageTracker() {
         content_category: 'Contact',
         contact_method: 'email',
       })
-      // Google Ads conversion
-      trackGoogleAdsConversion(CONTACT_CONVERSION_SEND_TO)
+      // No Google Ads conversion here — taps are an observe-only signal (tracked
+      // in GA as Email_Click). The Contact conversion fires on form submit only.
     }
     if (emailLink) {
       emailLink.addEventListener('click', handleEmailClick)
@@ -52,8 +48,8 @@ export default function ContactPageTracker() {
         content_category: 'Contact',
         contact_method: 'phone',
       })
-      // Google Ads conversion
-      trackGoogleAdsConversion(CONTACT_CONVERSION_SEND_TO)
+      // No Google Ads conversion here — taps are an observe-only signal (tracked
+      // in GA as Phone_Click). The Contact conversion fires on form submit only.
     }
     if (phoneLink) {
       phoneLink.addEventListener('click', handlePhoneClick)
