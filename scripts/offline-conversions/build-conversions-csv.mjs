@@ -51,7 +51,7 @@ function parseArgs(argv) {
     if (a.startsWith('--')) {
       const key = a.slice(2)
       // Boolean flags take no value.
-      if (key === 'from-notion') args[key] = true
+      if (key === 'from-notion' || key === 'data-manager' || key === 'classic') args[key] = true
       else args[key] = argv[++i]
     } else {
       args._.push(a)
@@ -78,6 +78,35 @@ function formatConversionTime(input, tz) {
   const get = (type) => parts.find((p) => p.type === type)?.value ?? '00'
   const hour = get('hour') === '24' ? '00' : get('hour')
   return `${get('year')}-${get('month')}-${get('day')} ${hour}:${get('minute')}:${get('second')}`
+}
+
+// Format an instant as ISO-8601 with an explicit timezone offset, e.g.
+// "2026-01-15T14:30:00-08:00". Used for the Data Manager import schema, which
+// wants a self-contained timestamp (no separate TimeZone line).
+function formatConversionTimeISO(input, tz) {
+  const date = parseDate(input)
+  if (!date) return null
+  const parts = {}
+  for (const p of new Intl.DateTimeFormat('en-CA', {
+    timeZone: tz,
+    hourCycle: 'h23',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  }).formatToParts(date)) {
+    parts[p.type] = p.value
+  }
+  const hour = parts.hour === '24' ? '00' : parts.hour
+  // Timezone offset for this instant (handles DST), e.g. "GMT-08:00" -> "-08:00".
+  const tzName = new Intl.DateTimeFormat('en-US', {timeZone: tz, timeZoneName: 'longOffset'})
+    .formatToParts(date)
+    .find((p) => p.type === 'timeZoneName')?.value
+  const match = /GMT([+-]\d{2}):?(\d{2})/.exec(tzName || '')
+  const offset = match ? `${match[1]}:${match[2]}` : '+00:00'
+  return `${parts.year}-${parts.month}-${parts.day}T${hour}:${parts.minute}:${parts.second}${offset}`
 }
 
 function parseDate(input) {
@@ -192,6 +221,11 @@ async function main() {
   const defaultCurrency = args.currency || DEFAULTS.currency
   const tz = args.tz || DEFAULTS.tz
   const outPath = args.out || DEFAULTS.out
+  // Default to the Data Manager schema (this account is Data-Manager-only):
+  // headers in row 1 + ISO timestamp with offset. Pass --classic for the old
+  // uploader format (a "Parameters:TimeZone=" line + local time).
+  const dataManager = !args.classic
+  const formatTime = dataManager ? formatConversionTimeISO : formatConversionTime
 
   let rows
   try {
@@ -219,7 +253,7 @@ async function main() {
       skipped.push(`${label}: no gclid (older lead, or came from gbraid/wbraid which need the API)`)
       return
     }
-    const time = formatConversionTime(row.closedAt, tz)
+    const time = formatTime(row.closedAt, tz)
     if (!time) {
       skipped.push(`${label} (${gclid.slice(0, 12)}…): invalid or missing close date`)
       return
@@ -233,11 +267,9 @@ async function main() {
   })
 
   const header = ['Google Click ID', 'Conversion Name', 'Conversion Time', 'Conversion Value', 'Conversion Currency']
-  const lines = [
-    `Parameters:TimeZone=${tz}`,
-    header.map(csvField).join(','),
-    ...out.map((r) => r.map(csvField).join(',')),
-  ]
+  const headerAndRows = [header.map(csvField).join(','), ...out.map((r) => r.map(csvField).join(','))]
+  // Data Manager: headers in row 1. Classic uploader: TimeZone line first.
+  const lines = dataManager ? headerAndRows : [`Parameters:TimeZone=${tz}`, ...headerAndRows]
   writeFileSync(outPath, lines.join('\n') + '\n')
 
   console.log(`Wrote ${out.length} conversion${out.length === 1 ? '' : 's'} → ${outPath}`)
