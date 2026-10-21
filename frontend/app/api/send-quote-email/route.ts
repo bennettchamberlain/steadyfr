@@ -2,6 +2,7 @@ import {NextRequest, NextResponse} from 'next/server'
 import nodemailer from 'nodemailer'
 import {createWebsiteLead} from '@/lib/notionLead'
 import type {LeadUtm} from '@/lib/adClickIds'
+import {clientIpFrom} from '@/lib/clientIp'
 
 // Ensure this route uses the Node.js runtime so we can use nodemailer
 export const runtime = 'nodejs'
@@ -610,6 +611,8 @@ San Francisco Bay Area`
       wbraid: data.wbraid,
       fbclid: data.fbclid,
       utm: data.utm,
+      ip: clientIpFrom(request.headers),
+      userAgent: request.headers.get('user-agent') || undefined,
     })
     if (!notionResult.ok) {
       console.error('[send-quote-email] Notion write failed:', notionResult.error)

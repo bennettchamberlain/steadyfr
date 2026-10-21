@@ -34,6 +34,10 @@ export type WebsiteLead = {
   wbraid?: string
   /** Meta (Facebook/Instagram) click id → "Meta click ID" column (falls back to Notes). */
   fbclid?: string
+  /** Client IP captured server-side → "IP address" column (for conversion-match enhancement / Meta CAPI). */
+  ip?: string
+  /** Client user-agent captured server-side → "User agent" column (conversion enhancement / Meta CAPI). */
+  userAgent?: string
   /** Campaign tags (utm_*) → "Source / Campaign" column (falls back to Notes). */
   utm?: LeadUtm
   source: LeadSource
@@ -274,6 +278,16 @@ export async function createWebsiteLead(
   if (fbclid) {
     properties['Meta click ID'] = richText(fbclid)
     optionalColumns.push({name: 'Meta click ID', fallbackNote: `Meta ad click (fbclid): ${fbclid}`})
+  }
+  const ip = lead.ip?.trim()
+  if (ip) {
+    properties['IP address'] = richText(ip)
+    optionalColumns.push({name: 'IP address', fallbackNote: `IP: ${ip}`})
+  }
+  const userAgent = lead.userAgent?.trim()
+  if (userAgent) {
+    properties['User agent'] = richText(userAgent)
+    optionalColumns.push({name: 'User agent', fallbackNote: `UA: ${userAgent}`})
   }
   if (sourceCampaign) {
     properties['Source / Campaign'] = richText(sourceCampaign)
