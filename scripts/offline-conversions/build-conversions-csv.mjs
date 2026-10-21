@@ -34,9 +34,11 @@ const DEFAULTS = {
   tz: 'America/Los_Angeles',
   out: 'google-ads-offline-conversions.csv',
   stageProp: 'Lead Stage',
+  wonStage: 'Finished', // the Lead Stage value that means the job sold/closed
   valueProp: 'Sold at',
   gclidProp: 'Gclid',
   notesProp: 'Notes',
+  dateProp: 'Sold on', // date column used as the conversion time
 }
 
 const NOTION_VERSION = '2022-06-28'
@@ -147,15 +149,12 @@ async function fetchNotionLeads() {
 }
 
 async function rowsFromNotion(args) {
-  const wonStage = args['won-stage']
-  if (!wonStage) {
-    throw new Error('--from-notion requires --won-stage "<the Lead Stage value that means sold/won>"')
-  }
+  const wonStage = args['won-stage'] || DEFAULTS.wonStage
   const stageProp = args['stage-prop'] || DEFAULTS.stageProp
   const valueProp = args['value-prop'] || DEFAULTS.valueProp
   const gclidProp = args['gclid-prop'] || DEFAULTS.gclidProp
   const notesProp = args['notes-prop'] || DEFAULTS.notesProp
-  const dateProp = args['date-prop'] // optional
+  const dateProp = args['date-prop'] || DEFAULTS.dateProp
 
   const pages = await fetchNotionLeads()
   const rows = []

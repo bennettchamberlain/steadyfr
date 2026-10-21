@@ -78,7 +78,6 @@ directly and pick the rows that are marked sold/won.
 ```bash
 NOTION_TOKEN=... node scripts/offline-conversions/build-conversions-csv.mjs \
   --from-notion \
-  --won-stage "Won" \
   --name "Converted lead (offline)" \
   --out /tmp/offline-conversions.csv
 ```
@@ -86,15 +85,14 @@ NOTION_TOKEN=... node scripts/offline-conversions/build-conversions-csv.mjs \
 - Needs **`NOTION_TOKEN`** in the environment (the same token the website uses —
   it's in the app's env / Vercel project settings). `NOTION_DATABASE_ID` is
   optional; it defaults to the leads database.
-- **`--won-stage`** (required): the exact **`Lead Stage`** value that means the
-  lead became a paying job (e.g. `Won`). Only those rows are exported.
 - **`--name`**: must match your Google Ads offline conversion action (the
   "Import / Track conversions from clicks" one — see setup above).
-- Column mapping (override only if you rename them):
-  `--stage-prop "Lead Stage"`, `--value-prop "Sold at"`, `--gclid-prop "Gclid"`,
-  `--notes-prop "Notes"` (fallback place to find a gclid on older leads),
-  `--date-prop "<date column>"` (optional; otherwise the row's last-edited time
-  is used as the conversion time).
+- Defaults are set for this database, so you normally don't pass these:
+  - `--won-stage "Finished"` — the **`Lead Stage`** value that means the job sold.
+  - `--value-prop "Sold at"` — the sale amount (number).
+  - `--date-prop "Sold on"` — the date used as the conversion time (falls back to
+    the row's last-edited time if a row has no `Sold on` date).
+  - `--stage-prop "Lead Stage"`, `--gclid-prop "Gclid"`, `--notes-prop "Notes"`.
 
 The script reads `Sold at` as the conversion value and `Gclid` as the click id,
 skips any won lead with no gclid (older leads, or gbraid/wbraid clicks that need
