@@ -39,6 +39,8 @@ const DEFAULTS = {
   gclidProp: 'Gclid',
   notesProp: 'Notes',
   dateProp: 'Sold on', // date column used as the conversion time
+  ipProp: 'IP address',
+  uaProp: 'User agent',
 }
 
 const NOTION_VERSION = '2022-06-28'
@@ -177,6 +179,17 @@ async function fetchNotionLeads() {
   return pages
 }
 
+// Pull gclid / gbraid / wbraid out of a stored value. The Gclid column holds the
+// raw gclid when present, otherwise a labelled "gbraid=…" / "wbraid=…".
+function extractAdIds(text) {
+  const t = text || ''
+  return {
+    gclid: extractGclid(t),
+    gbraid: /gbraid=([^\s]+)/i.exec(t)?.[1] || '',
+    wbraid: /wbraid=([^\s]+)/i.exec(t)?.[1] || '',
+  }
+}
+
 async function rowsFromNotion(args) {
   const wonStage = args['won-stage'] || DEFAULTS.wonStage
   const stageProp = args['stage-prop'] || DEFAULTS.stageProp
@@ -184,6 +197,8 @@ async function rowsFromNotion(args) {
   const gclidProp = args['gclid-prop'] || DEFAULTS.gclidProp
   const notesProp = args['notes-prop'] || DEFAULTS.notesProp
   const dateProp = args['date-prop'] || DEFAULTS.dateProp
+  const ipProp = args['ip-prop'] || DEFAULTS.ipProp
+  const uaProp = args['ua-prop'] || DEFAULTS.uaProp
 
   const pages = await fetchNotionLeads()
   const rows = []
@@ -192,12 +207,20 @@ async function rowsFromNotion(args) {
     const stage = stageName(props[stageProp])
     if (stage.trim().toLowerCase() !== wonStage.trim().toLowerCase()) continue
 
-    const gclid = extractGclid(plainText(props[gclidProp])) || extractGclid(plainText(props[notesProp]))
+    const ids = extractAdIds(plainText(props[gclidProp]) || plainText(props[notesProp]))
     const value = props[valueProp]?.number
     const closedAt =
       (dateProp && props[dateProp]?.date?.start) || page.last_edited_time // ISO instant fallback
 
-    rows.push({gclid, value, closedAt, _name: plainText(props.Name) || page.id})
+    rows.push({
+      ...ids,
+      value,
+      closedAt,
+      ip: plainText(props[ipProp]),
+      userAgent: plainText(props[uaProp]),
+      transactionId: page.id, // stable per lead → dedupes re-uploads
+      _name: plainText(props.Name) || page.id,
+    })
   }
   return rows
 }
@@ -249,24 +272,40 @@ async function main() {
   rows.forEach((row, i) => {
     const label = row._name ? `"${row._name}"` : `row ${i + 1}`
     const gclid = (row.gclid || '').toString().trim()
-    if (!gclid) {
-      skipped.push(`${label}: no gclid (older lead, or came from gbraid/wbraid which need the API)`)
+    const gbraid = (row.gbraid || '').toString().trim()
+    const wbraid = (row.wbraid || '').toString().trim()
+    // Classic upload matches on gclid only; Data Manager can also match gbraid/wbraid.
+    const hasId = dataManager ? gclid || gbraid || wbraid : gclid
+    if (!hasId) {
+      skipped.push(
+        dataManager
+          ? `${label}: no gclid/gbraid/wbraid (not from a Google ad click)`
+          : `${label}: no gclid (gbraid/wbraid need Data Manager, not the classic uploader)`,
+      )
       return
     }
+    const idHint = (gclid || gbraid || wbraid).slice(0, 12)
     const time = formatTime(row.closedAt, tz)
     if (!time) {
-      skipped.push(`${label} (${gclid.slice(0, 12)}…): invalid or missing close date`)
+      skipped.push(`${label} (${idHint}…): invalid or missing close date`)
       return
     }
     const value = Number(row.value)
     if (!Number.isFinite(value)) {
-      skipped.push(`${label} (${gclid.slice(0, 12)}…): invalid or missing value ("Sold at")`)
+      skipped.push(`${label} (${idHint}…): invalid or missing value ("Sold at")`)
       return
     }
-    out.push([gclid, name, time, value, row.currency || defaultCurrency])
+    const currency = row.currency || defaultCurrency
+    if (dataManager) {
+      out.push([gclid, gbraid, wbraid, row.transactionId || '', name, time, value, currency, row.ip || '', row.userAgent || '', 'web'])
+    } else {
+      out.push([gclid, name, time, value, currency])
+    }
   })
 
-  const header = ['Google Click ID', 'Conversion Name', 'Conversion Time', 'Conversion Value', 'Conversion Currency']
+  const header = dataManager
+    ? ['Google Click ID', 'GBRAID', 'WBRAID', 'Transaction ID', 'Conversion Name', 'Conversion Time', 'Conversion Value', 'Conversion Currency', 'IP Address', 'User Agent', 'Event Source']
+    : ['Google Click ID', 'Conversion Name', 'Conversion Time', 'Conversion Value', 'Conversion Currency']
   const headerAndRows = [header.map(csvField).join(','), ...out.map((r) => r.map(csvField).join(','))]
   // Data Manager: headers in row 1. Classic uploader: TimeZone line first.
   const lines = dataManager ? headerAndRows : [`Parameters:TimeZone=${tz}`, ...headerAndRows]

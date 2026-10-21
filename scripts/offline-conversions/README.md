@@ -83,12 +83,24 @@ Steps:
 2. Open its **Set up connection** / Data Manager flow → data source **File
    upload** → data **Conversions** → **offline conversions**.
 3. **Select data:** upload the generated CSV.
-4. **Map fields:** map the columns to Google's fields — `Google Click ID` → click
-   id (gclid), `Conversion Time` → time, `Conversion Value` → value,
-   `Conversion Currency` → currency (the action itself is already chosen, so
-   `Conversion Name` can be left unmapped).
+4. **Map fields** — the Data Manager CSV carries extra columns for better matching;
+   map each to its Google Ads field:
+   - `Google Click ID` → **Google Click ID** (not Transaction ID!)
+   - `GBRAID` → **GBRAID**, `WBRAID` → **WBRAID** (iOS clicks)
+   - `Transaction ID` → **Transaction ID** (dedupes re-uploads)
+   - `Conversion Time` → **Conversion date/time**
+   - `Conversion Value` → **Conversion value**, `Conversion Currency` → **Conversion currency**
+   - `IP Address` → **IP address**, `User Agent` → **User agent**
+   - `Event Source` → **Event source**
+   - `Conversion Name` → leave unmapped (the action is already chosen).
+   - **Ad measurement / Ad personalization consent** and **Session attributes** →
+     leave unmapped (no consent platform; account-level consent defaults apply).
 5. **Review** and finish. First successful upload activates the action;
    reporting shows within ~24h.
+
+> gbraid/wbraid rows (iOS/privacy-safe clicks) now ride along in the CSV and
+> match via the GBRAID/WBRAID fields — they're no longer skipped. The classic
+> format (`--classic`) still only supports gclid.
 
 ---
 
@@ -114,7 +126,12 @@ NOTION_TOKEN=... node scripts/offline-conversions/build-conversions-csv.mjs \
   - `--value-prop "Sold at"` — the sale amount (number).
   - `--date-prop "Sold on"` — the date used as the conversion time (falls back to
     the row's last-edited time if a row has no `Sold on` date).
-  - `--stage-prop "Lead Stage"`, `--gclid-prop "Gclid"`, `--notes-prop "Notes"`.
+  - `--stage-prop "Lead Stage"`, `--gclid-prop "Gclid"`, `--notes-prop "Notes"`,
+    `--ip-prop "IP address"`, `--ua-prop "User agent"`.
+
+It also reads the **`IP address`** and **`User agent`** columns and the Notion
+page id (as Transaction ID) into the Data Manager enhancement columns, and
+pulls gbraid/wbraid out of the `Gclid` column so iOS clicks are included too.
 
 The script reads `Sold at` as the conversion value and `Gclid` as the click id,
 skips any won lead with no gclid (older leads, or gbraid/wbraid clicks that need
