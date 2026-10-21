@@ -2,6 +2,7 @@ import {NextRequest, NextResponse} from 'next/server'
 import nodemailer from 'nodemailer'
 import {appointmentFromSlot, createWebsiteLead, pacificDatePlus} from '@/lib/notionLead'
 import type {LeadUtm} from '@/lib/adClickIds'
+import {clientIpFrom} from '@/lib/clientIp'
 
 // Node runtime required for nodemailer
 export const runtime = 'nodejs'
@@ -284,6 +285,7 @@ export async function POST(request: NextRequest) {
     wbraid: data.wbraid,
     fbclid: data.fbclid,
     utm: data.utm,
+    ip: clientIpFrom(request.headers),
     source: kind === 'shop' ? 'Shop visit' : 'Call',
     visit:
       parsed && data.visitDate
