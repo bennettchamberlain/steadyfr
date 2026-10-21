@@ -2,7 +2,8 @@
 
 import Script from 'next/script'
 import {usePathname, useSearchParams} from 'next/navigation'
-import {useEffect, Suspense} from 'react'
+import {useEffect, useState, Suspense} from 'react'
+import {isProductionHost} from '@/lib/isProductionHost'
 
 const GA_MEASUREMENT_ID = 'G-PV51QJQLR9'
 // Google Ads (conversion tracking) — shares the same gtag.js already loaded for GA
@@ -41,6 +42,14 @@ function GAPageViewTracker() {
 }
 
 export default function GoogleAnalytics() {
+  // Only load GA / Google Ads on the real production host, so preview
+  // deployments, localhost and test traffic never send data or fire conversions.
+  const [enabled, setEnabled] = useState(false)
+  useEffect(() => {
+    setEnabled(isProductionHost())
+  }, [])
+  if (!enabled) return null
+
   return (
     <>
       {/* Google Analytics */}

@@ -2,7 +2,8 @@
 
 import Script from 'next/script'
 import {usePathname, useSearchParams} from 'next/navigation'
-import {useEffect, Suspense} from 'react'
+import {useEffect, useState, Suspense} from 'react'
+import {isProductionHost} from '@/lib/isProductionHost'
 
 const META_PIXEL_ID = '767536079342741'
 
@@ -31,6 +32,13 @@ function MetaPixelTracker() {
 }
 
 export default function MetaPixel() {
+  // Only load the Meta Pixel on the real production host, so preview
+  // deployments, localhost and test traffic never send pixel events.
+  const [enabled, setEnabled] = useState(false)
+  useEffect(() => {
+    setEnabled(isProductionHost())
+  }, [])
+  if (!enabled) return null
 
   return (
     <>
