@@ -8,7 +8,7 @@ export const metadata = {
 }
 
 const EFFECTIVE_DATE = 'October 13, 2026'
-const LAST_UPDATED = 'October 15, 2026'
+const LAST_UPDATED = 'October 21, 2026'
 
 // External link helper — opens in a new tab, styled as a subtle accent link.
 function Ext({href, children}: {href: string; children: React.ReactNode}) {
@@ -120,14 +120,18 @@ export default function PrivacyPage() {
             </p>
             <ul>
               <li>
-                <strong>Device and usage data:</strong> IP address, browser type, device type,
-                operating system, referring/exit pages, pages viewed, links clicked, and the
-                dates/times of your visits.
+                <strong>Device and usage data:</strong> IP address, browser type and user agent,
+                device type, operating system, referring/exit pages, pages viewed, links clicked,
+                and the dates/times of your visits.
               </li>
               <li>
                 <strong>Advertising and analytics identifiers:</strong> cookie IDs and identifiers
                 (including advertising click identifiers such as Google&rsquo;s{' '}
-                <code className="text-gray-200">gclid</code>) used to measure traffic, ad
+                <code className="text-gray-200">gclid</code>,{' '}
+                <code className="text-gray-200">gbraid</code>, and{' '}
+                <code className="text-gray-200">wbraid</code> and Meta&rsquo;s{' '}
+                <code className="text-gray-200">fbclid</code>, and campaign tags such as{' '}
+                <code className="text-gray-200">utm</code> parameters) used to measure traffic, ad
                 performance, and conversions.
               </li>
             </ul>
@@ -178,6 +182,14 @@ export default function PrivacyPage() {
                 for Customer Match &mdash; hashed email/phone). Under some privacy laws, this may be
                 considered &ldquo;sharing&rdquo; or a &ldquo;sale&rdquo; for cross-context behavioral
                 advertising. You can opt out as described in Sections 5 and 6.
+              </li>
+              <li>
+                <strong>For conversion measurement.</strong> When an inquiry results in a completed
+                job, we may upload limited conversion data &mdash; the advertising click
+                identifier(s) associated with your visit, the date of the sale, and the sale value,
+                along with technical data such as your IP address and user agent &mdash; to
+                advertising platforms (such as Google Ads) to measure which ads led to completed
+                work. This is used only to measure and improve our own advertising.
               </li>
               <li>
                 <strong>For legal, safety, and fraud-prevention reasons</strong> &mdash; e.g., to
