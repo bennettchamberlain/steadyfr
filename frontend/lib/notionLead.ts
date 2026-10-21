@@ -36,6 +36,8 @@ export type WebsiteLead = {
   fbclid?: string
   /** Client IP captured server-side → "IP address" column (for conversion-match enhancement / Meta CAPI). */
   ip?: string
+  /** Client user-agent captured server-side → "User agent" column (conversion enhancement / Meta CAPI). */
+  userAgent?: string
   /** Campaign tags (utm_*) → "Source / Campaign" column (falls back to Notes). */
   utm?: LeadUtm
   source: LeadSource
@@ -281,6 +283,11 @@ export async function createWebsiteLead(
   if (ip) {
     properties['IP address'] = richText(ip)
     optionalColumns.push({name: 'IP address', fallbackNote: `IP: ${ip}`})
+  }
+  const userAgent = lead.userAgent?.trim()
+  if (userAgent) {
+    properties['User agent'] = richText(userAgent)
+    optionalColumns.push({name: 'User agent', fallbackNote: `UA: ${userAgent}`})
   }
   if (sourceCampaign) {
     properties['Source / Campaign'] = richText(sourceCampaign)

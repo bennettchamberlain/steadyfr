@@ -286,6 +286,7 @@ export async function POST(request: NextRequest) {
     fbclid: data.fbclid,
     utm: data.utm,
     ip: clientIpFrom(request.headers),
+    userAgent: request.headers.get('user-agent') || undefined,
     source: kind === 'shop' ? 'Shop visit' : 'Call',
     visit:
       parsed && data.visitDate

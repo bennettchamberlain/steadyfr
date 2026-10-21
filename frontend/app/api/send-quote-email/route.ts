@@ -612,6 +612,7 @@ San Francisco Bay Area`
       fbclid: data.fbclid,
       utm: data.utm,
       ip: clientIpFrom(request.headers),
+      userAgent: request.headers.get('user-agent') || undefined,
     })
     if (!notionResult.ok) {
       console.error('[send-quote-email] Notion write failed:', notionResult.error)
