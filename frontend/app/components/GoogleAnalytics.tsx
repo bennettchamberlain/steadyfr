@@ -7,8 +7,10 @@ import {useEffect, Suspense} from 'react'
 const GA_MEASUREMENT_ID = 'G-PV51QJQLR9'
 // Google Ads (conversion tracking) — shares the same gtag.js already loaded for GA
 const GOOGLE_ADS_ID = 'AW-18264152079'
-// Conversion action: "Contact conversion"
+// Conversion action: "Contact conversion" (contact form submit)
 export const CONTACT_CONVERSION_SEND_TO = 'AW-18264152079/wNbYCLr48sccEI-wg4VE'
+// Conversion action: "Lead – Quote request" (quote form submit)
+export const QUOTE_CONVERSION_SEND_TO = 'AW-18264152079/y2cPCP3IgKUdEI-wg4VE'
 
 declare global {
   interface Window {

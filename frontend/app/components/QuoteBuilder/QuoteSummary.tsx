@@ -15,7 +15,7 @@ import type {
 import {PRICING} from '../utils/pricingConstants'
 import {PDF_CONFIG} from '../utils/pdfConstants'
 import {trackMetaEvent} from '@/app/components/MetaPixel'
-import {trackGAEvent} from '@/app/components/GoogleAnalytics'
+import {trackGAEvent, trackGoogleAdsConversion, QUOTE_CONVERSION_SEND_TO} from '@/app/components/GoogleAnalytics'
 import FormConsentNotice from '@/app/components/FormConsentNotice'
 import {getAdClickIds} from '@/lib/adClickIds'
 
@@ -279,78 +279,38 @@ export function QuoteSummary({
       }
       
       setSubmitStatus('success')
-      
-      // ===== META PIXEL CONVERSION EVENTS =====
-      // Lead event - primary conversion event for Meta Pixel
+
+      // ===== CONVERSIONS (fire once, on success) =====
+      // Google Ads: the "Lead – Quote request" conversion action.
+      trackGoogleAdsConversion(QUOTE_CONVERSION_SEND_TO)
+      // GA4 standard lead event. No `value` — the quote estimate is NOT revenue,
+      // and sending it would mislead Smart Bidding. Estimate kept as a plain
+      // reporting parameter only.
+      trackGAEvent('generate_lead', {
+        quote_style: style,
+        quote_infill: infill,
+        quote_length: materials.topRailFeet,
+        quote_total: price.total,
+      })
+      // Meta: single Lead event (feeds retargeting audiences). No estimate value.
       trackMetaEvent('Lead', {
         content_name: 'Railing Quote Request',
         content_category: 'Quote',
-        value: price.total,
-        currency: 'USD',
-        quote_value: price.total,
         style: style,
         infill: infill,
         total_length: materials.topRailFeet,
       })
-      // Purchase event - standard conversion event for Meta Pixel
-      trackMetaEvent('Purchase', {
-        content_name: 'Quote Completed',
-        content_category: 'Quote',
-        value: price.total,
-        currency: 'USD',
-        quote_value: price.total,
-      })
-      // CompleteRegistration - form completion conversion event
-      trackMetaEvent('CompleteRegistration', {
-        content_name: 'Quote Form Completed',
-        value: price.total,
-        currency: 'USD',
-      })
-      
-      // ===== GOOGLE ANALYTICS CONVERSION EVENTS =====
-      // generate_lead - Standard GA4 conversion event (automatically recognized as conversion)
-      // This is the primary conversion event for lead generation forms
-      trackGAEvent('generate_lead', {
-        value: price.total,
-        currency: 'USD',
-        quote_style: style,
-        quote_infill: infill,
-        quote_length: materials.topRailFeet,
-        quote_total: price.total,
-      })
-      
-      // Purchase event - Standard GA4 e-commerce conversion event
-      // Using purchase event format for quote completion tracking
-      const transactionId = `quote_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-      trackGAEvent('purchase', {
-        transaction_id: transactionId,
-        value: price.total,
-        currency: 'USD',
-        items: [{
-          item_id: 'railing_quote',
-          item_name: 'Railing Quote Request',
-          item_category: 'Quote',
-          price: price.total,
-          quantity: 1,
-        }],
-        quote_style: style,
-        quote_infill: infill,
-        quote_length: materials.topRailFeet,
-      })
-      
-      // Quote submitted event - Custom event for detailed tracking
-      // Note: Mark this as a conversion in GA4 dashboard if needed
+
+      // Descriptive funnel event (not a conversion); estimate as a report param.
       trackGAEvent('quote_submitted', {
         event_category: 'quote',
         event_label: 'quote_form_submitted',
-        value: price.total,
-        currency: 'USD',
         quote_style: style,
         quote_infill: infill,
         quote_length: materials.topRailFeet,
         quote_total: price.total,
       })
-      
+
       // Also generate PDF if user wants
       // (keeping PDF generation code below)
       
@@ -960,30 +920,11 @@ export function QuoteSummary({
           <button
             type="button"
             onClick={() => {
-              // Track conversion intent on button click for both platforms
+              // Funnel event only — NOT a conversion. Conversions fire on
+              // success inside handleSubmitQuote(), not on button click.
               trackGAEvent('quote_submit_button_clicked', {
                 event_category: 'quote',
                 event_label: 'submit_button_clicked',
-                quote_value: price.total,
-              })
-              trackGAEvent('conversion', {
-                event_category: 'quote',
-                event_label: 'submit_button_clicked',
-                value: price.total,
-                currency: 'USD',
-              })
-              // Track Meta Pixel conversion events
-              trackMetaEvent('InitiateCheckout', {
-                content_name: 'Quote Submit Button Clicked',
-                content_category: 'Quote',
-                value: price.total,
-                currency: 'USD',
-              })
-              trackMetaEvent('Lead', {
-                content_name: 'Quote Submit Initiated',
-                content_category: 'Quote',
-                value: price.total,
-                currency: 'USD',
               })
               handleSubmitQuote()
             }}
