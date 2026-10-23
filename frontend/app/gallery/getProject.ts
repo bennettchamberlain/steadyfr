@@ -1,5 +1,6 @@
 import {sanityFetch} from '@/sanity/lib/live'
 import {allGalleryProjectsQuery} from '@/sanity/lib/queries'
+import type {AllGalleryProjectsQueryResult} from '@/sanity.types'
 import {projectSlug} from '@/app/gallery/slugify'
 
 /**
@@ -9,7 +10,9 @@ import {projectSlug} from '@/app/gallery/slugify'
  * both resolve identically.
  */
 export async function getProjectBySlug(slug: string) {
-  const {data: projects} = await sanityFetch({query: allGalleryProjectsQuery})
+  const {data} = await sanityFetch({query: allGalleryProjectsQuery})
+  // next-sanity's live types drop the GROQ result, so name it here.
+  const projects: AllGalleryProjectsQueryResult | null = data ?? null
   if (!projects) return null
   return (
     projects.find((p) => projectSlug(p.projectName, p._id) === slug) ||

@@ -73,29 +73,6 @@ const transporter =
       })
     : null
 
-// Log transporter configuration (without sensitive data) - only once at module load
-declare global {
-  // eslint-disable-next-line no-var
-  var transporterLogged: boolean | undefined
-}
-if (!global.transporterLogged) {
-  if (transporter) {
-    console.log('[send-quote-email] Transporter configured:', {
-      host: 'smtp-relay.brevo.com',
-      port: 587,
-      secure: false,
-      authUser: BREVO_SMTP_USER,
-      requireTLS: true,
-    })
-  } else {
-    console.error('[send-quote-email] Brevo SMTP is not configured. Missing environment variables:', [
-      !BREVO_SMTP_USER && 'BREVO_SMTP_USER',
-      !BREVO_SMTP_PASS && 'BREVO_SMTP_PASS',
-    ].filter(Boolean))
-  }
-  global.transporterLogged = true
-}
-
 function generateEmailHTML(data: QuoteEmailData): string {
   const styleLabel = data.style === 'victorian' ? 'Victorian Top Rail' : 'Rectangle Top Rail'
   

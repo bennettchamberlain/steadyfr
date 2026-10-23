@@ -3,8 +3,18 @@
 import {isCorsOriginError} from 'next-sanity/live'
 import {toast} from 'sonner'
 
+// next-sanity/live's published types re-export this guard from a missing `src/`
+// path, so TypeScript drops the type predicate and `error` stays `unknown`.
+type CorsOriginErrorLike = {
+  addOriginUrl?: URL
+}
+
+function isSanityCorsError(error: unknown): error is CorsOriginErrorLike {
+  return isCorsOriginError(error)
+}
+
 export function handleError(error: unknown) {
-  if (isCorsOriginError(error)) {
+  if (isSanityCorsError(error)) {
     // If the error is a CORS origin error, let's display that specific error.
     const {addOriginUrl} = error
     toast.error(`Sanity Live couldn't connect`, {

@@ -18,6 +18,13 @@ type PageData = {
   pageBuilder?: PageBuilderSection[]
 }
 
+// next-sanity's published useOptimistic types point at a missing source file,
+// so the reducer callback is not inferred. Name the arguments ourselves.
+type PageBuilderAction = {
+  id: string
+  document: PageData
+}
+
 /**
  * The PageBuilder component is used to render the blocks from the `pageBuilder` field in the Page type in your Sanity Studio.
  */
@@ -79,26 +86,30 @@ export default function PageBuilder({page}: PageBuilderPageProps) {
   const pageBuilderSections = useOptimistic<
     PageBuilderSection[] | undefined,
     SanityDocument<PageData>
-  >(page?.pageBuilder || [], (currentSections, action) => {
-    // The action contains updated document data from Sanity
-    // when someone makes an edit in the Studio
+  >(
+    page?.pageBuilder || [],
+    (currentSections: PageBuilderSection[] | undefined, action: PageBuilderAction) => {
+      // The action contains updated document data from Sanity
+      // when someone makes an edit in the Studio
 
-    // If the edit was to a different document, ignore it
-    if (action.id !== page?._id) {
+      // If the edit was to a different document, ignore it
+      if (action.id !== page?._id) {
+        return currentSections
+      }
+
+      // If there are sections in the updated document, use them
+      if (action.document.pageBuilder) {
+        // Reconcile References. https://www.sanity.io/docs/enabling-drag-and-drop#ffe728eea8c1
+        return action.document.pageBuilder.map(
+          (section: PageBuilderSection) =>
+            currentSections?.find((s: PageBuilderSection) => s._key === section?._key) || section,
+        )
+      }
+
+      // Otherwise keep the current sections
       return currentSections
-    }
-
-    // If there are sections in the updated document, use them
-    if (action.document.pageBuilder) {
-      // Reconcile References. https://www.sanity.io/docs/enabling-drag-and-drop#ffe728eea8c1
-      return action.document.pageBuilder.map(
-        (section) => currentSections?.find((s) => s._key === section?._key) || section,
-      )
-    }
-
-    // Otherwise keep the current sections
-    return currentSections
-  })
+    },
+  )
 
   return pageBuilderSections && pageBuilderSections.length > 0 ? (
     <RenderSections pageBuilderSections={pageBuilderSections} page={page} />

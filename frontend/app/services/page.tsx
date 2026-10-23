@@ -5,6 +5,7 @@ import ServicesHub from '@/app/services/ServicesHub'
 import {GALLERY_CATEGORIES} from '@/app/gallery/categories'
 import {articlesQuery, allGalleryProjectsQuery} from '@/sanity/lib/queries'
 import {sanityFetch} from '@/sanity/lib/live'
+import type {AllGalleryProjectsQueryResult} from '@/sanity.types'
 import {urlForImage} from '@/sanity/lib/utils'
 
 export const metadata = {
@@ -61,10 +62,11 @@ const INFILL_DESCRIPTIONS: Record<string, string> = {
 }
 
 export default async function ServicesPage() {
-  const [{data: articles}, {data: galleryProjects}] = await Promise.all([
+  const [{data: articles}, {data: galleryData}] = await Promise.all([
     sanityFetch({query: articlesQuery}),
     sanityFetch({query: allGalleryProjectsQuery}),
   ])
+  const galleryProjects: AllGalleryProjectsQueryResult = galleryData ?? []
 
   // One project per infill type for the carousel. Prefer projects flagged with
   // the dedicated `infillFeatured` toggle (separate from the home-page
