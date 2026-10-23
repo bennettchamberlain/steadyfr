@@ -212,7 +212,10 @@ export function QuoteSummary({
     setIsSubmitting(true)
     setSubmitStatus('idle')
     setErrorMessage('')
-    
+
+    // Shared id so the browser Lead event and the server-side CAPI Lead dedupe.
+    const metaEventId = crypto.randomUUID()
+
     try {
       // Capture diagram as image
       console.log('[QuoteSummary] Starting diagram capture for email...')
@@ -247,6 +250,7 @@ export function QuoteSummary({
         },
         sections,
         diagramImage: diagramImage || '',
+        metaEventId,
         ...getAdClickIds(), // gclid / gbraid / wbraid for offline conversion tracking
       }
 
@@ -293,13 +297,14 @@ export function QuoteSummary({
         quote_total: price.total,
       })
       // Meta: single Lead event (feeds retargeting audiences). No estimate value.
+      // eventId is shared with the server-side CAPI Lead so Meta dedupes them.
       trackMetaEvent('Lead', {
         content_name: 'Railing Quote Request',
         content_category: 'Quote',
         style: style,
         infill: infill,
         total_length: materials.topRailFeet,
-      })
+      }, metaEventId)
 
       // Descriptive funnel event (not a conversion); estimate as a report param.
       trackGAEvent('quote_submitted', {
