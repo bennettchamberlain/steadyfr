@@ -41,6 +41,19 @@ node scripts/customer-match/build-customer-list.mjs
 Output columns: `Email, Phone Number, First Name, Last Name, Country, Zip`
 (plain text — Google normalizes and hashes on upload).
 
+## Alternative: convert a spreadsheet directly (skip Notion)
+
+If your past customers are already in a spreadsheet, you can turn it straight into
+Customer Match format without importing to Notion. Export the sheet to CSV
+(Sheets/Excel → Download/Save as CSV), then:
+```bash
+node scripts/customer-match/convert-sheet.mjs past-customers.csv --out customers.csv
+```
+It finds the **Name / Email / Phone** (and Zip, if present) columns by their
+header — column order and extra columns don't matter — normalizes everything,
+de-dupes, and drops rows with no email/phone. Upload the result as a **second
+file** to the same Customer Match list, alongside the Notion export.
+
 ## Upload
 
 Google Ads → **Audience Manager → Your data segments → + → Customer list** →
