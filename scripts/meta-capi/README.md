@@ -12,8 +12,16 @@ contact info and Meta click id we already store on each lead in Notion.
 
 1. **Access token.** Events Manager → your dataset (**Steady**, id
    `767536079342741`) → **Settings → Conversions API → Generate access token**.
-   Keep it secret; it goes in `META_CAPI_TOKEN` (below), never in git.
-2. Nothing to add in Notion — it reads the existing `Email`, `Phone`,
+2. **Put your tokens in a local file** so you don't type them each run. Copy
+   `.env.example` to `.env.local` (same folder) and fill in the two values:
+   ```bash
+   cp scripts/meta-capi/.env.example scripts/meta-capi/.env.local
+   # then open scripts/meta-capi/.env.local and paste in NOTION_TOKEN + META_CAPI_TOKEN
+   ```
+   `.env.local` is **git-ignored** — it stays on your Mac, never committed or
+   deployed. The script reads it automatically. (`NOTION_TOKEN` is the same value
+   as in the website's Vercel env.)
+3. Nothing to add in Notion — it reads the existing `Email`, `Phone`,
    `Meta click ID`, `IP address`, `User agent`, `Sold at`, `Sold on`, and
    `Lead Stage` columns.
 
@@ -23,18 +31,20 @@ contact info and Meta click id we already store on each lead in Notion.
    **`Sold on`** (same as the Google flow — one run feeds both).
 2. From the repo root (`steadyfr/`), **dry run first** to see what it would send:
    ```bash
-   NOTION_TOKEN=... node scripts/meta-capi/send-conversions.mjs
+   node scripts/meta-capi/send-conversions.mjs
    ```
 3. **Validate with Meta's Test Events** (Events Manager → Test Events → copy the
    `TEST…` code), so nothing hits real reporting until you're happy:
    ```bash
-   NOTION_TOKEN=... META_CAPI_TOKEN=... \
-     node scripts/meta-capi/send-conversions.mjs --test-event-code TESTxxxx --send
+   node scripts/meta-capi/send-conversions.mjs --test-event-code TESTxxxx --send
    ```
 4. **Real send:**
    ```bash
-   NOTION_TOKEN=... META_CAPI_TOKEN=... node scripts/meta-capi/send-conversions.mjs --send
+   node scripts/meta-capi/send-conversions.mjs --send
    ```
+
+(Tokens still work inline too — `META_CAPI_TOKEN=... node …` — and override the
+`.env.local` values if set.)
 
 ## How it matches
 

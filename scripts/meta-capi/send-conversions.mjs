@@ -23,6 +23,33 @@
 //   node send-conversions.mjs --send               # real send
 
 import {createHash} from 'node:crypto'
+import {readFileSync} from 'node:fs'
+import {fileURLToPath} from 'node:url'
+import {dirname, join} from 'node:path'
+
+// Load scripts/meta-capi/.env.local (KEY=VALUE lines) into process.env without
+// overriding anything already set on the command line. The file is git-ignored,
+// so secrets stay on your machine and are never committed or deployed.
+function loadLocalEnv() {
+  try {
+    const envPath = join(dirname(fileURLToPath(import.meta.url)), '.env.local')
+    for (const line of readFileSync(envPath, 'utf8').split('\n')) {
+      const trimmed = line.trim()
+      if (!trimmed || trimmed.startsWith('#')) continue
+      const eq = trimmed.indexOf('=')
+      if (eq === -1) continue
+      const key = trimmed.slice(0, eq).trim()
+      let val = trimmed.slice(eq + 1).trim()
+      if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+        val = val.slice(1, -1)
+      }
+      if (key && process.env[key] === undefined) process.env[key] = val
+    }
+  } catch {
+    // No .env.local — fine; tokens can come from the shell/inline instead.
+  }
+}
+loadLocalEnv()
 
 const NOTION_VERSION = '2022-06-28'
 const DEFAULT_DATABASE_ID = '3f101274-8342-804a-b00a-d041a2867b1b'
