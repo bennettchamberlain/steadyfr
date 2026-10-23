@@ -13,6 +13,7 @@ declare global {
       action: string,
       event: string,
       params?: Record<string, unknown>,
+      options?: {eventID?: string},
     ) => void
   }
 }
@@ -99,15 +100,21 @@ export default function MetaPixel() {
  * - InitiateCheckout: content_name, content_category, value, currency
  * - CompleteRegistration: content_name, value, currency
  */
-export function trackMetaEvent(eventName: string, params?: Record<string, unknown>) {
+export function trackMetaEvent(
+  eventName: string,
+  params?: Record<string, unknown>,
+  eventID?: string,
+) {
   // Guard against empty or undefined event names
   if (!eventName || eventName.trim() === '') {
     console.warn('Meta Pixel: Attempted to track event with empty name', params)
     return
   }
-  
+
   if (typeof window !== 'undefined' && window.fbq) {
-    // Facebook Pixel automatically queues events if not loaded yet
-    window.fbq('track', eventName, params)
+    // Facebook Pixel automatically queues events if not loaded yet.
+    // Passing eventID lets the server-side CAPI event dedupe against this one.
+    if (eventID) window.fbq('track', eventName, params, {eventID})
+    else window.fbq('track', eventName, params)
   }
 }

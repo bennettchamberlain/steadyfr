@@ -221,12 +221,15 @@ export default function ContactForm() {
     } catch {
       files = []
     }
+    // Shared id so the browser Lead event and the server-side CAPI Lead dedupe.
+    const metaEventId = crypto.randomUUID()
     const payload = {
       name: s.name, email: s.email, phone: s.phone, company: s.company,
       path: effPath, convenience: s.convenience, visitDate: s.visitDate, slot: s.slot,
       street: s.street, city: s.city, region: s.region, zip: s.zip, propType: s.propType,
       mode: s.mode, location: s.location, railType: s.railType, application: s.application, infill: s.infill,
       additional: s.additional, files,
+      metaEventId,
       ...getAdClickIds(), // gclid / gbraid / wbraid for offline conversion tracking
     }
     try {
@@ -243,7 +246,7 @@ export default function ContactForm() {
         return
       }
       trackGAEvent('generate_lead', {event_category: 'contact', event_label: 'contact_form', currency: 'USD'})
-      trackMetaEvent('Lead', {content_name: 'Contact Form', content_category: 'Contact'})
+      trackMetaEvent('Lead', {content_name: 'Contact Form', content_category: 'Contact'}, metaEventId)
       trackGoogleAdsConversion(CONTACT_CONVERSION_SEND_TO)
       set({submitting: false, submitted: true})
     } catch (err) {

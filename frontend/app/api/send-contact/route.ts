@@ -3,6 +3,7 @@ import nodemailer from 'nodemailer'
 import {appointmentFromSlot, createWebsiteLead, pacificDatePlus} from '@/lib/notionLead'
 import type {LeadUtm} from '@/lib/adClickIds'
 import {clientIpFrom} from '@/lib/clientIp'
+import {sendMetaLead} from '@/lib/metaCapi'
 
 // Node runtime required for nodemailer
 export const runtime = 'nodejs'
@@ -40,6 +41,7 @@ interface ContactData {
   wbraid?: string
   fbclid?: string
   utm?: LeadUtm
+  metaEventId?: string // shared with the browser Meta Pixel Lead for dedup
 }
 
 // Brevo SMTP credentials come from environment variables.
@@ -308,6 +310,23 @@ export async function POST(request: NextRequest) {
       },
       {status: 502},
     )
+  }
+
+  // Server-side Meta Lead (dedupes with the browser pixel via metaEventId).
+  // Production host only, so previews/test don't send. No-ops without the token.
+  const host = request.headers.get('host') || ''
+  if (host === 'steadyfnr.com' || host === 'www.steadyfnr.com') {
+    await sendMetaLead({
+      eventId: data.metaEventId,
+      email: data.email,
+      phone: data.phone,
+      fbclid: data.fbclid,
+      fbc: request.cookies.get('_fbc')?.value,
+      fbp: request.cookies.get('_fbp')?.value,
+      ip: clientIpFrom(request.headers),
+      userAgent: request.headers.get('user-agent') || undefined,
+      sourceUrl: request.headers.get('referer') || undefined,
+    })
   }
 
   return NextResponse.json({ok: true, notionOk: true})
