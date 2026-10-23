@@ -29,3 +29,7 @@ next-env.d.ts
 
 # VS Code
 .vscode
+# Generated lead/conversion exports — contain customer PII, never commit
+customer-match.csv
+google-ads-offline-conversions.csv
+scripts/**/*.csv
