@@ -195,107 +195,80 @@ function multiSelect(values?: string[]) {
 
 const EMAIL_OK = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
-export async function createWebsiteLead(
-  lead: WebsiteLead,
+/**
+ * Apply the ad-attribution columns — Gclid (raw gclid, else labelled
+ * gbraid/wbraid), Meta click ID (fbclid), IP address, User agent, and
+ * Source / Campaign (from UTMs) — each with a Notes fallback so the value still
+ * lands if the column is missing from the database. Shared by leads and taps.
+ */
+function applyAttribution(
+  properties: Record<string, unknown>,
+  optionalColumns: Array<{name: string; fallbackNote: string}>,
+  a: {
+    gclid?: string
+    gbraid?: string
+    wbraid?: string
+    fbclid?: string
+    ip?: string
+    userAgent?: string
+    utm?: LeadUtm
+  },
+): void {
+  const adClickIds = [
+    a.gclid?.trim() && `gclid=${a.gclid.trim()}`,
+    a.gbraid?.trim() && `gbraid=${a.gbraid.trim()}`,
+    a.wbraid?.trim() && `wbraid=${a.wbraid.trim()}`,
+  ].filter(Boolean) as string[]
+  // Raw gclid when present (cleanest for CSV export); else the gbraid/wbraid fallback.
+  const gclidColumnValue = a.gclid?.trim() || adClickIds.join(' ')
+  if (gclidColumnValue) {
+    properties.Gclid = richText(gclidColumnValue)
+    optionalColumns.push({
+      name: 'Gclid',
+      fallbackNote: adClickIds.length ? `Ad click: ${adClickIds.join(' ')}` : '',
+    })
+  }
+  const fbclid = a.fbclid?.trim()
+  if (fbclid) {
+    properties['Meta click ID'] = richText(fbclid)
+    optionalColumns.push({name: 'Meta click ID', fallbackNote: `Meta ad click (fbclid): ${fbclid}`})
+  }
+  const ip = a.ip?.trim()
+  if (ip) {
+    properties['IP address'] = richText(ip)
+    optionalColumns.push({name: 'IP address', fallbackNote: `IP: ${ip}`})
+  }
+  const userAgent = a.userAgent?.trim()
+  if (userAgent) {
+    properties['User agent'] = richText(userAgent)
+    optionalColumns.push({name: 'User agent', fallbackNote: `UA: ${userAgent}`})
+  }
+  const sourceCampaign = composeSourceCampaign(a.utm)
+  if (sourceCampaign) {
+    properties['Source / Campaign'] = richText(sourceCampaign)
+    optionalColumns.push({name: 'Source / Campaign', fallbackNote: `Source / Campaign: ${sourceCampaign}`})
+  }
+}
+
+/**
+ * POST a page to the leads database, retrying when the database is missing one
+ * of the "optional" columns — Notion rejects the whole create with "<Name> is
+ * not a property that exists." Drop that column, fold its value into Notes, and
+ * retry so the row still saves. Only retries on failure, so there's no risk of a
+ * duplicate page. `initialNotes` seeds Notes (fallbacks are appended to it).
+ */
+async function createNotionPage(
+  properties: Record<string, unknown>,
+  optionalColumns: Array<{name: string; fallbackNote: string}>,
+  initialNotes: string,
 ): Promise<{ok: true; id: string} | {ok: false; error: string}> {
   const token = process.env.NOTION_TOKEN?.trim()
   if (!token) {
     return {ok: false, error: 'NOTION_TOKEN is not set'}
   }
 
-  const properties: Record<string, unknown> = {
-    Name: {
-      title: [{text: {content: (lead.name || lead.email || 'Website lead').slice(0, 200)}}],
-    },
-    Source: {select: {name: lead.source}},
-    Date: dateProperty(lead),
-  }
-
-  const email = lead.email?.trim()
-  if (email && EMAIL_OK.test(email)) properties.Email = {email}
-  const phone = lead.phone?.trim()
-  if (phone) properties.Phone = {phone_number: phone}
-
-  // Google Ads click ids, for matching a closed job back to the click on an
-  // offline conversion upload. Primary home is a dedicated "Gclid" property;
-  // if that column doesn't exist in the database we fall back to folding the
-  // ids into Notes so the lead still saves (see the retry below).
-  const adClickIds = [
-    lead.gclid?.trim() && `gclid=${lead.gclid.trim()}`,
-    lead.gbraid?.trim() && `gbraid=${lead.gbraid.trim()}`,
-    lead.wbraid?.trim() && `wbraid=${lead.wbraid.trim()}`,
-  ].filter(Boolean) as string[]
-  // The dedicated column holds the raw gclid when present (cleanest for CSV
-  // export); otherwise the labelled gbraid/wbraid fallback.
-  const gclidColumnValue = lead.gclid?.trim() || adClickIds.join(' ')
-  const adClickNote = adClickIds.length ? `Ad click: ${adClickIds.join(' ')}` : ''
-  // "source / medium · campaign · term: … · ad: …" from the UTM tags.
-  const sourceCampaign = composeSourceCampaign(lead.utm)
-
-  const textFields: Array<[string, string | undefined]> = [
-    ['Company', lead.company],
-    ['Street', lead.street],
-    ['City', lead.city],
-    ['State', lead.state],
-    ['Zip', lead.zip],
-    ['Files', lead.files?.filter(Boolean).join(', ')],
-  ]
-  for (const [key, value] of textFields) {
-    const trimmed = value?.trim()
-    if (trimmed) properties[key] = richText(trimmed)
-  }
-  if (lead.propertyType?.trim()) properties['Property type'] = {select: {name: lead.propertyType.trim()}}
-  if (lead.project?.trim()) properties.Project = {select: {name: lead.project.trim()}}
-  const multiFields: Array<[string, string[] | undefined]> = [
-    ['Location', lead.location],
-    ['Rail type', lead.railType],
-    ['Application', lead.application],
-    ['Infill', lead.infill],
-  ]
-  for (const [key, values] of multiFields) {
-    const property = multiSelect(values)
-    if (property) properties[key] = property
-  }
-
-  // "Optional" columns are ones a given database may not have yet (added over
-  // time / different per deployment). Each carries a Notes fallback so that if
-  // the column is missing, its value still lands on the lead (see retry below).
-  const optionalColumns: Array<{name: string; fallbackNote: string}> = []
-  if (gclidColumnValue) {
-    properties.Gclid = richText(gclidColumnValue)
-    optionalColumns.push({name: 'Gclid', fallbackNote: adClickNote})
-  }
-  if (typeof lead.estimateTotal === 'number' && Number.isFinite(lead.estimateTotal)) {
-    const dollars = Math.round(lead.estimateTotal)
-    properties.Estimate = {number: dollars}
-    optionalColumns.push({name: 'Estimate', fallbackNote: `Estimate: $${dollars.toLocaleString('en-US')}`})
-  }
-  if (typeof lead.lengthFeet === 'number' && Number.isFinite(lead.lengthFeet)) {
-    properties['Length (ft)'] = {number: lead.lengthFeet}
-    optionalColumns.push({name: 'Length (ft)', fallbackNote: `Length: ${lead.lengthFeet} ft`})
-  }
-  const fbclid = lead.fbclid?.trim()
-  if (fbclid) {
-    properties['Meta click ID'] = richText(fbclid)
-    optionalColumns.push({name: 'Meta click ID', fallbackNote: `Meta ad click (fbclid): ${fbclid}`})
-  }
-  const ip = lead.ip?.trim()
-  if (ip) {
-    properties['IP address'] = richText(ip)
-    optionalColumns.push({name: 'IP address', fallbackNote: `IP: ${ip}`})
-  }
-  const userAgent = lead.userAgent?.trim()
-  if (userAgent) {
-    properties['User agent'] = richText(userAgent)
-    optionalColumns.push({name: 'User agent', fallbackNote: `UA: ${userAgent}`})
-  }
-  if (sourceCampaign) {
-    properties['Source / Campaign'] = richText(sourceCampaign)
-    optionalColumns.push({name: 'Source / Campaign', fallbackNote: `Source / Campaign: ${sourceCampaign}`})
-  }
-
   // Notes is set last so missing-column fallbacks can be appended to it.
-  let notesValue = lead.notes?.trim() || ''
+  let notesValue = initialNotes.trim()
   if (notesValue) properties.Notes = richText(notesValue)
 
   async function postPage(): Promise<
@@ -329,10 +302,6 @@ export async function createWebsiteLead(
 
   let result = await postPage()
 
-  // If the database is missing one of the optional columns, Notion rejects the
-  // whole create with "<Name> is not a property that exists." Drop that column,
-  // fold its value into Notes, and retry — the lead still saves. We only retry
-  // when the create failed, so there's no risk of a duplicate page.
   let guard = 0
   while (!result.ok && result.status === 400 && guard < optionalColumns.length + 1) {
     guard++
@@ -351,4 +320,111 @@ export async function createWebsiteLead(
     return {ok: false, error: result.error}
   }
   return {ok: true, id: result.id}
+}
+
+export async function createWebsiteLead(
+  lead: WebsiteLead,
+): Promise<{ok: true; id: string} | {ok: false; error: string}> {
+  const properties: Record<string, unknown> = {
+    Name: {
+      title: [{text: {content: (lead.name || lead.email || 'Website lead').slice(0, 200)}}],
+    },
+    Source: {select: {name: lead.source}},
+    Date: dateProperty(lead),
+  }
+
+  const email = lead.email?.trim()
+  if (email && EMAIL_OK.test(email)) properties.Email = {email}
+  const phone = lead.phone?.trim()
+  if (phone) properties.Phone = {phone_number: phone}
+
+  const textFields: Array<[string, string | undefined]> = [
+    ['Company', lead.company],
+    ['Street', lead.street],
+    ['City', lead.city],
+    ['State', lead.state],
+    ['Zip', lead.zip],
+    ['Files', lead.files?.filter(Boolean).join(', ')],
+  ]
+  for (const [key, value] of textFields) {
+    const trimmed = value?.trim()
+    if (trimmed) properties[key] = richText(trimmed)
+  }
+  if (lead.propertyType?.trim()) properties['Property type'] = {select: {name: lead.propertyType.trim()}}
+  if (lead.project?.trim()) properties.Project = {select: {name: lead.project.trim()}}
+  const multiFields: Array<[string, string[] | undefined]> = [
+    ['Location', lead.location],
+    ['Rail type', lead.railType],
+    ['Application', lead.application],
+    ['Infill', lead.infill],
+  ]
+  for (const [key, values] of multiFields) {
+    const property = multiSelect(values)
+    if (property) properties[key] = property
+  }
+
+  // "Optional" columns are ones a given database may not have yet (added over
+  // time / different per deployment). Each carries a Notes fallback so that if
+  // the column is missing, its value still lands on the lead.
+  const optionalColumns: Array<{name: string; fallbackNote: string}> = []
+  applyAttribution(properties, optionalColumns, lead)
+  if (typeof lead.estimateTotal === 'number' && Number.isFinite(lead.estimateTotal)) {
+    const dollars = Math.round(lead.estimateTotal)
+    properties.Estimate = {number: dollars}
+    optionalColumns.push({name: 'Estimate', fallbackNote: `Estimate: $${dollars.toLocaleString('en-US')}`})
+  }
+  if (typeof lead.lengthFeet === 'number' && Number.isFinite(lead.lengthFeet)) {
+    properties['Length (ft)'] = {number: lead.lengthFeet}
+    optionalColumns.push({name: 'Length (ft)', fallbackNote: `Length: ${lead.lengthFeet} ft`})
+  }
+
+  return createNotionPage(properties, optionalColumns, lead.notes?.trim() || '')
+}
+
+export type TapEvent = {
+  kind: 'phone' | 'email'
+  /** Path of the page the tap happened on (for context in Notes). */
+  pagePath?: string
+  gclid?: string
+  gbraid?: string
+  wbraid?: string
+  fbclid?: string
+  ip?: string
+  userAgent?: string
+  utm?: LeadUtm
+}
+
+/**
+ * Log an anonymous tap on a tel:/mailto: link to the leads database, carrying
+ * whatever ad attribution (gclid/fbclid/UTM) was captured on landing plus the
+ * server-side IP/user-agent. There's no name/email/phone — the visitor only
+ * tapped — so the row exists to be matched to the eventual Dialpad call or email
+ * reply by click id + timestamp. Reuses the lead create's column-fallback retry.
+ */
+export async function createTapLead(
+  tap: TapEvent,
+): Promise<{ok: true; id: string} | {ok: false; error: string}> {
+  const label = tap.kind === 'phone' ? 'Phone tap' : 'Email tap'
+  // Pacific wall-clock timestamp — precise enough to line up with a Dialpad call.
+  const nowWall = wallClock(new Date(), TIME_ZONE)
+  const stamp = `${nowWall.slice(0, 10)} ${nowWall.slice(11, 16)}`
+
+  const properties: Record<string, unknown> = {
+    Name: {title: [{text: {content: `${label} · ${stamp} PT`}}]},
+    Source: {select: {name: 'Website tap'}},
+    Date: {date: {start: nowWall, time_zone: TIME_ZONE}},
+  }
+
+  const optionalColumns: Array<{name: string; fallbackNote: string}> = []
+  applyAttribution(properties, optionalColumns, tap)
+
+  const linkKind = tap.kind === 'phone' ? 'tel:' : 'mailto:'
+  const notes = [
+    `Anonymous ${tap.kind} tap on the website (${linkKind} link). No contact info captured — match to the Dialpad call / email reply by click id + time.`,
+    tap.pagePath ? `Page: ${tap.pagePath}` : '',
+  ]
+    .filter(Boolean)
+    .join('\n')
+
+  return createNotionPage(properties, optionalColumns, notes)
 }
