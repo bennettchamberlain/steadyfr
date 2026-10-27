@@ -5,7 +5,9 @@ group** that produced it. A gclid is an encrypted token — it can't be decoded
 locally, and the Google Ads web UI has no per-gclid lookup. The Google Ads API's
 `click_view` resource is the only way, and it keeps clicks for **~90 days**.
 
-This is read-only — it queries, it never changes anything.
+`lookup-gclid.mjs` is read-only — it queries Google Ads, never changes anything.
+(The `enrich-notion.mjs` companion below writes results back to Notion, and only
+with `--send`.)
 
 ```bash
 node scripts/click-lookup/lookup-gclid.mjs --gclid EAIaIQ...BwE
@@ -20,9 +22,56 @@ node scripts/click-lookup/lookup-gclid.mjs --gclid EAIa...BwE --days 30
 node scripts/click-lookup/lookup-gclid.mjs --gclid EAIa...BwE --json
 ```
 
+It also prints the click's **approximate geography** (where the person was, and
+the area their search was about). This is coarse by design — postal code / city /
+metro / region / country, never a precise address.
+
 **Keyword vs search term:** this returns the keyword you *bid on*, not the literal
 query the person typed. For the actual query, use Google Ads → Insights &
 reports → **Search terms**.
+
+---
+
+## Enrich Notion leads automatically
+
+`enrich-notion.mjs` applies the same lookup across the whole Notion leads
+database. Every website-form lead and anonymous tap row already stores its gclid
+(the `Gclid` column); this finds rows that have a gclid but aren't enriched yet,
+looks each one up, and writes the result back onto the row.
+
+```bash
+node scripts/click-lookup/enrich-notion.mjs            # DRY RUN (no writes), 25 rows
+node scripts/click-lookup/enrich-notion.mjs --send     # actually write to Notion
+node scripts/click-lookup/enrich-notion.mjs --limit 100 --send
+node scripts/click-lookup/enrich-notion.mjs --days 30 --send   # wider date scan
+```
+
+It writes into these columns **if they exist**, otherwise it folds the value into
+`Notes` (so you don't have to pre-create them, but adding them gives you
+structured, filterable columns):
+
+| Column | Example |
+|---|---|
+| `Keyword` | cable railing contractor |
+| `Match type` | BROAD |
+| `Campaign` | Cable and Guard Rail (Search) 7/7/26 |
+| `Ad group` | Ad group 1 |
+| `Ad network` | SEARCH_PARTNERS |
+| `Click location` | 94124,California,United States (Postal Code) |
+
+`Notes` always gets a one-line `Ad click → …` summary, which also marks the row
+as enriched so re-runs skip it. Safe by default — **dry run unless you pass
+`--send`**. Only rows with a real **gclid** resolve (gbraid/wbraid-only rows are
+skipped — `click_view` keys on gclid). Needs `NOTION_TOKEN` plus the
+`GOOGLE_ADS_*` credentials below.
+
+**Keeping it hands-free:** run it on a schedule (e.g. a daily cron) so new tap /
+form rows get enriched automatically within the 90-day `click_view` window:
+
+```bash
+# daily at 8am — enrich anything new from the last few days
+0 8 * * *  cd /path/to/steadyfr && node scripts/click-lookup/enrich-notion.mjs --send >> /tmp/enrich.log 2>&1
+```
 
 ---
 
