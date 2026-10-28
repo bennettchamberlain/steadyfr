@@ -1,0 +1,52 @@
+name: Enrich Notion click attribution
+
+# Runs scripts/click-lookup/enrich-notion.mjs daily to stamp new gclid rows in
+# the Notion leads DB with keyword / campaign / ad group / geography (via the
+# Google Ads click_view API). Deterministic, no npm deps.
+#
+# Secrets required (repo → Settings → Secrets and variables → Actions):
+#   NOTION_TOKEN, GOOGLE_ADS_CLIENT_ID, GOOGLE_ADS_CLIENT_SECRET,
+#   GOOGLE_ADS_REFRESH_TOKEN, GOOGLE_ADS_CUSTOMER_ID
+
+on:
+  schedule:
+    # 15:00 UTC = 08:00 PT during PDT (07:00 during PST). GitHub cron is UTC and
+    # does not shift for daylight saving. Timing isn't critical — it just enriches
+    # whatever rows are new.
+    - cron: '0 15 * * *'
+  workflow_dispatch:
+    inputs:
+      send:
+        description: 'Write to Notion (uncheck for a dry run)'
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: enrich-notion
+  cancel-in-progress: false
+
+jobs:
+  enrich:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Enrich Notion rows
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          GOOGLE_ADS_CLIENT_ID: ${{ secrets.GOOGLE_ADS_CLIENT_ID }}
+          GOOGLE_ADS_CLIENT_SECRET: ${{ secrets.GOOGLE_ADS_CLIENT_SECRET }}
+          GOOGLE_ADS_REFRESH_TOKEN: ${{ secrets.GOOGLE_ADS_REFRESH_TOKEN }}
+          GOOGLE_ADS_CUSTOMER_ID: ${{ secrets.GOOGLE_ADS_CUSTOMER_ID }}
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.send }}" = "false" ]; then
+            echo "Dry run (no writes)"
+            node scripts/click-lookup/enrich-notion.mjs --limit 200
+          else
+            node scripts/click-lookup/enrich-notion.mjs --send --limit 200
+          fi
