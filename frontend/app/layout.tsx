@@ -109,6 +109,10 @@ export async function generateMetadata(): Promise<Metadata> {
       'geo.placename': 'San Francisco',
       'geo.position': '37.7749;-122.4194',
       'ICBM': '37.7749, -122.4194',
+      // Meta (Facebook) Business domain verification for steadyfnr.com — lets our
+      // Business Portfolio own the domain's event config (required for Aggregated
+      // Event Measurement on Meta ads).
+      'facebook-domain-verification': 'vmbey533nrixubxd6eqlr4kq3j2r8z',
     },
   }
 }
