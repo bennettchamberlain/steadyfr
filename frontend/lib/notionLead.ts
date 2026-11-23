@@ -5,7 +5,11 @@ const TIME_ZONE = 'America/Los_Angeles'
 const DATABASE_ID =
   process.env.NOTION_DATABASE_ID?.trim() || '3f101274-8342-804a-b00a-d041a2867b1b'
 
-export type LeadSource = 'Quote' | 'Call' | 'Shop visit'
+/** How the lead reached us → "Form" column. */
+export type LeadForm = 'Quote' | 'Call' | 'Shop visit' | 'Website tap'
+
+/** Where the lead found us → "Source" column (derived from click ids / UTMs). */
+export type LeadSource = 'Google ad' | 'Meta ad' | 'Organic social media' | 'AI assistant' | 'Organic / Unknown'
 
 export type WebsiteLead = {
   name: string
@@ -40,7 +44,8 @@ export type WebsiteLead = {
   userAgent?: string
   /** Campaign tags (utm_*) → "Source / Campaign" column (falls back to Notes). */
   utm?: LeadUtm
-  source: LeadSource
+  /** How the lead reached us → "Form" column. Source is derived from the ad tags. */
+  form: LeadForm
   /**
    * Pacific wall-clock appointment. Omit to log an all-day lead on today's Pacific date.
    * durationMinutes defaults to 60.
@@ -187,6 +192,33 @@ function composeSourceCampaign(utm?: LeadUtm): string {
     .join(' · ')
 }
 
+const SOCIAL_SOURCE = /^(fb|ig|facebook|instagram|meta|threads|an|msg)$/i
+const AI_SOURCE = /copilot|chatgpt|openai|perplexity|gemini|claude/i
+
+/**
+ * Best guess at where the visitor found us, from the attribution captured on
+ * landing. Our ads always carry utm tags (google / cpc, fb|ig / paid…), so a
+ * social source without a paid medium is organic (e.g. the Instagram bio link).
+ * A bare fbclid is treated as organic too: Facebook adds it to every outbound link.
+ */
+export function deriveLeadSource(a: {
+  gclid?: string
+  gbraid?: string
+  wbraid?: string
+  fbclid?: string
+  utm?: LeadUtm
+}): LeadSource {
+  const source = a.utm?.source?.trim() || ''
+  const medium = a.utm?.medium?.trim() || ''
+  const paid = /cpc|ppc|paid/i.test(medium)
+  if (a.gclid?.trim() || a.gbraid?.trim() || a.wbraid?.trim()) return 'Google ad'
+  if (/google|bing/i.test(source) && paid) return 'Google ad'
+  if (SOCIAL_SOURCE.test(source)) return paid ? 'Meta ad' : 'Organic social media'
+  if (AI_SOURCE.test(source)) return 'AI assistant'
+  if (a.fbclid?.trim()) return 'Organic social media'
+  return 'Organic / Unknown'
+}
+
 function multiSelect(values?: string[]) {
   const names = (values ?? []).map((value) => value.trim()).filter(Boolean)
   if (!names.length) return undefined
@@ -329,7 +361,8 @@ export async function createWebsiteLead(
     Name: {
       title: [{text: {content: (lead.name || lead.email || 'Website lead').slice(0, 200)}}],
     },
-    Source: {select: {name: lead.source}},
+    Source: {select: {name: deriveLeadSource(lead)}},
+    Form: {select: {name: lead.form}},
     Date: dateProperty(lead),
   }
 
@@ -366,7 +399,9 @@ export async function createWebsiteLead(
   // "Optional" columns are ones a given database may not have yet (added over
   // time / different per deployment). Each carries a Notes fallback so that if
   // the column is missing, its value still lands on the lead.
-  const optionalColumns: Array<{name: string; fallbackNote: string}> = []
+  const optionalColumns: Array<{name: string; fallbackNote: string}> = [
+    {name: 'Form', fallbackNote: `Form: ${lead.form}`},
+  ]
   applyAttribution(properties, optionalColumns, lead)
   if (typeof lead.estimateTotal === 'number' && Number.isFinite(lead.estimateTotal)) {
     const dollars = Math.round(lead.estimateTotal)
@@ -411,11 +446,14 @@ export async function createTapLead(
 
   const properties: Record<string, unknown> = {
     Name: {title: [{text: {content: `${label} · ${stamp} PT`}}]},
-    Source: {select: {name: 'Website tap'}},
+    Source: {select: {name: deriveLeadSource(tap)}},
+    Form: {select: {name: 'Website tap'}},
     Date: {date: {start: nowWall, time_zone: TIME_ZONE}},
   }
 
-  const optionalColumns: Array<{name: string; fallbackNote: string}> = []
+  const optionalColumns: Array<{name: string; fallbackNote: string}> = [
+    {name: 'Form', fallbackNote: 'Form: Website tap'},
+  ]
   applyAttribution(properties, optionalColumns, tap)
 
   const linkKind = tap.kind === 'phone' ? 'tel:' : 'mailto:'
