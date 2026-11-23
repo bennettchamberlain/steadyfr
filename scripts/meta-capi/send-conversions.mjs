@@ -21,6 +21,12 @@
 //   node send-conversions.mjs                      # dry run (prints events)
 //   node send-conversions.mjs --test-event-code TESTxxbnd --send   # test events
 //   node send-conversions.mjs --send               # real send
+//   node send-conversions.mjs --max-age-days 7     # only sales from the last 7 days
+//
+// Meta rejects any event older than its upload window ("Event Timestamp Too
+// Old": 7 days by default, up to 90 with "Allow historical conversion uploads"
+// on), and ONE too-old event fails the whole batch. So sales older than
+// --max-age-days (default 90) are skipped and listed instead of sent.
 
 import {createHash} from 'node:crypto'
 import {readFileSync} from 'node:fs'
@@ -69,6 +75,9 @@ const DEFAULTS = {
   // Offline/CRM sale that happened away from the website. Override with
   // --action-source if your sales flow fits another value better.
   actionSource: 'physical_store',
+  // Meta's longest upload window (needs "Allow historical conversion uploads"
+  // ON in the dataset settings; use --max-age-days 7 if it's off).
+  maxAgeDays: 90,
 }
 
 function parseArgs(argv) {
@@ -188,6 +197,14 @@ function buildEvents(pages, opts) {
       continue
     }
 
+    const eventTime = eventTimeUnix(page, opts.dateProp)
+    const ageDays = (Date.now() / 1000 - eventTime) / 86400
+    if (ageDays > opts.maxAgeDays) {
+      const day = new Date(eventTime * 1000).toISOString().slice(0, 10)
+      skipped.push(`"${name}": sold ${day} (${Math.floor(ageDays)} days ago), older than Meta's ${opts.maxAgeDays}-day upload window`)
+      continue
+    }
+
     const userData = {}
     if (em) userData.em = [em]
     if (ph) userData.ph = [ph]
@@ -199,7 +216,7 @@ function buildEvents(pages, opts) {
 
     events.push({
       event_name: opts.eventName,
-      event_time: eventTimeUnix(page, opts.dateProp),
+      event_time: eventTime,
       action_source: opts.actionSource,
       event_id: page.id, // dedupe key
       user_data: userData,
@@ -231,7 +248,11 @@ async function sendToMeta(events, {testEventCode}) {
   })
   const data = await resp.json().catch(() => ({}))
   if (!resp.ok) {
-    throw new Error(data?.error?.message || `Meta CAPI request failed (${resp.status})`)
+    const e = data?.error || {}
+    // Meta's top-level message is often just "Invalid parameter"; the user_*
+    // fields carry the real reason (e.g. "Event Timestamp Too Old").
+    const detail = [e.message, e.error_user_title, e.error_user_msg].filter(Boolean).join(' — ')
+    throw new Error(detail || `Meta CAPI request failed (${resp.status})`)
   }
   return data
 }
@@ -249,6 +270,11 @@ async function main() {
     currency: args.currency || DEFAULTS.currency,
     eventName: args['event-name'] || DEFAULTS.eventName,
     actionSource: args['action-source'] || DEFAULTS.actionSource,
+    maxAgeDays: args['max-age-days'] !== undefined ? Number(args['max-age-days']) : DEFAULTS.maxAgeDays,
+  }
+  if (!Number.isFinite(opts.maxAgeDays) || opts.maxAgeDays <= 0) {
+    console.error('--max-age-days must be a positive number.')
+    process.exit(1)
   }
 
   let pages

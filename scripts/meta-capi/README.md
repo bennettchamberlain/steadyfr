@@ -59,6 +59,12 @@ so re-sending the same lead de-dupes instead of double-counting.
   offline conversions within ~28 days of the click (vs Google's 90) — so upload
   closed jobs promptly.
 - Leads with no email/phone/fbclid are skipped (nothing to match on).
+- **Old sales are skipped.** Meta rejects events older than its upload window
+  ("Event Timestamp Too Old": 7 days by default, up to 90 with *Allow historical
+  conversion uploads* on), and one too-old event fails the **whole batch**. So any
+  sale whose `Sold on` is older than `--max-age-days` (default **90**) is listed
+  under *Skipped* instead of sent. If the historical-uploads extension is off
+  (it auto-disables after 90 days with no uploads), run with `--max-age-days 7`.
 - `action_source` defaults to `physical_store` (an offline sale); override with
   `--action-source` if another value fits your sales flow better.
 - Tokens (`NOTION_TOKEN`, `META_CAPI_TOKEN`) are read from the environment and the
