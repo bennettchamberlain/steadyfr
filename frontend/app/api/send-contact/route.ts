@@ -289,7 +289,7 @@ export async function POST(request: NextRequest) {
     utm: data.utm,
     ip: clientIpFrom(request.headers),
     userAgent: request.headers.get('user-agent') || undefined,
-    form: kind === 'shop' ? 'Shop visit' : 'Call',
+    form: kind === 'shop' ? 'Shop visit (form)' : 'Call (form)',
     visit:
       parsed && data.visitDate
         ? {date: data.visitDate, time: parsed.time, durationMinutes: parsed.durationMinutes}
