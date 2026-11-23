@@ -6,7 +6,7 @@ const DATABASE_ID =
   process.env.NOTION_DATABASE_ID?.trim() || '3f101274-8342-804a-b00a-d041a2867b1b'
 
 /** How the lead reached us → "Form" column. */
-export type LeadForm = 'Quote' | 'Call' | 'Shop visit' | 'Website tap'
+export type LeadForm = 'Quote (form)' | 'Call (form)' | 'Shop visit (form)' | 'Website tap'
 
 /** Where the lead found us → "Source" column (derived from click ids / UTMs). */
 export type LeadSource = 'Google ad' | 'Meta ad' | 'Organic social media' | 'AI assistant' | 'Organic / Unknown'

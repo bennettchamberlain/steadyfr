@@ -578,7 +578,7 @@ San Francisco Bay Area`
       email: recipientEmail,
       phone: data.phone,
       zip: data.zipcode,
-      form: 'Quote',
+      form: 'Quote (form)',
       railType: [railTypeTag],
       infill: infillColumnTag ? [infillColumnTag] : undefined,
       application: [applicationTag],
