@@ -110,6 +110,47 @@ const readFileBase64 = (file: File): Promise<{name: string; type: string; data: 
     r.readAsDataURL(file)
   })
 
+// Downscale + re-encode images in the browser so a handful of phone photos
+// (often several MB each) fit under Vercel's ~4.5 MB serverless request-body
+// limit. Returns null when the browser can't decode the image (e.g. some HEIC),
+// so the caller falls back to sending the original and the size guard catches it.
+const MAX_IMAGE_DIM = 2000 // px, longest edge
+const IMAGE_QUALITY = 0.7
+// base64 budget for all files combined — stays under the ~4.5 MB body cap with
+// headroom for the rest of the JSON payload. (base64 is ~33% larger than raw.)
+const MAX_PAYLOAD_BYTES = 4 * 1024 * 1024
+
+const compressImageToBase64 = async (
+  file: File,
+): Promise<{name: string; type: string; data: string} | null> => {
+  if (!file.type.startsWith('image/')) return null
+  try {
+    const bitmap = await createImageBitmap(file, {imageOrientation: 'from-image'})
+    const scale = Math.min(1, MAX_IMAGE_DIM / Math.max(bitmap.width, bitmap.height))
+    const width = Math.max(1, Math.round(bitmap.width * scale))
+    const height = Math.max(1, Math.round(bitmap.height * scale))
+    const canvas = document.createElement('canvas')
+    canvas.width = width
+    canvas.height = height
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return null
+    ctx.drawImage(bitmap, 0, 0, width, height)
+    bitmap.close()
+    const dataUrl = canvas.toDataURL('image/jpeg', IMAGE_QUALITY)
+    const data = dataUrl.slice(dataUrl.indexOf(',') + 1)
+    if (!data) return null
+    return {name: file.name.replace(/\.[^.]+$/, '') + '.jpg', type: 'image/jpeg', data}
+  } catch {
+    return null
+  }
+}
+
+// Compress images; pass non-images (e.g. PDFs) through unchanged.
+const prepareFiles = async (
+  list: File[],
+): Promise<{name: string; type: string; data: string}[]> =>
+  Promise.all(list.map(async (f) => (await compressImageToBase64(f)) ?? readFileBase64(f)))
+
 const PATHS: Record<string, {t: string; d: string}> = {
   scheduleCall: {t: 'Schedule a call', d: "Pick a time and date convenient for you, and we'll give you a call!"},
   visitShop: {t: 'Visit the shop', d: 'Come see our work in person.'},
@@ -217,9 +258,21 @@ export default function ContactForm() {
     set({submitting: true, submitError: ''})
     let files: {name: string; type: string; data: string}[] = []
     try {
-      files = await Promise.all(s.files.map(readFileBase64))
+      files = await prepareFiles(s.files)
     } catch {
       files = []
+    }
+    // Guard against Vercel's ~4.5 MB serverless body limit: if the (compressed)
+    // files are still too big, stop with a clear message instead of an opaque
+    // 413 the visitor can't interpret. base64 length is what travels in the body.
+    const totalFileBytes = files.reduce((sum, f) => sum + f.data.length, 0)
+    if (totalFileBytes > MAX_PAYLOAD_BYTES) {
+      const mb = (totalFileBytes / (1024 * 1024)).toFixed(1)
+      set({
+        submitting: false,
+        submitError: `Your photos/files total about ${mb} MB, which is too large to send through the form. Please remove a file or two, or email them to sales@steadyfnr.com and we'll match them to your request.`,
+      })
+      return
     }
     // Shared id so the browser Lead event and the server-side CAPI Lead dedupe.
     const metaEventId = crypto.randomUUID()
