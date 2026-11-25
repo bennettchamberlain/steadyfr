@@ -1,4 +1,5 @@
 import type {LeadUtm} from './adClickIds'
+import {alertNotionLeadFailure} from './leadAlert'
 
 const NOTION_VERSION = '2022-06-28'
 const TIME_ZONE = 'America/Los_Angeles'
@@ -296,7 +297,10 @@ async function createNotionPage(
 ): Promise<{ok: true; id: string} | {ok: false; error: string}> {
   const token = process.env.NOTION_TOKEN?.trim()
   if (!token) {
-    return {ok: false, error: 'NOTION_TOKEN is not set'}
+    const error = 'NOTION_TOKEN is not set'
+    if (initialNotes.trim()) properties.Notes = richText(initialNotes.trim())
+    await alertNotionLeadFailure(properties, error)
+    return {ok: false, error}
   }
 
   // Notes is set last so missing-column fallbacks can be appended to it.
@@ -306,18 +310,25 @@ async function createNotionPage(
   async function postPage(): Promise<
     {ok: true; id: string} | {ok: false; status: number; error: string}
   > {
-    const response = await fetch('https://api.notion.com/v1/pages', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Notion-Version': NOTION_VERSION,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        parent: {database_id: DATABASE_ID},
-        properties,
-      }),
-    })
+    let response: Response
+    try {
+      response = await fetch('https://api.notion.com/v1/pages', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Notion-Version': NOTION_VERSION,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          parent: {database_id: DATABASE_ID},
+          properties,
+        }),
+      })
+    } catch (err) {
+      // Network error / timeout: report it as a failure instead of throwing, so
+      // the caller's customer-facing response isn't turned into an error.
+      return {ok: false, status: 0, error: `Notion request threw: ${err instanceof Error ? err.message : String(err)}`}
+    }
 
     if (!response.ok) {
       const err = (await response.json().catch(() => ({}))) as {message?: string}
@@ -349,6 +360,7 @@ async function createNotionPage(
   }
 
   if (!result.ok) {
+    await alertNotionLeadFailure(properties, result.error)
     return {ok: false, error: result.error}
   }
   return {ok: true, id: result.id}
