@@ -24,7 +24,8 @@ function pacificParts(iso: string): {date: string; minutes: number} | null {
   }).formatToParts(d)
   const get = (t: string) => {
     const v = p.find((x) => x.type === t)?.value ?? '00'
-    return v === '24' ? '00' : v
+    // Only hour 24 (midnight in some Intl calendars) maps to 00, never the day-of-month.
+    return t === 'hour' && v === '24' ? '00' : v
   }
   return {
     date: `${get('year')}-${get('month')}-${get('day')}`,
