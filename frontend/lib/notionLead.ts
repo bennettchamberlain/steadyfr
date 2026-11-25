@@ -103,7 +103,8 @@ function wallClock(instant: Date, timeZone: string) {
   }).formatToParts(instant)
   const get = (type: string) => {
     const value = parts.find((part) => part.type === type)?.value ?? '00'
-    return value === '24' ? '00' : value
+    // Only hour 24 (midnight in some Intl calendars) maps to 00, never the day-of-month.
+    return type === 'hour' && value === '24' ? '00' : value
   }
   return `${get('year')}-${get('month')}-${get('day')}T${get('hour')}:${get('minute')}:${get('second')}`
 }
@@ -139,7 +140,10 @@ function pacificInstant(date: string, time: string): Date {
       formatter
         .formatToParts(new Date(utc))
         .filter((part) => part.type !== 'literal')
-        .map((part) => [part.type, part.value === '24' ? '00' : part.value]),
+        .map((part) => [
+          part.type,
+          part.type === 'hour' && part.value === '24' ? '00' : part.value,
+        ]),
     )
     const asWall = Date.UTC(
       Number(parts.year),
