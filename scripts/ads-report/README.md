@@ -24,11 +24,22 @@ Lead counting:
 
 Leads with no ad stamp (organic, affiliate, past customers) aren't counted. Ad leads whose specific ad can't be identified still count in the weekly platform totals.
 
-## Instagram profile visits and assisted leads
+## Instagram profile visits, bio-link visits and assisted leads
 
 - **IG profile visits:** Meta's `instagram_profile_visits` for each ad (daily only; Meta has no hourly figure for it).
-- **Assisted leads / Assisted revenue:** leads that didn't click an ad directly but are tied to one in the lead's **Assisted by ad** column, usually someone who saw an ad, visited the Instagram profile and came in through the bio link (`utm_content=link_in_bio`, added by Instagram). The value must start with the Meta ad name, e.g. `Steady Ad 1a v1 (likely: most IG profile visits that day)`. These are counted separately, so **Real leads** and **Revenue** never change because of them.
-- `bio-assist.mjs` (read-only) shows, per day, each GA4 bio-link visit and which ad it most likely came from: **exact** when GA4's first visit for that device was an ad click, otherwise **likely** = the ad with the most IG profile visits that day. The daily lead sweep uses it to fill **Assisted by ad**.
+- **Bio visits (exact):** Instagram bio-link visits (GA4, `utm_content=link_in_bio`, added by Instagram) whose first visit on that device was a click on this ad. A deterministic link, never a guess. Needs `GA4_PROPERTY_ID` and `GA4_REFRESH_TOKEN`; skipped with a warning if they're missing.
+- **Assisted leads / Assisted revenue:** leads that didn't click an ad directly but are tied to one in the lead's **Assisted by ad** column (usually: saw an ad, visited the profile, came in through the bio link). The value must start with the Meta ad name. Only `(exact: …)` and `(likely: …)` are credited; `(possible: …)` is for reference. Counted separately, so **Real leads** and **Revenue** never change because of them.
+
+`bio-assist.mjs` (read-only) gives each bio-link visit one verdict:
+
+| Verdict | Rule | Credited |
+|---|---|---|
+| exact | GA4's first visit on that device was a click on the ad | yes |
+| likely | someone in the same city clicked the ad in the 24 h before, and that city had at most 2 Meta ad visits in that window (busy cities like San Francisco rarely qualify) | yes |
+| possible | no qualifying same-city ad visit, but ads drove IG profile visits that day | no |
+| none | no ad link | no |
+
+The daily lead sweep uses it to fill **Assisted by ad** on bio-link leads.
 
 ```bash
 node scripts/ads-report/bio-assist.mjs --date 2026-11-24
