@@ -11,6 +11,13 @@
 // ad id for Google). Both tables are built from the same daily pull, so the
 // weekly totals always add up to the per-ad totals.
 //
+// "IG profile visits" is Meta's per-ad Instagram profile visit count. "Assisted
+// leads / revenue" credit an ad for leads that didn't click it directly but are
+// tied to it in the lead's "Assisted by ad" column (e.g. someone who saw the ad,
+// visited the Instagram profile and came in through the bio link). The lead
+// sweep fills that column; see scripts/ads-report/bio-assist.mjs. Assisted
+// leads are kept separate from "Real leads" so direct attribution never changes.
+//
 // Script-owned columns are overwritten every run. Columns you edit by hand
 // (Creative, Verdict, Notes) are never touched after a row is created.
 //
@@ -151,6 +158,9 @@ const AD_COLUMNS = {
   'Cost per real lead': money,
   'Jobs won': count,
   Revenue: money,
+  'IG profile visits': count,
+  'Assisted leads': count,
+  'Assisted revenue': money,
   'Leads (Notion)': {relation: {database_id: LEADS_DB_ID, type: 'single_property', single_property: {}}},
   Creative: {rich_text: {}},
   Verdict: {select: options('Testing', 'Keep', 'Iterate', 'Kill')},
@@ -172,6 +182,9 @@ const weekColumns = () => ({
   'Cost per real lead': money,
   'Jobs won': count,
   Revenue: money,
+  'IG profile visits': count,
+  'Assisted leads': count,
+  'Assisted revenue': money,
   'Best ad': {relation: {database_id: ADS_DB_ID, type: 'single_property', single_property: {}}},
   Notes: {rich_text: {}},
   'Last synced': {date: {}},
@@ -179,7 +192,16 @@ const weekColumns = () => ({
 
 // Add any missing columns to Steady - Ads and find (or create) Steady - Ad Weeks
 // next to it. Returns the Ad Weeks database id.
+// Column on the leads DB naming the ad that assisted a non-ad lead:
+//   "<Meta ad name> (exact: …)" or "<Meta ad name> (likely: …)"
+const ASSIST_COLUMN = 'Assisted by ad'
+
 async function setupNotion() {
+  const leadsDb = await notion('GET', `databases/${LEADS_DB_ID}`)
+  if (!leadsDb.properties[ASSIST_COLUMN]) {
+    await notion('PATCH', `databases/${LEADS_DB_ID}`, {properties: {[ASSIST_COLUMN]: {rich_text: {}}}})
+    console.log(`Leads DB: added "${ASSIST_COLUMN}" column`)
+  }
   const adsDb = await notion('GET', `databases/${ADS_DB_ID}`)
   const missing = Object.fromEntries(Object.entries(AD_COLUMNS).filter(([k]) => !adsDb.properties[k]))
   if (Object.keys(missing).length) {
@@ -189,7 +211,14 @@ async function setupNotion() {
 
   const found = await notion('POST', 'search', {query: WEEKS_DB_TITLE, filter: {property: 'object', value: 'database'}})
   const existing = found.results.find((d) => d.title?.map((t) => t.plain_text).join('') === WEEKS_DB_TITLE)
-  if (existing) return existing.id
+  if (existing) {
+    const weekMissing = Object.fromEntries(Object.entries(weekColumns()).filter(([k]) => !existing.properties?.[k]))
+    if (Object.keys(weekMissing).length) {
+      await notion('PATCH', `databases/${existing.id}`, {properties: weekMissing})
+      console.log(`${WEEKS_DB_TITLE}: added ${Object.keys(weekMissing).length} columns`)
+    }
+    return existing.id
+  }
 
   if (adsDb.parent?.type !== 'page_id') fail('Steady - Ads is not inside a page; create "Steady - Ad Weeks" by hand.')
   const created = await notion('POST', 'databases', {
@@ -300,6 +329,7 @@ async function loadGoogle(creds, until) {
     clicks: Number(r.metrics.clicks || 0),
     quoteStarts: 0, // Google has no quote-start event; Meta only
     platformLeads: Number(r.metrics.conversions || 0),
+    profileVisits: 0, // Instagram only
   })
   const daily = [
     ...adDaily.map((r) => toDaily(`google:${r.adGroupAd.ad.id}`, r)),
@@ -350,6 +380,7 @@ function attributeLeads(pages, ads, daily) {
       revenue: props['Sold at']?.number || 0,
       platform: null,
       key: null,
+      assistKey: null,
     }
 
     const parts = src.split('·').map((s) => s.trim())
@@ -374,13 +405,38 @@ function attributeLeads(pages, ads, daily) {
       )[0]
       if (best) lead.key = best.key
     }
+
+    // Not a direct ad lead, but tied to a Meta ad via "Assisted by ad".
+    if (!lead.platform) {
+      const assistName = plainText(props[ASSIST_COLUMN]).replace(/\s*\(.*$/, '').trim()
+      const pool = (assistName && metaByName.get(assistName)) || []
+      const best = [...pool].sort(
+        (a, b) =>
+          (spendByKeyWeek.get(`${b.key}|${lead.week}`) || 0) - (spendByKeyWeek.get(`${a.key}|${lead.week}`) || 0) ||
+          (spendByKey.get(b.key) || 0) - (spendByKey.get(a.key) || 0),
+      )[0]
+      if (best) lead.assistKey = best.key
+    }
     return lead
   })
 }
 
 // ---------- aggregation ----------
 
-const emptyTotals = () => ({spend: 0, impressions: 0, clicks: 0, quoteStarts: 0, platformLeads: 0, real: 0, spam: 0, won: 0, revenue: 0})
+const emptyTotals = () => ({
+  spend: 0,
+  impressions: 0,
+  clicks: 0,
+  quoteStarts: 0,
+  platformLeads: 0,
+  profileVisits: 0,
+  real: 0,
+  spam: 0,
+  won: 0,
+  revenue: 0,
+  assisted: 0,
+  assistedRevenue: 0,
+})
 
 function addDaily(t, d) {
   t.spend += d.spend
@@ -388,6 +444,7 @@ function addDaily(t, d) {
   t.clicks += d.clicks
   t.quoteStarts += d.quoteStarts
   t.platformLeads += d.platformLeads
+  t.profileVisits += d.profileVisits || 0
 }
 
 function addLead(t, l) {
@@ -397,6 +454,11 @@ function addLead(t, l) {
     t.won += 1
     t.revenue += l.revenue
   }
+}
+
+function addAssist(t, l) {
+  if (l.real) t.assisted += 1
+  if (l.won) t.assistedRevenue += l.revenue
 }
 
 const costPerReal = (t) => (t.real ? t.spend / t.real : null)
@@ -413,6 +475,9 @@ function totalsColumns(t) {
     'Cost per real lead': num(costPerReal(t)),
     'Jobs won': num(t.won),
     Revenue: num(t.revenue),
+    'IG profile visits': num(t.profileVisits),
+    'Assisted leads': num(t.assisted),
+    'Assisted revenue': num(t.assistedRevenue),
   }
 }
 
@@ -471,6 +536,10 @@ async function main() {
     addLead(row.t, l)
     row.leadIds.push(l.pageId)
   }
+  for (const l of leads) {
+    const row = l.assistKey && byAd.get(l.assistKey)
+    if (row) addAssist(row.t, l)
+  }
 
   // Per-week totals by platform (+ All), and per-ad per-week for "Best ad".
   const weeks = new Map() // week -> {Meta, Google, All, perAd: Map(key -> totals)}
@@ -497,6 +566,13 @@ async function main() {
     addLead(w.All, l)
     if (l.key && byAd.has(l.key)) addLead(adTotalsInWeek(w, l.key), l)
   }
+  for (const l of leads) {
+    if (!l.assistKey || !byAd.has(l.assistKey)) continue
+    const w = weekOf(l.week)
+    addAssist(w[platformOf(l.assistKey)], l)
+    addAssist(w.All, l)
+    addAssist(adTotalsInWeek(w, l.assistKey), l)
+  }
 
   // ---- report ----
   const adRows = [...byAd.values()].sort((a, b) => b.t.spend - a.t.spend)
@@ -506,8 +582,13 @@ async function main() {
     console.log(
       `  ${r.ad.platform.padEnd(6)} ${r.ad.status.padEnd(9)} $${t.spend.toFixed(2).padStart(8)}  clicks ${String(t.clicks).padStart(4)}  ` +
         `quote starts ${String(t.quoteStarts).padStart(3)}  platform leads ${String(round2(t.platformLeads)).padStart(4)}  ` +
-        `real ${t.real}  spam ${t.spam}  won ${t.won}  ${r.ad.name}`,
+        `real ${t.real}  spam ${t.spam}  won ${t.won}  ig profile ${t.profileVisits}  assisted ${t.assisted}  ${r.ad.name}`,
     )
+  }
+  const assistedLeads = leads.filter((l) => l.assistKey)
+  if (assistedLeads.length) {
+    console.log(`\n${assistedLeads.length} assisted lead(s) (credited separately from real leads):`)
+    for (const l of assistedLeads) console.log(`  ${l.date}  ${byAd.get(l.assistKey)?.ad.name || l.assistKey}  ${l.name}`)
   }
   const unmatched = leads.filter((l) => l.platform && !l.key)
   if (unmatched.length) {
@@ -521,7 +602,7 @@ async function main() {
       const t = weeks.get(wk)[p]
       console.log(
         `  ${wk} ${p.padEnd(6)} $${t.spend.toFixed(2).padStart(8)}  clicks ${String(t.clicks).padStart(4)}  ` +
-          `platform leads ${String(round2(t.platformLeads)).padStart(4)}  real ${t.real}  spam ${t.spam}`,
+          `platform leads ${String(round2(t.platformLeads)).padStart(4)}  real ${t.real}  spam ${t.spam}  ig profile ${t.profileVisits}  assisted ${t.assisted}`,
       )
     }
   }
@@ -583,7 +664,7 @@ async function main() {
     const w = weeks.get(wk)
     for (const p of ['Meta', 'Google', 'All']) {
       const t = w[p]
-      if (!t.spend && !t.real && !t.spam && !t.platformLeads) continue
+      if (!t.spend && !t.real && !t.spam && !t.platformLeads && !t.profileVisits && !t.assisted) continue
       const inPlatform = [...w.perAd.entries()]
         .filter(([key]) => p === 'All' || platformOf(key) === p)
         .map(([key, totals]) => ({key, t: totals}))

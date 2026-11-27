@@ -60,16 +60,18 @@ const actionValue = (actions, ...types) => {
 }
 
 // Daily per-ad metrics between since and until (YYYY-MM-DD, account timezone).
-// Returns [{adId, date, spend, impressions, clicks, quoteStarts, platformLeads}].
+// Returns [{adId, date, spend, impressions, clicks, quoteStarts, platformLeads, profileVisits}].
 //   clicks        = link clicks (not all clicks, which include likes/expands)
 //   quoteStarts   = initiate_checkout (the quote builder fires InitiateCheckout)
 //   platformLeads = Meta's "lead" (pixel + server-side Lead events)
+//   profileVisits = Instagram profile visits from the ad (Meta reports these daily
+//                   only; the hourly breakdown returns nothing for this field)
 export async function dailyAdInsights({token, accountId}, since, until) {
   const rows = await graphGetAll(token, `${accountId}/insights`, {
     level: 'ad',
     time_increment: '1',
     time_range: JSON.stringify({since, until}),
-    fields: 'ad_id,spend,impressions,actions',
+    fields: 'ad_id,spend,impressions,actions,instagram_profile_visits',
     limit: '500',
   })
   return rows.map((r) => ({
@@ -80,5 +82,6 @@ export async function dailyAdInsights({token, accountId}, since, until) {
     clicks: actionValue(r.actions, 'link_click'),
     quoteStarts: actionValue(r.actions, 'initiate_checkout', 'offsite_conversion.fb_pixel_initiate_checkout'),
     platformLeads: actionValue(r.actions, 'lead', 'offsite_conversion.fb_pixel_lead'),
+    profileVisits: Number(r.instagram_profile_visits) || 0,
   }))
 }

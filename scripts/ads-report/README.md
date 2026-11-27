@@ -24,6 +24,17 @@ Lead counting:
 
 Leads with no ad stamp (organic, affiliate, past customers) aren't counted. Ad leads whose specific ad can't be identified still count in the weekly platform totals.
 
+## Instagram profile visits and assisted leads
+
+- **IG profile visits:** Meta's `instagram_profile_visits` for each ad (daily only; Meta has no hourly figure for it).
+- **Assisted leads / Assisted revenue:** leads that didn't click an ad directly but are tied to one in the lead's **Assisted by ad** column, usually someone who saw an ad, visited the Instagram profile and came in through the bio link (`utm_content=link_in_bio`, added by Instagram). The value must start with the Meta ad name, e.g. `Steady Ad 1a v1 (likely: most IG profile visits that day)`. These are counted separately, so **Real leads** and **Revenue** never change because of them.
+- `bio-assist.mjs` (read-only) shows, per day, each GA4 bio-link visit and which ad it most likely came from: **exact** when GA4's first visit for that device was an ad click, otherwise **likely** = the ad with the most IG profile visits that day. The daily lead sweep uses it to fill **Assisted by ad**.
+
+```bash
+node scripts/ads-report/bio-assist.mjs --date 2026-11-24
+node scripts/ads-report/bio-assist.mjs --since 2026-11-01 --until 2026-11-27
+```
+
 ## Columns
 
 The script overwrites its own columns on every run. It never changes **Creative**, **Verdict** or **Notes** after creating a row (new ads start with Verdict = *Testing*). Fill those in yourself.
