@@ -15,8 +15,14 @@
 // leads / revenue" credit an ad for leads that didn't click it directly but are
 // tied to it in the lead's "Assisted by ad" column (e.g. someone who saw the ad,
 // visited the Instagram profile and came in through the bio link). The lead
-// sweep fills that column; see scripts/ads-report/bio-assist.mjs. Assisted
-// leads are kept separate from "Real leads" so direct attribution never changes.
+// sweep fills that column; see scripts/ads-report/bio-assist.mjs. Only "exact"
+// and "likely" verdicts are credited ("possible" is not). Assisted leads are
+// kept separate from "Real leads" so direct attribution never changes.
+//
+// "Bio visits (exact)" counts Instagram bio-link visits (GA4, utm_content =
+// link_in_bio) whose first visit on that device was a click on the ad: a
+// deterministic link, never a guess. Skipped with a warning if GA4 credentials
+// are missing.
 //
 // Script-owned columns are overwritten every run. Columns you edit by hand
 // (Creative, Verdict, Notes) are never touched after a row is created.
@@ -32,6 +38,7 @@
 
 import {loadSharedEnv, getAdsCredentials, makeContext, gaqlSearch} from '../click-lookup/googleAds.mjs'
 import {getMetaCredentials, listAds, dailyAdInsights} from './metaAds.mjs'
+import {ga4Missing, ga4Report, ga4Day, BIO_LINK_FILTER, isMetaPaid, resolveMetaAd} from './ga4.mjs'
 
 loadSharedEnv()
 
@@ -159,6 +166,7 @@ const AD_COLUMNS = {
   'Jobs won': count,
   Revenue: money,
   'IG profile visits': count,
+  'Bio visits (exact)': count,
   'Assisted leads': count,
   'Assisted revenue': money,
   'Leads (Notion)': {relation: {database_id: LEADS_DB_ID, type: 'single_property', single_property: {}}},
@@ -183,6 +191,7 @@ const weekColumns = () => ({
   'Jobs won': count,
   Revenue: money,
   'IG profile visits': count,
+  'Bio visits (exact)': count,
   'Assisted leads': count,
   'Assisted revenue': money,
   'Best ad': {relation: {database_id: ADS_DB_ID, type: 'single_property', single_property: {}}},
@@ -260,6 +269,32 @@ async function loadMeta(creds, until) {
     })),
     daily: daily.map((d) => ({...d, key: `meta:${d.adId}`})),
   }
+}
+
+// Instagram bio-link visits whose GA4 first visit (same device) was a Meta ad
+// click → zero-spend daily rows carrying only bioExact, keyed to that ad.
+async function loadBioExact(m, until) {
+  const missing = ga4Missing()
+  if (missing.length) {
+    console.log(`(Skipping "Bio visits (exact)": missing ${missing.join(', ')})`)
+    return []
+  }
+  const spend = new Map()
+  for (const d of m.daily) spend.set(d.key, (spend.get(d.key) || 0) + d.spend)
+  const rows = await ga4Report({
+    dateRanges: [{startDate: META_SINCE, endDate: until}],
+    dimensions: [{name: 'date'}, {name: 'firstUserSourceMedium'}, {name: 'firstUserManualAdContent'}],
+    metrics: [{name: 'sessions'}],
+    dimensionFilter: BIO_LINK_FILTER,
+  })
+  const out = []
+  for (const [day, firstSrc, content, n] of rows) {
+    if (!isMetaPaid(firstSrc)) continue
+    const ad = resolveMetaAd(content, m.ads, (a) => spend.get(a.key) || 0)
+    if (!ad) continue
+    out.push({key: ad.key, date: ga4Day(day), spend: 0, impressions: 0, clicks: 0, quoteStarts: 0, platformLeads: 0, profileVisits: 0, bioExact: Number(n)})
+  }
+  return out
 }
 
 // Effective status: active only if the ad (or asset group), its ad group and
@@ -407,8 +442,10 @@ function attributeLeads(pages, ads, daily) {
     }
 
     // Not a direct ad lead, but tied to a Meta ad via "Assisted by ad".
-    if (!lead.platform) {
-      const assistName = plainText(props[ASSIST_COLUMN]).replace(/\s*\(.*$/, '').trim()
+    // Only "exact" and "likely" verdicts count; "possible" is for reference.
+    const assistText = plainText(props[ASSIST_COLUMN])
+    if (!lead.platform && /\((exact|likely)\b/i.test(assistText)) {
+      const assistName = assistText.replace(/\s*\(.*$/, '').trim()
       const pool = (assistName && metaByName.get(assistName)) || []
       const best = [...pool].sort(
         (a, b) =>
@@ -430,6 +467,7 @@ const emptyTotals = () => ({
   quoteStarts: 0,
   platformLeads: 0,
   profileVisits: 0,
+  bioExact: 0,
   real: 0,
   spam: 0,
   won: 0,
@@ -445,6 +483,7 @@ function addDaily(t, d) {
   t.quoteStarts += d.quoteStarts
   t.platformLeads += d.platformLeads
   t.profileVisits += d.profileVisits || 0
+  t.bioExact += d.bioExact || 0
 }
 
 function addLead(t, l) {
@@ -476,6 +515,7 @@ function totalsColumns(t) {
     'Jobs won': num(t.won),
     Revenue: num(t.revenue),
     'IG profile visits': num(t.profileVisits),
+    'Bio visits (exact)': num(t.bioExact),
     'Assisted leads': num(t.assisted),
     'Assisted revenue': num(t.assistedRevenue),
   }
@@ -516,10 +556,12 @@ async function main() {
     queryAll(LEADS_DB_ID),
   ])
   const daily = [...m.daily, ...g.daily]
+  const bioDaily = await loadBioExact(m, today)
   const spendKeys = new Set(daily.filter((d) => d.spend > 0 || d.impressions > 0).map((d) => d.key))
   // Keep ads that ever ran, plus anything currently live (e.g. just launched).
   const ads = [...m.ads, ...g.ads].filter((a) => spendKeys.has(a.key) || a.status === 'Active' || a.status === 'In review')
   const leads = attributeLeads(leadPages, ads, daily)
+  daily.push(...bioDaily) // after attribution: zero-spend rows, only bioExact
 
   // Per-ad lifetime totals.
   const byAd = new Map(ads.map((a) => [a.key, {ad: a, t: emptyTotals(), leadIds: [], first: '', last: ''}]))
@@ -582,7 +624,7 @@ async function main() {
     console.log(
       `  ${r.ad.platform.padEnd(6)} ${r.ad.status.padEnd(9)} $${t.spend.toFixed(2).padStart(8)}  clicks ${String(t.clicks).padStart(4)}  ` +
         `quote starts ${String(t.quoteStarts).padStart(3)}  platform leads ${String(round2(t.platformLeads)).padStart(4)}  ` +
-        `real ${t.real}  spam ${t.spam}  won ${t.won}  ig profile ${t.profileVisits}  assisted ${t.assisted}  ${r.ad.name}`,
+        `real ${t.real}  spam ${t.spam}  won ${t.won}  ig profile ${t.profileVisits}  bio exact ${t.bioExact}  assisted ${t.assisted}  ${r.ad.name}`,
     )
   }
   const assistedLeads = leads.filter((l) => l.assistKey)
@@ -664,7 +706,7 @@ async function main() {
     const w = weeks.get(wk)
     for (const p of ['Meta', 'Google', 'All']) {
       const t = w[p]
-      if (!t.spend && !t.real && !t.spam && !t.platformLeads && !t.profileVisits && !t.assisted) continue
+      if (!t.spend && !t.real && !t.spam && !t.platformLeads && !t.profileVisits && !t.bioExact && !t.assisted) continue
       const inPlatform = [...w.perAd.entries()]
         .filter(([key]) => p === 'All' || platformOf(key) === p)
         .map(([key, totals]) => ({key, t: totals}))

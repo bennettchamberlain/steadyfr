@@ -1,19 +1,26 @@
 #!/usr/bin/env node
-// Which Meta ad most likely sent an Instagram bio-link visitor?
+// Which Meta ad (if any) sent an Instagram bio-link visitor?
 //
 // Instagram tags bio-link clicks utm_source=ig&utm_medium=social&utm_content=link_in_bio,
 // so GA4 sees them, but not the ad (if any) that sent the person to the profile.
-// For each day in the range this prints:
-//   1. GA4 bio-link sessions (time, city, device) and, when the visitor's FIRST
-//      visit was an ad click on the same device, that ad: an EXACT link.
-//   2. Meta's Instagram profile visits per ad that day. The top ad is the
-//      LIKELY source for bio-link visitors with no exact link. (Meta reports
-//      profile visits per day only, so this is a best guess, not a match.)
+// Each bio-link visit gets one verdict, strongest first:
 //
-// The lead sweep uses this to fill the "Assisted by ad" column on bio-link leads:
-//   "Steady Ad 1a v1 (exact: GA4 first visit was this ad)"
-//   "Steady Ad 1a v1 (likely: most IG profile visits that day)"
-// and the ads sync credits those as "Assisted leads / revenue".
+//   EXACT     GA4's first visit for that device was a click on this ad.
+//   LIKELY    someone in the same city clicked this Meta ad in the 24 hours up to
+//             the bio-link visit (any device: people often see the ad on one
+//             device and come back on another), AND that city had only a few
+//             Meta ad visits in that window (at most MAX_CITY_AD_SESSIONS), so
+//             it's unlikely to be a coincidence. Busy cities (San Francisco,
+//             Oakland) rarely qualify: someone there clicks an ad most days.
+//   POSSIBLE  no qualifying same-city ad visit, but ads drove Instagram profile
+//             visits that day; the top ad is named for reference only. Organic profile
+//             visitors also tap the bio link, so this is NOT credited.
+//   none      no ad link at all (organic).
+//
+// The lead sweep copies the verdict for a bio-link lead into the lead's
+// "Assisted by ad" column, ad name first:
+//   "Steady Ad 1a v1 (exact: …)" / "Steady Ad 1a v1 (likely: …)" / "Steady Ad 1a v1 (possible: …)"
+// The ads sync credits only exact and likely as "Assisted leads / revenue".
 //
 // Read-only. Needs META_ADS_READ_TOKEN, META_AD_ACCOUNT_ID, GA4_PROPERTY_ID,
 // GA4_REFRESH_TOKEN and GOOGLE_ADS_CLIENT_ID/SECRET in scripts/meta-capi/.env.local.
@@ -25,10 +32,13 @@
 
 import {loadSharedEnv} from '../click-lookup/googleAds.mjs'
 import {getMetaCredentials, listAds, dailyAdInsights} from './metaAds.mjs'
+import {ga4Report, ga4Day, BIO_LINK_FILTER, isMetaPaid, resolveMetaAd} from './ga4.mjs'
 
 loadSharedEnv()
 
 const TIMEZONE = 'America/Los_Angeles'
+const LOOKBACK_DAYS = 1 // 24 h before the bio-link visit
+const MAX_CITY_AD_SESSIONS = 2
 
 function parseArgs(argv) {
   const args = {}
@@ -54,32 +64,10 @@ const addDays = (ymd, n) => {
   return d.toISOString().slice(0, 10)
 }
 
-// Loose match between a utm_content value ("1av1", "Steady Ad 1a v1") and an ad name.
-const squash = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9]/g, '')
+const shortDate = (ymd) =>
+  new Date(`${ymd}T12:00:00Z`).toLocaleDateString('en-US', {month: 'short', day: 'numeric', timeZone: 'UTC'})
 
-async function ga4Report(body) {
-  const env = process.env
-  const missing = ['GA4_PROPERTY_ID', 'GA4_REFRESH_TOKEN', 'GOOGLE_ADS_CLIENT_ID', 'GOOGLE_ADS_CLIENT_SECRET'].filter((k) => !env[k]?.trim())
-  if (missing.length) fail(`Missing ${missing.join(', ')} (scripts/meta-capi/.env.local).`)
-  const tok = await fetch('https://oauth2.googleapis.com/token', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-    body: new URLSearchParams({
-      client_id: env.GOOGLE_ADS_CLIENT_ID.trim(),
-      client_secret: env.GOOGLE_ADS_CLIENT_SECRET.trim(),
-      refresh_token: env.GA4_REFRESH_TOKEN.trim(),
-      grant_type: 'refresh_token',
-    }),
-  }).then((r) => r.json())
-  if (!tok.access_token) fail(`GA4 auth failed: ${tok.error_description || tok.error || 'no access token'}`)
-  const res = await fetch(`https://analyticsdata.googleapis.com/v1beta/properties/${env.GA4_PROPERTY_ID.trim()}:runReport`, {
-    method: 'POST',
-    headers: {Authorization: `Bearer ${tok.access_token}`, 'Content-Type': 'application/json'},
-    body: JSON.stringify(body),
-  }).then((r) => r.json())
-  if (res.error) fail(`GA4 report failed: ${res.error.message}`)
-  return (res.rows || []).map((r) => [...r.dimensionValues.map((v) => v.value), ...r.metricValues.map((v) => v.value)])
-}
+const knownCity = (c) => c && c !== '(not set)'
 
 async function main() {
   const args = parseArgs(process.argv.slice(2))
@@ -90,7 +78,7 @@ async function main() {
   const meta = getMetaCredentials()
   if (!meta.ok) fail(`Missing ${meta.missing.join(', ')} (scripts/meta-capi/.env.local).`)
 
-  const [ads, daily, sessions] = await Promise.all([
+  const [ads, daily, bioRows, adRows] = await Promise.all([
     listAds(meta.creds),
     dailyAdInsights(meta.creds, since, until),
     ga4Report({
@@ -103,25 +91,35 @@ async function main() {
         {name: 'firstUserManualAdContent'},
       ],
       metrics: [{name: 'sessions'}],
-      dimensionFilter: {filter: {fieldName: 'sessionManualAdContent', stringFilter: {value: 'link_in_bio'}}},
+      dimensionFilter: BIO_LINK_FILTER,
       orderBys: [{dimension: {dimensionName: 'dateHour'}}],
-      limit: 1000,
+    }),
+    // Meta ad sessions by city, including the lookback window before `since`.
+    ga4Report({
+      dateRanges: [{startDate: addDays(since, -LOOKBACK_DAYS), endDate: until}],
+      dimensions: [{name: 'dateHour'}, {name: 'city'}, {name: 'sessionSourceMedium'}, {name: 'sessionManualAdContent'}],
+      metrics: [{name: 'sessions'}],
+      dimensionFilter: {filter: {fieldName: 'sessionMedium', stringFilter: {matchType: 'CONTAINS', value: 'paid'}}},
     }),
   ])
 
   const adName = new Map(ads.map((a) => [a.id, a.name]))
   const spendById = new Map()
   for (const d of daily) spendById.set(d.adId, (spendById.get(d.adId) || 0) + d.spend)
-  // utm_content → ad name; on ties prefer the ad that spent most in the range.
-  const resolveAd = (content) => {
-    const key = squash(content)
-    if (!key) return ''
-    const hits = ads.filter((a) => squash(a.name) === key || squash(a.name).endsWith(key))
-    hits.sort((a, b) => (spendById.get(b.id) || 0) - (spendById.get(a.id) || 0))
-    return hits[0]?.name || content
+  const resolveName = (content) => resolveMetaAd(content, ads, (a) => spendById.get(a.id) || 0)?.name || ''
+
+  // Meta-paid sessions per city: [{dateHour, name, n}]
+  const adVisitsByCity = new Map()
+  for (const [dh, city, sm, content, n] of adRows) {
+    if (!knownCity(city) || !isMetaPaid(sm)) continue
+    const name = resolveName(content)
+    if (!name) continue
+    if (!adVisitsByCity.has(city)) adVisitsByCity.set(city, [])
+    adVisitsByCity.get(city).push({dateHour: dh, name, n: Number(n)})
   }
 
-  const visitsByDay = new Map() // date -> [{name, visits}]
+  // Ad-driven Instagram profile visits per day: Map(date -> Map(name -> visits))
+  const visitsByDay = new Map()
   for (const d of daily) {
     if (!d.profileVisits) continue
     if (!visitsByDay.has(d.date)) visitsByDay.set(d.date, new Map())
@@ -130,32 +128,61 @@ async function main() {
     m.set(name, (m.get(name) || 0) + d.profileVisits)
   }
 
-  const bioByDay = new Map()
-  for (const [dhm, city, device, firstSrc, firstContent, n] of sessions) {
-    const day = `${dhm.slice(0, 4)}-${dhm.slice(4, 6)}-${dhm.slice(6, 8)}`
-    if (!bioByDay.has(day)) bioByDay.set(day, [])
-    bioByDay.get(day).push({time: `${dhm.slice(8, 10)}:00`, city, device, firstSrc, firstContent, n: Number(n)})
+  const verdictFor = (dh, city, firstSrc, firstContent) => {
+    const day = ga4Day(dh)
+    if (isMetaPaid(firstSrc)) {
+      const name = resolveName(firstContent)
+      if (name) return {kind: 'EXACT', text: `${name} (exact: GA4 first visit on this device was this ad)`}
+    }
+    if (knownCity(city)) {
+      const from = addDays(day, -LOOKBACK_DAYS).replace(/-/g, '') + dh.slice(8, 10)
+      const hits = (adVisitsByCity.get(city) || []).filter((v) => v.dateHour >= from && v.dateHour <= dh)
+      const cityTotal = hits.reduce((s, v) => s + v.n, 0)
+      if (hits.length && cityTotal <= MAX_CITY_AD_SESSIONS) {
+        const byAd = new Map()
+        for (const v of hits) {
+          const cur = byAd.get(v.name) || {n: 0, last: ''}
+          byAd.set(v.name, {n: cur.n + v.n, last: v.dateHour > cur.last ? v.dateHour : cur.last})
+        }
+        const [name, {n, last}] = [...byAd.entries()].sort((a, b) => b[1].n - a[1].n || b[1].last.localeCompare(a[1].last))[0]
+        return {
+          kind: 'likely',
+          text: `${name} (likely: ${city} visit from this ad ${shortDate(ga4Day(last))} ${last.slice(8, 10)}:00, within 24 h before; ${cityTotal} ${city} ad visit${cityTotal > 1 ? 's' : ''} in that window)`,
+        }
+      }
+    }
+    const top = [...(visitsByDay.get(day) || new Map()).entries()].sort((a, b) => b[1] - a[1])[0]
+    if (top) {
+      return {
+        kind: 'possible',
+        text: `${top[0]} (possible: ${top[1]} ad-driven IG profile visit${top[1] > 1 ? 's' : ''} that day, no qualifying ${knownCity(city) ? city + ' ' : ''}ad visit in the 24 h before; not credited)`,
+      }
+    }
+    return {kind: 'none', text: 'no ad link (organic)'}
   }
 
-  console.log(`Instagram bio-link visits and IG profile visits by ad, ${since} → ${until} (Pacific)\n`)
+  const bioByDay = new Map()
+  for (const [dh, city, device, firstSrc, firstContent, n] of bioRows) {
+    const day = ga4Day(dh)
+    if (!bioByDay.has(day)) bioByDay.set(day, [])
+    bioByDay.get(day).push({dh, city, device, n: Number(n), v: verdictFor(dh, city, firstSrc, firstContent)})
+  }
+
+  console.log(`Instagram bio-link visits, ${since} → ${until} (Pacific). Credited: exact + likely.\n`)
+  const tally = {EXACT: 0, likely: 0, possible: 0, none: 0}
   for (let day = since; day <= until; day = addDays(day, 1)) {
     const ranked = [...(visitsByDay.get(day) || new Map()).entries()].sort((a, b) => b[1] - a[1])
     const bio = bioByDay.get(day) || []
     if (!ranked.length && !bio.length) continue
     const total = ranked.reduce((s, [, v]) => s + v, 0)
     console.log(`${day}  IG profile visits from ads: ${total}${ranked.length ? '  (' + ranked.map(([n, v]) => `${n} ${v}`).join(', ') + ')' : ''}`)
-    const likely = ranked[0]?.[0]
     if (!bio.length) console.log('  no bio-link visits')
     for (const s of bio) {
-      const exact = /paid/i.test(s.firstSrc) ? resolveAd(s.firstContent) : ''
-      const verdict = exact
-        ? `EXACT: ${exact} (exact: GA4 first visit was this ad)`
-        : likely
-          ? `likely: ${likely} (likely: most IG profile visits that day)`
-          : 'no ad link (no ad profile visits that day; organic)'
-      console.log(`  ${s.time}  ${s.city || '?'} · ${s.device}${s.n > 1 ? ` ×${s.n}` : ''}  →  ${verdict}`)
+      tally[s.v.kind] += 1
+      console.log(`  ${s.dh.slice(8, 10)}:00  ${s.city || '?'} · ${s.device}${s.n > 1 ? ` ×${s.n}` : ''}  →  ${s.v.kind.toUpperCase()}: ${s.v.text}`)
     }
   }
+  console.log(`\nBio-link visit rows: ${tally.EXACT} exact, ${tally.likely} likely, ${tally.possible} possible (not credited), ${tally.none} no ad link.`)
 }
 
 main().catch((err) => fail(err.message))
