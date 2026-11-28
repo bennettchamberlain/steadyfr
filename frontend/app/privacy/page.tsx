@@ -8,7 +8,7 @@ export const metadata = {
 }
 
 const EFFECTIVE_DATE = 'October 13, 2026'
-const LAST_UPDATED = 'October 21, 2026'
+const LAST_UPDATED = 'November 28, 2026'
 
 // External link helper — opens in a new tab, styled as a subtle accent link.
 function Ext({href, children}: {href: string; children: React.ReactNode}) {
@@ -160,11 +160,15 @@ export default function PrivacyPage() {
             <h2>3. How We Share Information &mdash; and What We Don&rsquo;t Do</h2>
             <p>
               <strong>We do not sell your personal information for money.</strong> We do use limited
-              information you provide &mdash; specifically your <strong>email address and/or phone
-              number</strong> &mdash; for our own advertising through <strong>Google Customer
-              Match</strong>. In this program, your email/phone is shared with Google in hashed form
-              so we can show our ads to you and to similar audiences. We do <strong>not</strong>{' '}
-              share your information with any other third parties for <em>their</em> own marketing.
+              information you provide &mdash; specifically your{' '}
+              <strong>email address and/or phone number</strong> &mdash; for our own advertising
+              through <strong>Google Customer Match</strong> and{' '}
+              <strong>Meta Custom Audiences</strong>, and to measure our ads through Google and Meta
+              conversion tools. In these programs, your email/phone is shared with Google and Meta
+              in hashed (scrambled) form so we can show our ads to you and to similar audiences,
+              exclude you from ads, and measure which ads led to inquiries or completed work. We do{' '}
+              <strong>not</strong> share your information with any other third parties for{' '}
+              <em>their</em> own marketing.
             </p>
             <p>Beyond that, we share information only in these limited circumstances:</p>
             <ul>
@@ -177,19 +181,22 @@ export default function PrivacyPage() {
               </li>
               <li>
                 <strong>For analytics and advertising.</strong> We use analytics and advertising
-                tools (such as Google and Meta) and Google Customer Match that collect, receive, or
-                are provided certain information (like device/usage data, identifiers, and &mdash;
-                for Customer Match &mdash; hashed email/phone). Under some privacy laws, this may be
-                considered &ldquo;sharing&rdquo; or a &ldquo;sale&rdquo; for cross-context behavioral
-                advertising. You can opt out as described in Sections 5 and 6.
+                tools (such as Google and Meta), Google Customer Match, and Meta Custom Audiences
+                that collect, receive, or are provided certain information (like device/usage data,
+                identifiers, and &mdash; for Customer Match, Custom Audiences, and conversion
+                measurement &mdash; hashed email/phone). Under some privacy laws, this may be
+                considered &ldquo;sharing&rdquo; or a &ldquo;sale&rdquo; for cross-context
+                behavioral advertising. You can opt out as described in Sections 5 and 6.
               </li>
               <li>
                 <strong>For conversion measurement.</strong> When an inquiry results in a completed
                 job, we may upload limited conversion data &mdash; the advertising click
-                identifier(s) associated with your visit, the date of the sale, and the sale value,
-                along with technical data such as your IP address and user agent &mdash; to
-                advertising platforms (such as Google Ads) to measure which ads led to completed
-                work. This is used only to measure and improve our own advertising.
+                identifier(s) associated with your visit, your email address and/or phone number in
+                hashed form, the date of the sale, and the sale value, along with technical data
+                such as your IP address and user agent &mdash; to advertising platforms (such as
+                Google Ads and Meta, including through Meta&rsquo;s Conversions API) to measure
+                which ads led to completed work. This is used only to measure and improve our own
+                advertising.
               </li>
               <li>
                 <strong>For legal, safety, and fraud-prevention reasons</strong> &mdash; e.g., to
@@ -221,14 +228,22 @@ export default function PrivacyPage() {
                 <Ext href="https://policies.google.com/privacy">Google Privacy Policy</Ext>
               </li>
               <li>
-                <strong>Google Customer Match</strong> &mdash; we may upload customer email addresses
-                and/or phone numbers to Google (in hashed form) to deliver our advertising to those
-                customers and similar audiences.{' '}
+                <strong>Google Customer Match</strong> &mdash; we may upload customer email
+                addresses and/or phone numbers to Google (in hashed form) to deliver our advertising
+                to those customers and similar audiences.{' '}
                 <Ext href="https://policies.google.com/privacy">Google Privacy Policy</Ext>
               </li>
               <li>
                 <strong>Meta Pixel (Facebook)</strong> &mdash; advertising measurement and audience
                 tools. <Ext href="https://www.facebook.com/privacy/policy">Meta Privacy Policy</Ext>
+              </li>
+              <li>
+                <strong>Meta Conversions API and Custom Audiences</strong> &mdash; we may upload
+                customer email addresses and/or phone numbers to Meta (in hashed form), along with
+                click identifiers and sale details, to measure which ads led to completed work and
+                to deliver our advertising to, or exclude it from, those customers and similar
+                audiences.{' '}
+                <Ext href="https://www.facebook.com/privacy/policy">Meta Privacy Policy</Ext>
               </li>
             </ul>
             <p>We also rely on the following providers to operate the Site and our business:</p>
@@ -266,10 +281,13 @@ export default function PrivacyPage() {
             <h2>5. Your Choices</h2>
             <ul>
               <li>
-                <strong>Advertising opt-out (including Customer Match):</strong> You can ask us to
-                exclude your information from our Google Customer Match advertising by contacting us
-                at <Ext href="mailto:help@superhotfab.com">help@superhotfab.com</Ext>. You can also
-                opt out of Google Analytics via the{' '}
+                <strong>
+                  Advertising opt-out (including Customer Match and Custom Audiences):
+                </strong>{' '}
+                You can ask us to exclude your information from our Google Customer Match and Meta
+                Custom Audience advertising, and from conversion uploads, by contacting us at{' '}
+                <Ext href="mailto:help@superhotfab.com">help@superhotfab.com</Ext>. You can also opt
+                out of Google Analytics via the{' '}
                 <Ext href="https://tools.google.com/dlpage/gaoptout">
                   Google Analytics Opt-out Browser Add-on
                 </Ext>
@@ -302,13 +320,15 @@ export default function PrivacyPage() {
             </p>
             <p>
               <strong>We do not sell personal information for money.</strong> However, our use of
-              Google Customer Match and advertising/analytics tools may be considered a
-              &ldquo;sale&rdquo; or &ldquo;sharing&rdquo; of personal information for cross-context
-              behavioral advertising under California law. You can opt out by contacting us at{' '}
+              Google Customer Match, Meta Custom Audiences, conversion uploads, and
+              advertising/analytics tools may be considered a &ldquo;sale&rdquo; or
+              &ldquo;sharing&rdquo; of personal information for cross-context behavioral advertising
+              under California law. You can opt out by contacting us at{' '}
               <Ext href="mailto:help@superhotfab.com">help@superhotfab.com</Ext> to have your
               information excluded, by using Global Privacy Control, and by using the opt-outs in
-              Section 5. If you opt out, we will not use your information for Customer Match
-              advertising.
+              Section 5. If you opt out, we will not use your information for Google Customer Match
+              or Meta Custom Audience advertising, or include it in conversion uploads to
+              advertising platforms.
             </p>
             <p>
               To exercise any of these rights, contact us at{' '}
@@ -364,8 +384,7 @@ export default function PrivacyPage() {
               <br />
               907 Minna St, San Francisco, CA
               <br />
-              Email:{' '}
-              <Ext href="mailto:help@superhotfab.com">help@superhotfab.com</Ext>
+              Email: <Ext href="mailto:help@superhotfab.com">help@superhotfab.com</Ext>
               <br />
               Phone:{' '}
               <a href="tel:4153473270" className="text-sky-400 hover:text-sky-300 underline">
